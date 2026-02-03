@@ -12,7 +12,7 @@ This guide will help you set up the frontend with the API client library.
 ### 1. Initialize the Frontend Project (if not already done)
 
 ```bash
-cd /Users/fpirzada/Documents/cc_mem_video_player/frontend
+cd /Users/fpirzada/Documents/recall/frontend
 npm init -y
 ```
 
@@ -187,7 +187,7 @@ Create `index.html`:
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Claude Code Session Replay</title>
+    <title>Recall</title>
   </head>
   <body>
     <div id="root"></div>
@@ -237,7 +237,7 @@ code {
 ### 1. Start the Backend (in one terminal)
 
 ```bash
-cd /Users/fpirzada/Documents/cc_mem_video_player/backend
+cd /Users/fpirzada/Documents/recall/backend
 npm run dev
 ```
 
@@ -251,7 +251,7 @@ node test-api-client.js
 ### 3. Start the Frontend (in another terminal)
 
 ```bash
-cd /Users/fpirzada/Documents/cc_mem_video_player/frontend
+cd /Users/fpirzada/Documents/recall/frontend
 npm run dev
 ```
 

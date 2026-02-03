@@ -14,7 +14,7 @@ npm install prismjs @types/prismjs
 
 ### 2. Created CodeBlock Component
 
-**File**: `/Users/fpirzada/Documents/cc_mem_video_player/frontend/src/components/CodeBlock.tsx`
+**File**: `/Users/fpirzada/Documents/recall/frontend/src/components/CodeBlock.tsx`
 
 Features:
 - Syntax highlighting for 25+ programming languages
@@ -29,7 +29,7 @@ Features:
 
 ### 3. Updated SessionPlayerPage
 
-**File**: `/Users/fpirzada/Documents/cc_mem_video_player/frontend/src/pages/SessionPlayerPage.tsx`
+**File**: `/Users/fpirzada/Documents/recall/frontend/src/pages/SessionPlayerPage.tsx`
 
 Changes:
 - Imported `CodeBlock` and `DiffBlock` components
@@ -165,13 +165,13 @@ VITE v6.4.1 ready in 93 ms
 ## Files Modified/Created
 
 ### Created
-1. `/Users/fpirzada/Documents/cc_mem_video_player/frontend/src/components/CodeBlock.tsx`
-2. `/Users/fpirzada/Documents/cc_mem_video_player/frontend/src/components/CodeBlock.README.md`
-3. `/Users/fpirzada/Documents/cc_mem_video_player/frontend/SYNTAX_HIGHLIGHTING_IMPLEMENTATION.md`
+1. `/Users/fpirzada/Documents/recall/frontend/src/components/CodeBlock.tsx`
+2. `/Users/fpirzada/Documents/recall/frontend/src/components/CodeBlock.README.md`
+3. `/Users/fpirzada/Documents/recall/frontend/SYNTAX_HIGHLIGHTING_IMPLEMENTATION.md`
 
 ### Modified
-1. `/Users/fpirzada/Documents/cc_mem_video_player/frontend/package.json` (added prismjs dependencies)
-2. `/Users/fpirzada/Documents/cc_mem_video_player/frontend/src/pages/SessionPlayerPage.tsx`
+1. `/Users/fpirzada/Documents/recall/frontend/package.json` (added prismjs dependencies)
+2. `/Users/fpirzada/Documents/recall/frontend/src/pages/SessionPlayerPage.tsx`
 
 ## Next Steps (Optional Enhancements)
 

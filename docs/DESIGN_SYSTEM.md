@@ -1,6 +1,6 @@
 # Design System & Styling Guide
 
-**Project:** Claude Code Session Replay Frontend
+**Project:** Recall Frontend
 **Version:** Phase 1
 **Date:** 2026-02-02
 

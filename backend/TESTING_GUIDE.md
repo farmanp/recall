@@ -4,7 +4,7 @@
 
 ### Run All Tests
 ```bash
-cd /Users/fpirzada/Documents/cc_mem_video_player/backend
+cd /Users/fpirzada/Documents/recall/backend
 npm test -- --run
 ```
 

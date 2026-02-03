@@ -1,6 +1,6 @@
 # System Architecture
 
-This document describes the technical architecture of the Claude Code Session Replay application.
+This document describes the technical architecture of the Recall application.
 
 ## Table of Contents
 
@@ -18,7 +18,7 @@ This document describes the technical architecture of the Claude Code Session Re
 
 ## Overview
 
-Claude Code Session Replay is a **local-first web application** that visualizes Claude Code sessions as a playable timeline. It reads from the `claude-mem` SQLite database and presents sessions in a video-player-like interface.
+Recall is a **local-first web application** that visualizes Claude Code sessions as a playable timeline. It reads from the `claude-mem` SQLite database and presents sessions in a video-player-like interface.
 
 ### Key Design Principles
 

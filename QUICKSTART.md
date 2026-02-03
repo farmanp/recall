@@ -1,4 +1,4 @@
-# Claude Code Session Replay - Quick Start Guide
+# Recall - Quick Start Guide
 
 🎬 **Watch your Claude Code sessions like a video player!**
 

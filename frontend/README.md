@@ -1,6 +1,6 @@
 # Session Replay Frontend
 
-Frontend application for Claude Code Session Replay built with React, TypeScript, and Vite.
+Frontend application for Recall built with React, TypeScript, and Vite.
 
 ## Tech Stack
 

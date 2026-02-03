@@ -1,5 +1,5 @@
 /**
- * Type-safe API client for Claude Code Session Replay backend
+ * Type-safe API client for Recall backend
  */
 
 import type {

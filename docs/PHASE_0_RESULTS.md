@@ -235,6 +235,6 @@ Phase 0 validation was a complete success. The timeline reconstruction algorithm
 
 ---
 
-**Validated by:** Claude Code Session Replay Validation Script v1.0
+**Validated by:** Recall Validation Script v1.0
 **Database:** `~/.claude-mem/claude-mem.db`
 **Database Version:** Inferred from schema (claude-mem v7.4.1+)

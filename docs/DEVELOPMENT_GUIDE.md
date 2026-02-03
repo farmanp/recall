@@ -1,6 +1,6 @@
 # Development Guide
 
-A comprehensive guide for developers working on Claude Code Session Replay.
+A comprehensive guide for developers working on Recall.
 
 ## Table of Contents
 
@@ -41,7 +41,7 @@ ls ~/.claude-mem/claude-mem.db
 ```bash
 # Clone the repository
 git clone <repository-url>
-cd cc_mem_video_player
+cd recall
 
 # Install root dependencies
 npm install
@@ -87,7 +87,7 @@ npm run dev
 Testing database connection...
 ✅ Database connected: 127 sessions found
 
-🚀 Claude Code Session Replay Server
+🚀 Recall Server
 📡 Server running on http://localhost:3001
 💾 Database: ~/.claude-mem/claude-mem.db
 

@@ -1,4 +1,4 @@
-# Claude Code Session Replay
+# Recall
 
 A local-first web application that visualizes Claude Code sessions like a video player, enabling you to watch how features were built, decisions made, and problems solved.
 
@@ -18,7 +18,7 @@ A local-first web application that visualizes Claude Code sessions like a video 
 ## 🏗️ Project Structure
 
 ```
-cc_mem_video_player/
+recall/
 ├── backend/               # Node.js + Express + SQLite API
 │   ├── src/
 │   │   ├── db/

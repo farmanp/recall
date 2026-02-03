@@ -1,6 +1,6 @@
 # Frontend Setup Guide
 
-**Project:** Claude Code Session Replay Frontend
+**Project:** Recall Frontend
 **Date:** 2026-02-02
 
 ---

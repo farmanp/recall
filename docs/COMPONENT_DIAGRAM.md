@@ -1,6 +1,6 @@
 # Component Architecture Visual Diagrams
 
-**Project:** Claude Code Session Replay
+**Project:** Recall
 **Date:** 2026-02-02
 
 ---

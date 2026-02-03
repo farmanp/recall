@@ -2,7 +2,7 @@
 
 ## Overview
 
-This comprehensive test suite validates the backend API for the Claude Code Session Replay application. The suite includes unit tests, integration tests, and API endpoint tests with >80% code coverage target.
+This comprehensive test suite validates the backend API for the Recall application. The suite includes unit tests, integration tests, and API endpoint tests with >80% code coverage target.
 
 ## Test Structure
 

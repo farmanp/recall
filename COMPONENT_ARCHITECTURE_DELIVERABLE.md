@@ -1,6 +1,6 @@
 # Component Architecture Design - Final Deliverable
 
-**Project:** Claude Code Session Replay Frontend
+**Project:** Recall Frontend
 **Phase:** Phase 1 - Component Architecture & Design
 **Date:** 2026-02-02
 **Status:** ✅ COMPLETE - Ready for Implementation
@@ -454,7 +454,7 @@ npm install --save-dev @types/node
 
 ## Project Context
 
-This frontend architecture is part of the Claude Code Session Replay project, which visualizes claude-mem database sessions like a video player.
+This frontend architecture is part of the Recall project, which visualizes claude-mem database sessions like a video player.
 
 **Backend:** Node.js + Express + SQLite (complete)
 **Frontend:** React + TypeScript + Tailwind (architecture complete)

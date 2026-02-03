@@ -1,6 +1,6 @@
-# Claude Code Session Replay - API Client Library
+# Recall - API Client Library
 
-A fully typed API client library for the Claude Code Session Replay frontend application.
+A fully typed API client library for the Recall frontend application.
 
 ## Files Created
 

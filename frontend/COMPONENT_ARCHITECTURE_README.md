@@ -1,6 +1,6 @@
 # Frontend Component Architecture - Deliverable Summary
 
-**Project:** Claude Code Session Replay
+**Project:** Recall
 **Phase:** Phase 1 - Frontend Component Design
 **Date:** 2026-02-02
 **Status:** Architecture Complete, Ready for Implementation

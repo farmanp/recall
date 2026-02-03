@@ -1,5 +1,5 @@
 /**
- * React Query hooks for Claude Code Session Replay API
+ * React Query hooks for Recall API
  */
 
 import { useQuery, UseQueryOptions, UseQueryResult } from '@tanstack/react-query';

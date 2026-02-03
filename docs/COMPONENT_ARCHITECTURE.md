@@ -1,6 +1,6 @@
 # Frontend Component Architecture
 
-**Project:** Claude Code Session Replay
+**Project:** Recall
 **Phase:** Phase 1 - Frontend Architecture
 **Date:** 2026-02-02
 

@@ -49,7 +49,7 @@ function start(): void {
 
     // Start listening
     const server = app.listen(PORT, () => {
-      console.log(`\n🚀 Claude Code Session Replay Server`);
+      console.log(`\n🚀 Recall Server`);
       console.log(`📡 Server running on http://localhost:${PORT}`);
       console.log(`💾 Claude-mem DB: ~/.claude-mem/claude-mem.db`);
       console.log(`💾 Transcript DB: ${getTranscriptDbPath()}`);

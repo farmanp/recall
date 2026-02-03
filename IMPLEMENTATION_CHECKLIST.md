@@ -3,15 +3,15 @@
 ## Completed Tasks ✅
 
 ### 1. Shared Types (✅ COMPLETE)
-- [x] Read backend schema from `/Users/fpirzada/Documents/cc_mem_video_player/backend/src/db/schema.ts`
-- [x] Created `/Users/fpirzada/Documents/cc_mem_video_player/shared/types.ts`
+- [x] Read backend schema from `/Users/fpirzada/Documents/recall/backend/src/db/schema.ts`
+- [x] Created `/Users/fpirzada/Documents/recall/shared/types.ts`
 - [x] Copied all relevant types from backend
 - [x] Added frontend-specific types
 - [x] Added API error types
 - [x] File size: 2.8 KB
 
 ### 2. API Client (✅ COMPLETE)
-- [x] Created `/Users/fpirzada/Documents/cc_mem_video_player/frontend/src/api/client.ts`
+- [x] Created `/Users/fpirzada/Documents/recall/frontend/src/api/client.ts`
 - [x] Implemented `ApiClient` class
 - [x] Implemented `ApiClientError` class
 - [x] Added base URL configuration
@@ -30,7 +30,7 @@
 - [x] File size: 5.4 KB
 
 ### 3. React Query Hooks (✅ COMPLETE)
-- [x] Created `/Users/fpirzada/Documents/cc_mem_video_player/frontend/src/hooks/useApi.ts`
+- [x] Created `/Users/fpirzada/Documents/recall/frontend/src/hooks/useApi.ts`
 - [x] Implemented all 5 core hooks:
   - [x] `useHealthCheck()` - Health check with auto-refetch
   - [x] `useSessions(query)` - List sessions with filtering
@@ -48,7 +48,7 @@
 - [x] File size: 5.2 KB
 
 ### 4. Testing (✅ COMPLETE)
-- [x] Created `/Users/fpirzada/Documents/cc_mem_video_player/test-api-client.js`
+- [x] Created `/Users/fpirzada/Documents/recall/test-api-client.js`
 - [x] Tested all 5 API endpoints
 - [x] Verified backend is running at http://localhost:3001
 - [x] Confirmed health check works
@@ -58,27 +58,27 @@
 - [x] All endpoints returning valid JSON responses
 
 ### 5. Documentation (✅ COMPLETE)
-- [x] Created `/Users/fpirzada/Documents/cc_mem_video_player/frontend/API_CLIENT_README.md`
+- [x] Created `/Users/fpirzada/Documents/recall/frontend/API_CLIENT_README.md`
   - [x] Complete API documentation
   - [x] Usage examples for all hooks
   - [x] Error handling guide
   - [x] Type safety examples
   - [x] Advanced usage patterns
-- [x] Created `/Users/fpirzada/Documents/cc_mem_video_player/frontend/SETUP.md`
+- [x] Created `/Users/fpirzada/Documents/recall/frontend/SETUP.md`
   - [x] Installation instructions
   - [x] TypeScript configuration
   - [x] Vite/build tool setup
   - [x] Environment variables guide
   - [x] Troubleshooting section
   - [x] Complete file structure
-- [x] Created `/Users/fpirzada/Documents/cc_mem_video_player/API_CLIENT_SUMMARY.md`
+- [x] Created `/Users/fpirzada/Documents/recall/API_CLIENT_SUMMARY.md`
   - [x] Overview of all files
   - [x] Feature list
   - [x] Quick start guide
   - [x] Statistics and metrics
 
 ### 6. Example Components (✅ COMPLETE)
-- [x] Created `/Users/fpirzada/Documents/cc_mem_video_player/frontend/src/examples/SessionViewer.example.tsx`
+- [x] Created `/Users/fpirzada/Documents/recall/frontend/src/examples/SessionViewer.example.tsx`
 - [x] Implemented complete example components:
   - [x] `HealthStatus` - Real-time health indicator
   - [x] `SessionList` - Paginated session list
@@ -253,16 +253,16 @@ Summary:
 
 ```bash
 # Check files exist
-ls -lh /Users/fpirzada/Documents/cc_mem_video_player/shared/types.ts
-ls -lh /Users/fpirzada/Documents/cc_mem_video_player/frontend/src/api/client.ts
-ls -lh /Users/fpirzada/Documents/cc_mem_video_player/frontend/src/hooks/useApi.ts
-ls -lh /Users/fpirzada/Documents/cc_mem_video_player/frontend/src/examples/SessionViewer.example.tsx
+ls -lh /Users/fpirzada/Documents/recall/shared/types.ts
+ls -lh /Users/fpirzada/Documents/recall/frontend/src/api/client.ts
+ls -lh /Users/fpirzada/Documents/recall/frontend/src/hooks/useApi.ts
+ls -lh /Users/fpirzada/Documents/recall/frontend/src/examples/SessionViewer.example.tsx
 
 # Test API connectivity
 curl http://localhost:3001/api/health
 
 # Run test script
-node /Users/fpirzada/Documents/cc_mem_video_player/test-api-client.js
+node /Users/fpirzada/Documents/recall/test-api-client.js
 ```
 
 ## Status: ✅ COMPLETE

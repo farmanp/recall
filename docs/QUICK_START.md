@@ -1,6 +1,6 @@
 # Quick Start Guide
 
-Get Claude Code Session Replay up and running in 5 minutes.
+Get Recall up and running in 5 minutes.
 
 ## Prerequisites
 
@@ -30,7 +30,7 @@ If the database file exists, you're ready to go!
 
 ```bash
 git clone <repository-url>
-cd cc_mem_video_player
+cd recall
 ```
 
 ### 2. Install Backend Dependencies
@@ -62,7 +62,7 @@ You should see:
 Testing database connection...
 ✅ Database connected: 127 sessions found
 
-🚀 Claude Code Session Replay Server
+🚀 Recall Server
 📡 Server running on http://localhost:3001
 💾 Database: ~/.claude-mem/claude-mem.db
 

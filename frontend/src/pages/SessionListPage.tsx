@@ -141,7 +141,7 @@ export const SessionListPage: React.FC = () => {
       <div className="bg-white border-b shadow-sm sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 py-6">
           <h1 className="text-3xl font-bold text-gray-900">
-            🎬 Claude Code Session Replay
+            Recall
           </h1>
           <p className="text-sm text-gray-600 mt-2">
             {filteredSessions.length} of {total} {total === 1 ? 'session' : 'sessions'}

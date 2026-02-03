@@ -1,5 +1,5 @@
 {
-  "name": "session-replay-frontend",
+  "name": "recall-frontend",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -38,7 +38,7 @@
     "typescript-eslint": "^8.18.2",
     "vite": "^6.0.5"
   },
-  "description": "Frontend application for Claude Code Session Replay built with React, TypeScript, and Vite.",
+  "description": "Frontend application for Recall built with React, TypeScript, and Vite.",
   "main": "eslint.config.js",
   "keywords": [],
   "author": "",

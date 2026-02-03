@@ -1,13 +1,13 @@
-# Claude Code Session Replay - API Client Library Summary
+# Recall - API Client Library Summary
 
 ## Overview
 
-A complete, fully-typed API client library has been created for the Claude Code Session Replay frontend application. All endpoints are implemented with TypeScript type safety, error handling, and React Query integration.
+A complete, fully-typed API client library has been created for the Recall frontend application. All endpoints are implemented with TypeScript type safety, error handling, and React Query integration.
 
 ## Files Created
 
 ### 1. Shared Types
-**File**: `/Users/fpirzada/Documents/cc_mem_video_player/shared/types.ts` (2.8 KB)
+**File**: `/Users/fpirzada/Documents/recall/shared/types.ts` (2.8 KB)
 
 - Database entity types: `Session`, `Observation`, `UserPrompt`
 - Event types: `SessionEvent`
@@ -17,7 +17,7 @@ A complete, fully-typed API client library has been created for the Claude Code 
 - Frontend utility types
 
 ### 2. API Client
-**File**: `/Users/fpirzada/Documents/cc_mem_video_player/frontend/src/api/client.ts` (5.4 KB)
+**File**: `/Users/fpirzada/Documents/recall/frontend/src/api/client.ts` (5.4 KB)
 
 **Features**:
 - `ApiClient` class with configurable base URL and timeout
@@ -36,7 +36,7 @@ getEvent(sessionId, eventType, eventId): Promise<SessionEvent | Observation | Us
 ```
 
 ### 3. React Query Hooks
-**File**: `/Users/fpirzada/Documents/cc_mem_video_player/frontend/src/hooks/useApi.ts` (5.2 KB)
+**File**: `/Users/fpirzada/Documents/recall/frontend/src/hooks/useApi.ts` (5.2 KB)
 
 **Hooks**:
 ```typescript
@@ -62,7 +62,7 @@ useLiveSessionEvents(id?, query?, refetchInterval?) // Auto-refetch events
 - Filter support
 
 ### 4. Example React Component
-**File**: `/Users/fpirzada/Documents/cc_mem_video_player/frontend/src/examples/SessionViewer.example.tsx` (13 KB)
+**File**: `/Users/fpirzada/Documents/recall/frontend/src/examples/SessionViewer.example.tsx` (13 KB)
 
 **Components**:
 - `HealthStatus` - Real-time API health indicator
@@ -84,27 +84,27 @@ useLiveSessionEvents(id?, query?, refetchInterval?) // Auto-refetch events
 
 ### 5. Test Files
 
-**JavaScript Test**: `/Users/fpirzada/Documents/cc_mem_video_player/test-api-client.js` (101 lines)
+**JavaScript Test**: `/Users/fpirzada/Documents/recall/test-api-client.js` (101 lines)
 - Tests all API endpoints
 - Validates responses
 - Error handling verification
 - Can run without TypeScript: `node test-api-client.js`
 
-**TypeScript Test**: `/Users/fpirzada/Documents/cc_mem_video_player/frontend/src/api/client.test.ts`
+**TypeScript Test**: `/Users/fpirzada/Documents/recall/frontend/src/api/client.test.ts`
 - Type-safe test implementation
 - Integration test examples
 - Reference for writing more tests
 
 ### 6. Documentation
 
-**API Client README**: `/Users/fpirzada/Documents/cc_mem_video_player/frontend/API_CLIENT_README.md`
+**API Client README**: `/Users/fpirzada/Documents/recall/frontend/API_CLIENT_README.md`
 - Complete API documentation
 - Usage examples for all hooks
 - Error handling guide
 - Configuration options
 - Next steps
 
-**Setup Guide**: `/Users/fpirzada/Documents/cc_mem_video_player/frontend/SETUP.md`
+**Setup Guide**: `/Users/fpirzada/Documents/recall/frontend/SETUP.md`
 - Step-by-step installation instructions
 - TypeScript configuration
 - Vite/build tool setup
@@ -280,7 +280,7 @@ function MyComponent() {
 ## File Locations
 
 ```
-/Users/fpirzada/Documents/cc_mem_video_player/
+/Users/fpirzada/Documents/recall/
 ├── shared/
 │   └── types.ts                                  # Shared types
 ├── frontend/

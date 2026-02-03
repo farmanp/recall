@@ -6,7 +6,7 @@ Successfully built a beautiful, feature-rich side-by-side file diff visualizatio
 
 ## Files Created
 
-### 1. `/Users/fpirzada/Documents/cc_mem_video_player/frontend/src/components/DiffViewer.tsx`
+### 1. `/Users/fpirzada/Documents/recall/frontend/src/components/DiffViewer.tsx`
 **Main Component File** (360 lines)
 
 **Key Features:**
@@ -27,7 +27,7 @@ Successfully built a beautiful, feature-rich side-by-side file diff visualizatio
 - Tailwind CSS for styling
 - React hooks (useState, useMemo)
 
-### 2. `/Users/fpirzada/Documents/cc_mem_video_player/frontend/src/components/DiffViewer.md`
+### 2. `/Users/fpirzada/Documents/recall/frontend/src/components/DiffViewer.md`
 **Documentation File**
 
 Complete documentation including:
@@ -41,7 +41,7 @@ Complete documentation including:
 - Performance notes
 - Accessibility features
 
-### 3. `/Users/fpirzada/Documents/cc_mem_video_player/frontend/src/components/DiffViewer.example.tsx`
+### 3. `/Users/fpirzada/Documents/recall/frontend/src/components/DiffViewer.example.tsx`
 **Example Usage File**
 
 Demonstrates 5 different use cases:
@@ -53,7 +53,7 @@ Demonstrates 5 different use cases:
 
 ## Files Modified
 
-### `/Users/fpirzada/Documents/cc_mem_video_player/frontend/src/pages/SessionPlayerPage.tsx`
+### `/Users/fpirzada/Documents/recall/frontend/src/pages/SessionPlayerPage.tsx`
 
 **Changes:**
 1. Added import for DiffViewer component

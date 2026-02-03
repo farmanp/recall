@@ -115,7 +115,7 @@
 
 ### Quick Start
 ```bash
-cd /Users/fpirzada/Documents/cc_mem_video_player/backend
+cd /Users/fpirzada/Documents/recall/backend
 
 # Run all tests
 npm test -- --run
@@ -141,26 +141,26 @@ open coverage/index.html
 ## 📁 Files Created
 
 ### Configuration
-- `/Users/fpirzada/Documents/cc_mem_video_player/backend/vitest.config.ts`
+- `/Users/fpirzada/Documents/recall/backend/vitest.config.ts`
 
 ### Test Files
-- `/Users/fpirzada/Documents/cc_mem_video_player/backend/src/__tests__/setup.ts`
-- `/Users/fpirzada/Documents/cc_mem_video_player/backend/src/__tests__/db/queries.test.ts`
-- `/Users/fpirzada/Documents/cc_mem_video_player/backend/src/__tests__/routes/sessions.test.ts`
-- `/Users/fpirzada/Documents/cc_mem_video_player/backend/src/__tests__/server.test.ts`
+- `/Users/fpirzada/Documents/recall/backend/src/__tests__/setup.ts`
+- `/Users/fpirzada/Documents/recall/backend/src/__tests__/db/queries.test.ts`
+- `/Users/fpirzada/Documents/recall/backend/src/__tests__/routes/sessions.test.ts`
+- `/Users/fpirzada/Documents/recall/backend/src/__tests__/server.test.ts`
 
 ### Documentation
-- `/Users/fpirzada/Documents/cc_mem_video_player/backend/TEST_SUITE_README.md`
-- `/Users/fpirzada/Documents/cc_mem_video_player/backend/TESTING_GUIDE.md`
-- `/Users/fpirzada/Documents/cc_mem_video_player/backend/TEST_SUITE_SUMMARY.md`
-- `/Users/fpirzada/Documents/cc_mem_video_player/backend/TEST_IMPLEMENTATION_CHECKLIST.md`
+- `/Users/fpirzada/Documents/recall/backend/TEST_SUITE_README.md`
+- `/Users/fpirzada/Documents/recall/backend/TESTING_GUIDE.md`
+- `/Users/fpirzada/Documents/recall/backend/TEST_SUITE_SUMMARY.md`
+- `/Users/fpirzada/Documents/recall/backend/TEST_IMPLEMENTATION_CHECKLIST.md`
 
 ### Helper Scripts
-- `/Users/fpirzada/Documents/cc_mem_video_player/backend/run-tests.sh`
-- `/Users/fpirzada/Documents/cc_mem_video_player/backend/verify-test-setup.sh`
+- `/Users/fpirzada/Documents/recall/backend/run-tests.sh`
+- `/Users/fpirzada/Documents/recall/backend/verify-test-setup.sh`
 
 ### Modified Files
-- `/Users/fpirzada/Documents/cc_mem_video_player/backend/package.json` (added test scripts)
+- `/Users/fpirzada/Documents/recall/backend/package.json` (added test scripts)
 
 ## 🔍 Test Coverage Breakdown
 

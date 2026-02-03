@@ -445,4 +445,4 @@ npm run import -- --help
 
 ## License
 
-Part of the cc_mem_video_player backend.
+Part of the Recall backend.

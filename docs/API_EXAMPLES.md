@@ -1,6 +1,6 @@
 # API Examples
 
-This document provides comprehensive examples for all API endpoints in the Claude Code Session Replay backend.
+This document provides comprehensive examples for all API endpoints in the Recall backend.
 
 ## Table of Contents
 

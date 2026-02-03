@@ -1,10 +1,10 @@
-Claude Code Session Replay - API Client Library
+Recall - API Client Library
 ==============================================
 
 CREATED FILES STRUCTURE
 =======================
 
-/Users/fpirzada/Documents/cc_mem_video_player/
+/Users/fpirzada/Documents/recall/
 │
 ├── shared/
 │   └── types.ts (2.8 KB)

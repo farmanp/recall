@@ -1,5 +1,5 @@
 /**
- * Shared types for Claude Code Session Replay
+ * Shared types for Recall
  * These types are used by both frontend and backend
  */
 

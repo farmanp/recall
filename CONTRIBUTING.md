@@ -1,6 +1,6 @@
-# Contributing to Claude Code Session Replay
+# Contributing to Recall
 
-Thank you for your interest in contributing to Claude Code Session Replay! This guide will help you get started with development.
+Thank you for your interest in contributing to Recall! This guide will help you get started with development.
 
 ## Table of Contents
 
@@ -31,7 +31,7 @@ Before you begin, ensure you have the following installed:
 1. **Clone the repository:**
    ```bash
    git clone <repository-url>
-   cd cc_mem_video_player
+   cd recall
    ```
 
 2. **Install root dependencies:**
@@ -62,7 +62,7 @@ Before you begin, ensure you have the following installed:
 ## Project Structure
 
 ```
-cc_mem_video_player/
+recall/
 ├── backend/                 # Express + TypeScript + SQLite API
 │   ├── src/
 │   │   ├── db/
