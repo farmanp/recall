@@ -1,0 +1,55 @@
+{
+  "sessionId": "389c2d7b-0883-44a7-a2d6-4b039337d0eb",
+  "timestamp": "2026-02-02T19:52:52.110Z",
+  "checks": [
+    {
+      "name": "Global ID Mapping",
+      "passed": true,
+      "details": {
+        "totalSessions": 127,
+        "matches": 127,
+        "mismatches": 0
+      }
+    },
+    {
+      "name": "Monotonic Timestamps",
+      "passed": true,
+      "details": {
+        "violations": 0,
+        "samples": []
+      }
+    },
+    {
+      "name": "Prompt-Before-Observation Order",
+      "passed": true,
+      "details": {
+        "violations": 0
+      }
+    },
+    {
+      "name": "No Duplicate Row IDs",
+      "passed": true,
+      "details": {
+        "duplicateCount": 0
+      }
+    },
+    {
+      "name": "NULL Prompt Number Analysis",
+      "passed": true,
+      "details": {
+        "totalObservations": 4919,
+        "nullCount": 0,
+        "nonNullCount": 4919,
+        "nullPercentage": "0.00"
+      }
+    }
+  ],
+  "failures": [],
+  "summary": {
+    "totalEvents": 902,
+    "prompts": 44,
+    "observations": 858,
+    "passed": 5,
+    "failed": 0
+  }
+}
