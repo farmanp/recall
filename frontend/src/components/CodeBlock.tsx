@@ -4,8 +4,9 @@
  * Syntax-highlighted code block with line numbers and scrolling support
  */
 
-import React from 'react';
+import React, { useRef, useMemo, useCallback } from 'react';
 import Prism from 'prismjs';
+import { useVirtualizer } from '@tanstack/react-virtual';
 
 // Import core Prism themes
 import 'prismjs/themes/prism-tomorrow.css';
@@ -171,29 +172,39 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({
     return div.innerHTML;
   };
 
-  // Safely highlight code with robust error handling
-  const { html: highlightedCode, useHighlighting } = React.useMemo(() => {
-    // If no grammar, use plain text
+  // Highlight cache
+  const highlightCache = useRef<Record<string, string>>({});
+
+  const highlightLine = useCallback((lineText: string): string => {
+    if (!lineText || lineText.trim() === '') return '\u00A0';
+
+    const cacheKey = `${prismLanguage}:${lineText}`;
+    if (highlightCache.current[cacheKey]) return highlightCache.current[cacheKey];
+
+    let result: string;
     if (!grammar) {
-      return { html: escapeHtml(code), useHighlighting: false };
+      result = escapeHtml(lineText);
+    } else {
+      try {
+        result = Prism.highlight(lineText, grammar, prismLanguage);
+      } catch (e) {
+        result = escapeHtml(lineText);
+      }
     }
 
-    // Known problematic languages - skip highlighting
-    const skipHighlighting = ['javascript', 'jsx', 'typescript', 'tsx'];
-    if (skipHighlighting.includes(prismLanguage)) {
-      return { html: escapeHtml(code), useHighlighting: false };
-    }
+    highlightCache.current[cacheKey] = result;
+    return result;
+  }, [grammar, prismLanguage]);
 
-    try {
-      // Attempt to highlight
-      const highlighted = Prism.highlight(code, grammar, prismLanguage);
-      return { html: highlighted, useHighlighting: true };
-    } catch (error) {
-      // If highlighting fails, fall back to plain text
-      console.warn(`Failed to highlight code for language ${prismLanguage}, using plain text`);
-      return { html: escapeHtml(code), useHighlighting: false };
-    }
-  }, [code, grammar, prismLanguage]);
+  const lines = useMemo(() => code.split('\n'), [code]);
+  const parentRef = useRef<HTMLDivElement>(null);
+
+  const virtualizer = useVirtualizer({
+    count: lines.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 24,
+    overscan: 10,
+  });
 
   return (
     <div className="code-block-wrapper rounded-lg overflow-hidden bg-gray-950 border border-gray-800">
@@ -205,27 +216,41 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({
       )}
 
       <div
-        className="overflow-auto"
+        ref={parentRef}
+        className="overflow-auto bg-gray-950 font-mono text-sm leading-relaxed"
         style={{ maxHeight }}
       >
-        <pre
-          className={showLineNumbers ? 'line-numbers' : ''}
-          style={{
-            margin: 0,
-            background: 'transparent',
-            fontSize: '0.875rem',
-            lineHeight: '1.5',
-          }}
+        <div
+          className="relative w-full"
+          style={{ height: `${virtualizer.getTotalSize()}px` }}
         >
-          <code
-            className={useHighlighting ? `language-${prismLanguage}` : 'language-plaintext'}
-            style={{
-              background: 'transparent',
-              textShadow: 'none',
-            }}
-            dangerouslySetInnerHTML={{ __html: highlightedCode }}
-          />
-        </pre>
+          {virtualizer.getVirtualItems().map((virtualRow) => (
+            <div
+              key={virtualRow.key}
+              data-index={virtualRow.index}
+              className="absolute top-0 left-0 w-full flex hover:bg-white/5 transition-colors group"
+              style={{
+                height: `${virtualRow.size}px`,
+                transform: `translateY(${virtualRow.start}px)`,
+              }}
+            >
+              {showLineNumbers && (
+                <div className="w-12 flex-shrink-0 text-right pr-4 text-gray-600 select-none border-r border-gray-800 bg-gray-900/30 font-mono text-xs py-1">
+                  {virtualRow.index + 1}
+                </div>
+              )}
+              <div className="flex-1 px-4 overflow-hidden py-1">
+                <pre style={{ margin: 0, background: 'transparent' }}>
+                  <code
+                    className={grammar ? `language-${prismLanguage}` : 'language-plaintext'}
+                    style={{ background: 'transparent', textShadow: 'none' }}
+                    dangerouslySetInnerHTML={{ __html: highlightLine(lines[virtualRow.index]) }}
+                  />
+                </pre>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

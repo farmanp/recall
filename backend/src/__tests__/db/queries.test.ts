@@ -316,7 +316,7 @@ describe('Database Queries', () => {
     it('should return observation by ID with parsed JSON', () => {
       const db = getDbInstance();
       const obsRow = db.prepare('SELECT id FROM observations WHERE sdk_session_id = ? LIMIT 1')
-        .get('sdk-session-1') as { id: number } | undefined;
+        .get('session-1') as { id: number } | undefined;
 
       if (obsRow) {
         const event = getEventById('observation', obsRow.id);

@@ -10,6 +10,11 @@
     "build:backend": "cd backend && npm install && npm run build",
     "build:frontend": "cd frontend && npm install && npm run build",
     "copy:frontend": "mkdir -p backend/public && cp -r frontend/dist/* backend/public/",
+    "lint": "npm run lint:backend && npm run lint:frontend",
+    "lint:backend": "cd backend && npm run lint",
+    "lint:frontend": "cd frontend && npm run lint",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "prepublishOnly": "npm run build",
     "start": "node bin/recall.js"
   },
@@ -47,6 +52,9 @@
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "open": "^10.0.0"
+  },
+  "devDependencies": {
+    "prettier": "^3.5.2"
   },
   "engines": {
     "node": ">=18.0.0"

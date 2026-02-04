@@ -4,6 +4,8 @@ import path from 'path';
 import sessionsRouter from './routes/sessions';
 import commentaryRouter from './routes/commentary';
 import importRouter from './routes/import';
+import { getDbInstance } from './db/connection';
+import { getTranscriptDbInstance } from './db/transcript-connection';
 
 /**
  * Create and configure Express application
@@ -40,19 +42,9 @@ export function createServer(): Application {
     next();
   });
 
-  // API Routes
-  app.use('/api/sessions', sessionsRouter);
-  app.use('/api/sessions', commentaryRouter);
-  app.use('/api/import', importRouter);
-  // Mount sessions router at /api for /api/agents endpoint
-  app.use('/api', sessionsRouter);
-
   // Health check with DB status
   app.get('/api/health', (_req: Request, res: Response) => {
     try {
-      const { getDbInstance } = require('./db/connection');
-      const { getTranscriptDbInstance } = require('./db/transcript-connection');
-
       const db = getDbInstance();
       const transcriptDb = getTranscriptDbInstance();
 
@@ -77,6 +69,13 @@ export function createServer(): Application {
       });
     }
   });
+
+  // API Routes
+  app.use('/api/sessions', sessionsRouter);
+  app.use('/api/sessions', commentaryRouter);
+  app.use('/api/import', importRouter);
+  // Mount sessions router at /api for /api/agents endpoint
+  app.use('/api', sessionsRouter);
 
   // Serve built frontend (for production)
   const publicDir = path.join(__dirname, '..', 'public');

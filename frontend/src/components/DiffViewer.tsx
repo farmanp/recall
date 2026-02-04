@@ -9,8 +9,24 @@
  * - Virtual scrolling for large files
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useCallback } from 'react';
 import * as Diff from 'diff';
+import Prism from 'prismjs';
+import { useVirtualizer } from '@tanstack/react-virtual';
+
+// Import Prism components (same as CodeBlock)
+import 'prismjs/themes/prism-tomorrow.css';
+import 'prismjs/components/prism-javascript';
+import 'prismjs/components/prism-typescript';
+import 'prismjs/components/prism-jsx';
+import 'prismjs/components/prism-tsx';
+import 'prismjs/components/prism-python';
+import 'prismjs/components/prism-bash';
+import 'prismjs/components/prism-json';
+import 'prismjs/components/prism-yaml';
+import 'prismjs/components/prism-markdown';
+import 'prismjs/components/prism-css';
+import 'prismjs/components/prism-sql';
 
 export interface DiffViewerProps {
   filePath: string;
@@ -41,6 +57,51 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [viewMode, setViewMode] = useState<'split' | 'unified'>('split');
+
+  // Syntax highlighting helper with cache
+  const highlightCache = useRef<Record<string, string>>({});
+
+  const highlightCode = useCallback((code: string, lang: string): string => {
+    if (!code || code.trim() === '') return '\u00A0';
+
+    // Check cache
+    const cacheKey = `${lang}:${code}`;
+    if (highlightCache.current[cacheKey]) return highlightCache.current[cacheKey];
+
+    // Normalize language name
+    const langMap: Record<string, string> = {
+      ts: 'typescript',
+      tsx: 'tsx',
+      js: 'javascript',
+      jsx: 'jsx',
+      py: 'python',
+      md: 'markdown',
+      yml: 'yaml',
+      yaml: 'yaml',
+      html: 'markup',
+      css: 'css'
+    };
+    const prismLang = langMap[lang] || lang || 'plaintext';
+    const grammar = Prism.languages[prismLang];
+
+    let result: string;
+    if (!grammar) {
+      const div = document.createElement('div');
+      div.textContent = code;
+      result = div.innerHTML;
+    } else {
+      try {
+        result = Prism.highlight(code, grammar, prismLang);
+      } catch (e) {
+        const div = document.createElement('div');
+        div.textContent = code;
+        result = div.innerHTML;
+      }
+    }
+
+    highlightCache.current[cacheKey] = result;
+    return result;
+  }, []);
 
   // Compute the diff blocks
   const diffBlocks = useMemo(() => {
@@ -155,133 +216,152 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
     return iconMap[ext || ''] || '📄';
   };
 
+  const parentRef = useRef<HTMLDivElement>(null);
+
+  const splitVirtualizer = useVirtualizer({
+    count: Math.max(leftLines.length, rightLines.length),
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 24, // Estimate height of a line
+    overscan: 10,
+  });
+
   const renderSplitView = () => {
-    const maxLines = Math.max(leftLines.length, rightLines.length);
+    const virtualItems = splitVirtualizer.getVirtualItems();
 
     return (
-      <div className="flex border border-gray-700 rounded-lg overflow-hidden">
-        {/* Left side (old content) */}
-        {isEdit && oldContent && (
-          <div className="flex-1 border-r border-gray-700">
-            <div className="bg-gray-800 px-4 py-2 text-xs font-semibold text-gray-400 border-b border-gray-700">
-              Before
-            </div>
-            <div className="bg-gray-950">
-              {leftLines.map((line, index) => (
-                <div
-                  key={`left-${index}`}
-                  className={`flex ${
-                    line.type === 'removed'
-                      ? 'bg-red-900/30'
-                      : line.type === 'unchanged' && line.content
-                      ? 'bg-gray-900'
-                      : 'bg-gray-950'
-                  }`}
-                >
-                  <div className="w-12 flex-shrink-0 text-right pr-3 py-1 text-xs text-gray-500 select-none border-r border-gray-800">
-                    {line.oldLineNumber || ''}
+      <div
+        ref={parentRef}
+        className="max-h-[600px] overflow-auto border border-gray-700 rounded-lg bg-gray-950"
+      >
+        <div
+          className="relative w-full"
+          style={{ height: `${splitVirtualizer.getTotalSize()}px` }}
+        >
+          {virtualItems.map((virtualRow) => {
+            const left = leftLines[virtualRow.index];
+            const right = rightLines[virtualRow.index];
+
+            return (
+              <div
+                key={virtualRow.key}
+                data-index={virtualRow.index}
+                className="absolute top-0 left-0 w-full flex"
+                style={{
+                  height: `${virtualRow.size}px`,
+                  transform: `translateY(${virtualRow.start}px)`,
+                }}
+              >
+                {/* Left side */}
+                {isEdit && oldContent && (
+                  <div className={`flex-1 flex border-r border-gray-800 ${left?.type === 'removed' ? 'bg-red-900/30' :
+                      left?.type === 'unchanged' && left?.content ? 'bg-gray-900/50' : ''
+                    }`}>
+                    <div className="w-12 flex-shrink-0 text-right pr-3 py-1 text-[10px] font-mono text-gray-600 select-none border-r border-gray-800 bg-gray-900/20">
+                      {left?.oldLineNumber || ''}
+                    </div>
+                    <div className="flex-1 px-3 py-1 overflow-hidden">
+                      <pre className="text-xs font-mono text-gray-300 whitespace-pre">
+                        <code dangerouslySetInnerHTML={{ __html: left?.content ? highlightCode(left.content, language) : '\u00A0' }} />
+                      </pre>
+                    </div>
                   </div>
-                  <div className="flex-1 px-3 py-1">
-                    <pre className="text-xs font-mono text-gray-300 whitespace-pre-wrap break-all">
-                      {line.content || '\u00A0'}
+                )}
+
+                {/* Right side */}
+                <div className={`flex-1 flex ${right?.type === 'added' ? 'bg-green-900/30' :
+                    right?.type === 'unchanged' && right?.content ? 'bg-gray-900/50' : ''
+                  }`}>
+                  <div className="w-12 flex-shrink-0 text-right pr-3 py-1 text-[10px] font-mono text-gray-600 select-none border-r border-gray-800 bg-gray-900/20">
+                    {right?.newLineNumber || ''}
+                  </div>
+                  <div className="flex-1 px-3 py-1 overflow-hidden">
+                    <pre className="text-xs font-mono text-gray-300 whitespace-pre">
+                      <code dangerouslySetInnerHTML={{ __html: right?.content ? highlightCode(right.content, language) : '\u00A0' }} />
                     </pre>
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Right side (new content) */}
-        <div className="flex-1">
-          <div className="bg-gray-800 px-4 py-2 text-xs font-semibold text-gray-400 border-b border-gray-700">
-            {isEdit && oldContent ? 'After' : 'New File'}
-          </div>
-          <div className="bg-gray-950">
-            {rightLines.map((line, index) => (
-              <div
-                key={`right-${index}`}
-                className={`flex ${
-                  line.type === 'added'
-                    ? 'bg-green-900/30'
-                    : line.type === 'unchanged' && line.content
-                    ? 'bg-gray-900'
-                    : 'bg-gray-950'
-                }`}
-              >
-                <div className="w-12 flex-shrink-0 text-right pr-3 py-1 text-xs text-gray-500 select-none border-r border-gray-800">
-                  {line.newLineNumber || ''}
-                </div>
-                <div className="flex-1 px-3 py-1">
-                  <pre className="text-xs font-mono text-gray-300 whitespace-pre-wrap break-all">
-                    {line.content || '\u00A0'}
-                  </pre>
-                </div>
               </div>
-            ))}
-          </div>
+            );
+          })}
         </div>
       </div>
     );
   };
 
-  const renderUnifiedView = () => {
-    const allLines: Array<DiffLine & { side: 'left' | 'right' | 'both' }> = [];
-
-    // Merge lines for unified view
+  const allLines = useMemo(() => {
+    const lines: Array<DiffLine & { side: 'left' | 'right' | 'both' }> = [];
     const maxLines = Math.max(leftLines.length, rightLines.length);
     for (let i = 0; i < maxLines; i++) {
       const left = leftLines[i];
       const right = rightLines[i];
 
       if (left && right && left.type === 'unchanged' && right.type === 'unchanged') {
-        allLines.push({ ...right, side: 'both' });
+        lines.push({ ...right, side: 'both' });
       } else {
         if (left && left.type === 'removed') {
-          allLines.push({ ...left, side: 'left' });
+          lines.push({ ...left, side: 'left' });
         }
         if (right && right.type === 'added') {
-          allLines.push({ ...right, side: 'right' });
+          lines.push({ ...right, side: 'right' });
         }
       }
     }
+    return lines;
+  }, [leftLines, rightLines]);
+
+  const unifiedVirtualizer = useVirtualizer({
+    count: allLines.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 24,
+    overscan: 10,
+  });
+
+  const renderUnifiedView = () => {
+    const virtualItems = unifiedVirtualizer.getVirtualItems();
 
     return (
-      <div className="border border-gray-700 rounded-lg overflow-hidden">
-        <div className="bg-gray-800 px-4 py-2 text-xs font-semibold text-gray-400 border-b border-gray-700">
-          Unified Diff
-        </div>
-        <div className="bg-gray-950">
-          {allLines.map((line, index) => (
-            <div
-              key={`unified-${index}`}
-              className={`flex ${
-                line.type === 'added'
-                  ? 'bg-green-900/30'
-                  : line.type === 'removed'
-                  ? 'bg-red-900/30'
-                  : 'bg-gray-900'
-              }`}
-            >
-              <div className="w-12 flex-shrink-0 text-right pr-3 py-1 text-xs text-gray-500 select-none border-r border-gray-800">
-                {line.oldLineNumber || line.newLineNumber || ''}
+      <div
+        ref={parentRef}
+        className="max-h-[600px] overflow-auto border border-gray-700 rounded-lg bg-gray-950"
+      >
+        <div
+          className="relative w-full"
+          style={{ height: `${unifiedVirtualizer.getTotalSize()}px` }}
+        >
+          {virtualItems.map((virtualRow) => {
+            const line = allLines[virtualRow.index];
+            return (
+              <div
+                key={virtualRow.key}
+                data-index={virtualRow.index}
+                className={`absolute top-0 left-0 w-full flex ${line.type === 'added' ? 'bg-green-900/30' :
+                    line.type === 'removed' ? 'bg-red-900/30' : 'bg-gray-900/50'
+                  }`}
+                style={{
+                  height: `${virtualRow.size}px`,
+                  transform: `translateY(${virtualRow.start}px)`,
+                }}
+              >
+                <div className="w-12 flex-shrink-0 text-right pr-3 py-1 text-[10px] font-mono text-gray-600 select-none border-r border-gray-800 bg-gray-900/20">
+                  {line.oldLineNumber || line.newLineNumber || ''}
+                </div>
+                <div className="w-6 flex-shrink-0 text-center py-1 text-xs font-bold border-r border-gray-800">
+                  {line.type === 'added' ? (
+                    <span className="text-green-400">+</span>
+                  ) : line.type === 'removed' ? (
+                    <span className="text-red-400">-</span>
+                  ) : (
+                    ''
+                  )}
+                </div>
+                <div className="flex-1 px-3 py-1 overflow-hidden">
+                  <pre className="text-xs font-mono text-gray-300 whitespace-pre">
+                    <code dangerouslySetInnerHTML={{ __html: highlightCode(line.content, language) }} />
+                  </pre>
+                </div>
               </div>
-              <div className="w-6 flex-shrink-0 text-center py-1 text-xs font-bold border-r border-gray-800">
-                {line.type === 'added' ? (
-                  <span className="text-green-400">+</span>
-                ) : line.type === 'removed' ? (
-                  <span className="text-red-400">-</span>
-                ) : (
-                  ''
-                )}
-              </div>
-              <div className="flex-1 px-3 py-1">
-                <pre className="text-xs font-mono text-gray-300 whitespace-pre-wrap break-all">
-                  {line.content || '\u00A0'}
-                </pre>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     );
@@ -331,21 +411,19 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
           <div className="flex items-center gap-2">
             <button
               onClick={() => setViewMode('split')}
-              className={`px-3 py-1 text-xs rounded transition-colors ${
-                viewMode === 'split'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-              }`}
+              className={`px-3 py-1 text-xs rounded transition-colors ${viewMode === 'split'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                }`}
             >
               Split
             </button>
             <button
               onClick={() => setViewMode('unified')}
-              className={`px-3 py-1 text-xs rounded transition-colors ${
-                viewMode === 'unified'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-              }`}
+              className={`px-3 py-1 text-xs rounded transition-colors ${viewMode === 'unified'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                }`}
             >
               Unified
             </button>
@@ -355,7 +433,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
 
       {/* Diff Content */}
       {!isCollapsed && (
-        <div className="max-h-[600px] overflow-auto">
+        <div className="relative">
           {viewMode === 'split' ? renderSplitView() : renderUnifiedView()}
         </div>
       )}

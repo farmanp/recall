@@ -69,7 +69,16 @@ export const HelpPanel: React.FC<HelpPanelProps> = ({ onClose }) => {
         { key: 'c', description: 'Toggle compression (skip gaps)' },
         { key: 's', description: 'Toggle statistics panel' },
         { key: '?', description: 'Toggle this help panel' },
-        { key: 'Esc', description: 'Close panels' },
+        { key: 'Esc', description: 'Close panels / Go back to list' },
+      ],
+    },
+    {
+      title: 'Jump Patterns',
+      shortcuts: [
+        { key: 'u', description: 'Next User frame' },
+        { key: 't', description: 'Next Tool frame' },
+        { key: 'r', description: 'Next Response frame' },
+        { key: 'm', description: 'Next Thinking frame' },
       ],
     },
   ];

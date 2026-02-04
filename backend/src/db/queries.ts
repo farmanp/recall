@@ -261,7 +261,7 @@ export function getSessionEvents(
   }
 
   // Build afterTs filter
-  const afterTsFilter = afterTs ? ' AND combined.ts > ?' : '';
+  const afterTsFilter = afterTs ? ' WHERE combined.ts > ?' : '';
   const afterTsParam = afterTs ? [afterTs] : [];
 
   // Get total count first

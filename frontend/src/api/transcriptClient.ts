@@ -11,6 +11,9 @@ import type {
   SessionFramesQuery,
   PlaybackFrame,
   CommentaryResponse,
+  SearchResult,
+  SearchGlobalRequest,
+  SearchGlobalResponse,
 } from '../types/transcript';
 
 const API_BASE_URL = '/api';
@@ -120,6 +123,29 @@ export async function fetchSessionCommentary(
 
   if (!response.ok) {
     throw new Error(`Failed to fetch commentary for session ${sessionId}: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+/**
+ * Global content search
+ */
+export async function searchGlobal(
+  query: SearchGlobalRequest
+): Promise<SearchGlobalResponse> {
+  const params = new URLSearchParams();
+  params.append('q', query.query);
+  if (query.offset !== undefined) params.append('offset', query.offset.toString());
+  if (query.limit !== undefined) params.append('limit', query.limit.toString());
+  if (query.agent) params.append('agent', query.agent);
+  if (query.project) params.append('project', query.project);
+
+  const url = `${API_BASE_URL}/sessions/search?${params.toString()}`;
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error(`Search failed: ${response.statusText}`);
   }
 
   return response.json();

@@ -3,7 +3,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import type { SessionListQuery, SessionFramesQuery } from '../types/transcript';
+import type { SessionListQuery, SessionFramesQuery, SearchGlobalRequest } from '../types/transcript';
 import * as api from '../api/transcriptClient';
 
 /**
@@ -62,5 +62,17 @@ export function useSessionCommentary(sessionId: string | undefined) {
     enabled: !!sessionId,
     // Don't throw on error - commentary is optional
     retry: false,
+  });
+}
+
+/**
+ * Global content search
+ */
+export function useGlobalSearch(query: SearchGlobalRequest) {
+  return useQuery({
+    queryKey: ['global-search', query],
+    queryFn: () => api.searchGlobal(query),
+    enabled: !!query.query && query.query.length > 2,
+    placeholderData: (previousData) => previousData,
   });
 }

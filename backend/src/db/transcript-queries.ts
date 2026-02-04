@@ -13,6 +13,9 @@ import type {
   PlaybackFrame,
   ToolExecution,
   FileDiff,
+  SearchGlobalRequest,
+  SearchGlobalResponse,
+  SearchResult,
 } from '../types/transcript';
 
 /**
@@ -244,6 +247,135 @@ export function getTranscriptSessions(query: TranscriptSessionListQuery): {
   }));
 
   return { sessions, total };
+}
+
+/**
+ * Perform a global search across all transcript content
+ */
+export function searchGlobalFrames(req: SearchGlobalRequest): SearchGlobalResponse {
+  const db = getTranscriptDbInstance();
+  const { query, limit = 50, offset = 0, agent, project } = req;
+  const likeQuery = `%${query}%`;
+
+  const whereClauses: string[] = [];
+  const params: any = { likeQuery };
+
+  const searchClause = `(
+    f.user_message_text LIKE @likeQuery OR 
+    f.thinking_text LIKE @likeQuery OR 
+    f.response_text LIKE @likeQuery OR 
+    t.output_content LIKE @likeQuery OR 
+    d.new_content LIKE @likeQuery
+  )`;
+  whereClauses.push(searchClause);
+
+  if (agent) {
+    whereClauses.push('s.agent_type = @agent');
+    params.agent = agent;
+  }
+  if (project) {
+    whereClauses.push('s.project = @project');
+    params.project = project;
+  }
+
+  const whereClause = 'WHERE ' + whereClauses.join(' AND ');
+
+  // Count total matches
+  const countQuery = `
+    SELECT COUNT(DISTINCT f.id) as total
+    FROM playback_frames f
+    JOIN session_metadata s ON f.session_id = s.session_id
+    LEFT JOIN tool_executions t ON t.frame_id = f.id
+    LEFT JOIN file_diffs d ON d.tool_execution_id = t.id
+    ${whereClause}
+  `;
+  const countResult = db.prepare(countQuery).get(params) as { total: number };
+
+  // Get results with snippets
+  const resultsQuery = `
+    SELECT 
+      f.id as frameId,
+      f.session_id as sessionId,
+      f.frame_type as frameType,
+      f.timestamp_ms as timestamp,
+      f.user_message_text,
+      f.thinking_text,
+      f.response_text,
+      f.agent_type as agent,
+      s.slug,
+      s.project,
+      t.output_content,
+      d.new_content as file_content
+    FROM playback_frames f
+    JOIN session_metadata s ON f.session_id = s.session_id
+    LEFT JOIN tool_executions t ON t.frame_id = f.id
+    LEFT JOIN file_diffs d ON d.tool_execution_id = t.id
+    ${whereClause}
+    GROUP BY f.id
+    ORDER BY f.timestamp_ms DESC
+    LIMIT @limit OFFSET @offset
+  `;
+
+  const rows = db.prepare(resultsQuery).all({ ...params, limit, offset }) as any[];
+
+  const results: SearchResult[] = rows.map(row => {
+    // Utility to create a snippet
+    const createSnippet = (text: string | null): string | null => {
+      if (!text) return null;
+      const index = text.toLowerCase().indexOf(query.toLowerCase());
+      if (index === -1) return text.substring(0, 100);
+      const start = Math.max(0, index - 40);
+      const end = Math.min(text.length, index + query.length + 60);
+      let snippet = text.substring(start, end);
+      if (start > 0) snippet = '...' + snippet;
+      if (end < text.length) snippet = snippet + '...';
+      return snippet;
+    };
+
+    let snippet = '';
+    let matchType: SearchResult['matchType'] = 'user_message';
+
+    if (row.user_message_text?.toLowerCase().includes(query.toLowerCase())) {
+      snippet = createSnippet(row.user_message_text) || '';
+      matchType = 'user_message';
+    } else if (row.response_text?.toLowerCase().includes(query.toLowerCase())) {
+      snippet = createSnippet(row.response_text) || '';
+      matchType = 'response';
+    } else if (row.thinking_text?.toLowerCase().includes(query.toLowerCase())) {
+      snippet = createSnippet(row.thinking_text) || '';
+      matchType = 'thinking';
+    } else if (row.output_content?.toLowerCase().includes(query.toLowerCase())) {
+      snippet = createSnippet(row.output_content) || '';
+      matchType = 'tool_output';
+    } else if (row.file_content?.toLowerCase().includes(query.toLowerCase())) {
+      snippet = createSnippet(row.file_content) || '';
+      matchType = 'file_change';
+    } else {
+      // Fallback
+      snippet = row.user_message_text || row.response_text || row.thinking_text || '';
+      if (snippet.length > 100) snippet = snippet.substring(0, 100) + '...';
+    }
+
+    return {
+      sessionId: row.sessionId,
+      slug: row.slug,
+      project: row.project,
+      frameId: row.frameId,
+      frameType: row.frameType,
+      timestamp: row.timestamp,
+      snippet,
+      matchType,
+      agent: row.agent as any
+    };
+  });
+
+  return {
+    results,
+    total: countResult.total,
+    query,
+    limit,
+    offset
+  };
 }
 
 /**

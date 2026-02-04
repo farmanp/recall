@@ -8,35 +8,23 @@ import path from 'path';
 import fs from 'fs';
 import { beforeAll, afterAll } from 'vitest';
 
-// Use a test database
-const TEST_DB_PATH = path.join(__dirname, 'test-claude-mem.db');
+const TEST_HOME = path.join(__dirname, `.vitest-${process.pid}`);
+const TEST_MEM_DIR = path.join(TEST_HOME, '.claude-mem');
+const TEST_DB_PATH = path.join(TEST_MEM_DIR, 'claude-mem.db');
 
 // Override the DB path for tests
-process.env.HOME = path.join(__dirname);
+process.env.HOME = TEST_HOME;
 
 /**
  * Create a test database with sample data
  */
 export function createTestDatabase(): Database.Database {
-  // Remove existing test DB
-  if (fs.existsSync(TEST_DB_PATH)) {
-    fs.unlinkSync(TEST_DB_PATH);
+  if (fs.existsSync(TEST_MEM_DIR)) {
+    fs.rmSync(TEST_MEM_DIR, { recursive: true, force: true });
   }
+  fs.mkdirSync(TEST_MEM_DIR, { recursive: true });
 
-  // Create test database directory
-  const testMemDir = path.join(__dirname, '.claude-mem');
-  if (!fs.existsSync(testMemDir)) {
-    fs.mkdirSync(testMemDir, { recursive: true });
-  }
-
-  const testDbPath = path.join(testMemDir, 'claude-mem.db');
-
-  // Remove existing test DB in .claude-mem
-  if (fs.existsSync(testDbPath)) {
-    fs.unlinkSync(testDbPath);
-  }
-
-  const db = new Database(testDbPath);
+  const db = new Database(TEST_DB_PATH);
 
   // Create schema
   db.exec(`
@@ -98,7 +86,7 @@ export function createTestDatabase(): Database.Database {
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     'session-1',
-    'sdk-session-1',
+    'session-1',
     'test-project',
     'Test initial prompt',
     nowISO,
@@ -117,7 +105,7 @@ export function createTestDatabase(): Database.Database {
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     'session-2',
-    'sdk-session-2',
+    'session-2',
     'another-project',
     'Another test prompt',
     new Date(now - 3600000).toISOString(),
@@ -163,7 +151,7 @@ export function createTestDatabase(): Database.Database {
       prompt_number, created_at, created_at_epoch, discovery_tokens
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
-    'sdk-session-1',
+    'session-1',
     'test-project',
     'feature',
     'Test Feature',
@@ -187,7 +175,7 @@ export function createTestDatabase(): Database.Database {
       prompt_number, created_at, created_at_epoch, discovery_tokens
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
-    'sdk-session-1',
+    'session-1',
     'test-project',
     'decision',
     'Test Decision',
@@ -218,14 +206,7 @@ beforeAll(() => {
  * Global teardown - cleanup
  */
 afterAll(() => {
-  const testMemDir = path.join(__dirname, '.claude-mem');
-  const testDbPath = path.join(testMemDir, 'claude-mem.db');
-
-  if (fs.existsSync(testDbPath)) {
-    fs.unlinkSync(testDbPath);
-  }
-
-  if (fs.existsSync(testMemDir)) {
-    fs.rmdirSync(testMemDir);
+  if (fs.existsSync(TEST_HOME)) {
+    fs.rmSync(TEST_HOME, { recursive: true, force: true });
   }
 });

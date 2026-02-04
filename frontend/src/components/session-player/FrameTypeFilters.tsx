@@ -17,6 +17,7 @@ interface FrameTypeFiltersProps {
   searchQuery?: string;
   onSearchChange?: (query: string) => void;
   searchMatchCount?: number;
+  currentMatchRank?: number; // 0-indexed rank of current match
   onNextMatch?: () => void;
   onPrevMatch?: () => void;
 }
@@ -29,6 +30,7 @@ export const FrameTypeFilters: React.FC<FrameTypeFiltersProps> = ({
   searchQuery = '',
   onSearchChange,
   searchMatchCount = 0,
+  currentMatchRank = -1,
   onNextMatch,
   onPrevMatch,
 }) => {
@@ -108,26 +110,34 @@ export const FrameTypeFilters: React.FC<FrameTypeFiltersProps> = ({
               </div>
               {searchQuery && (
                 <>
-                  <span className="text-sm text-gray-400 whitespace-nowrap">
-                    {searchMatchCount} {searchMatchCount === 1 ? 'match' : 'matches'}
+                  <span className="text-sm text-gray-400 whitespace-nowrap min-w-[80px] text-center">
+                    {searchMatchCount > 0 ? (
+                      <>
+                        <span className="text-white font-bold">{currentMatchRank + 1}</span>
+                        <span className="mx-1">/</span>
+                        <span>{searchMatchCount}</span>
+                      </>
+                    ) : (
+                      '0 matches'
+                    )}
                   </span>
                   {searchMatchCount > 0 && (
-                    <>
+                    <div className="flex bg-gray-700 rounded overflow-hidden border border-gray-600">
                       <button
                         onClick={onPrevMatch}
-                        className="px-2 py-1 bg-gray-700 hover:bg-gray-600 rounded text-sm"
+                        className="px-3 py-1 hover:bg-gray-600 transition-colors border-r border-gray-600"
                         title="Previous match (p)"
                       >
                         ↑
                       </button>
                       <button
                         onClick={onNextMatch}
-                        className="px-2 py-1 bg-gray-700 hover:bg-gray-600 rounded text-sm"
+                        className="px-3 py-1 hover:bg-gray-600 transition-colors"
                         title="Next match (n)"
                       >
                         ↓
                       </button>
-                    </>
+                    </div>
                   )}
                 </>
               )}
@@ -159,11 +169,10 @@ export const FrameTypeFilters: React.FC<FrameTypeFiltersProps> = ({
             return (
               <label
                 key={type}
-                className={`flex items-center gap-2 px-3 py-2 rounded border transition-all cursor-pointer ${
-                  isActive
-                    ? 'bg-gray-700 border-gray-600'
-                    : 'bg-gray-900 border-gray-800 opacity-50'
-                }`}
+                className={`flex items-center gap-2 px-3 py-2 rounded border transition-all cursor-pointer ${isActive
+                  ? 'bg-gray-700 border-gray-600'
+                  : 'bg-gray-900 border-gray-800 opacity-50'
+                  }`}
               >
                 <input
                   type="checkbox"

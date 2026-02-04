@@ -1,0 +1,10 @@
+node_modules
+dist
+coverage
+backend/coverage
+frontend/coverage
+frontend/dist
+backend/public
+package-lock.json
+backend/package-lock.json
+frontend/package-lock.json

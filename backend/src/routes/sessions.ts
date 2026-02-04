@@ -6,7 +6,9 @@ import { SessionTimeline, AgentType } from '../types/transcript';
 import {
   getTranscriptSessions,
   getTranscriptFrames,
+  searchGlobalFrames,
 } from '../db/transcript-queries';
+import { SearchGlobalRequest } from '../types/transcript';
 
 const router = Router();
 
@@ -159,6 +161,42 @@ router.get('/', async (req: Request, res: Response) => {
       error: 'Failed to fetch sessions',
       message: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : undefined
+    });
+  }
+});
+
+/**
+ * GET /api/sessions/search
+ * Global content search across all sessions
+ */
+router.get('/search', async (req: Request, res: Response) => {
+  try {
+    const query = getStringParam(req.query.q);
+    if (!query) {
+      res.status(400).json({ error: 'Search query "q" is required' });
+      return;
+    }
+
+    const limitStr = getStringParam(req.query.limit);
+    const offsetStr = getStringParam(req.query.offset);
+    const agent = getStringParam(req.query.agent) as any;
+    const project = getStringParam(req.query.project);
+
+    const searchReq: SearchGlobalRequest = {
+      query,
+      limit: limitStr ? parseInt(limitStr, 10) : 50,
+      offset: offsetStr ? parseInt(offsetStr, 10) : 0,
+      agent,
+      project
+    };
+
+    const results = searchGlobalFrames(searchReq);
+    res.json(results);
+  } catch (error) {
+    console.error('Error performing global search:', error);
+    res.status(500).json({
+      error: 'Failed to perform search',
+      message: error instanceof Error ? error.message : 'Unknown error'
     });
   }
 });

@@ -174,3 +174,34 @@ export interface CommentaryResponse {
   total: number;
   sessionId: string;
 }
+
+/**
+ * Global search result
+ */
+export interface SearchResult {
+  sessionId: string;
+  slug: string;
+  project: string;
+  frameId: string;
+  frameType: FrameType;
+  timestamp: number;
+  snippet: string;
+  matchType: 'user_message' | 'thinking' | 'response' | 'tool_output' | 'file_change';
+  agent?: AgentType;
+}
+
+export interface SearchGlobalRequest {
+  query: string;
+  limit?: number;
+  offset?: number;
+  agent?: AgentType;
+  project?: string;
+}
+
+export interface SearchGlobalResponse {
+  results: SearchResult[];
+  total: number;
+  query: string;
+  limit: number;
+  offset: number;
+}

@@ -4,9 +4,10 @@
  * Interactive timeline with click-to-seek, hover preview, and frame type markers
  */
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import type { PlaybackFrame, CommentaryData } from '../../types/transcript';
 import { CommentaryTimeline } from '../CommentaryBubble';
+import { Hash } from 'lucide-react';
 
 interface TimelineScrubberProps {
   frames: PlaybackFrame[];
@@ -96,27 +97,40 @@ export const TimelineScrubber: React.FC<TimelineScrubberProps> = ({
   };
 
   return (
-    <div className="bg-gray-800 border-t border-gray-700 px-6 py-2">
-      <div className="max-w-4xl mx-auto">
-        {/* Header: Frame Counter + Duration */}
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-xs text-gray-400">
-            Frame {currentFrameIndex + 1} / {frames.length}
-          </span>
-          <span className="text-xs text-gray-400">
-            {formatTimestamp(currentTimestampMs)} / {formatTimestamp(totalDurationMs)}
-          </span>
+    <div className="bg-gray-900/40 backdrop-blur-xl border-t border-white/5 px-6 py-4">
+      <div className="max-w-6xl mx-auto">
+        <div className="flex items-center justify-between mb-3 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">
+          <div className="flex items-center gap-4">
+            <span className="text-blue-400">{formatTimestamp(currentTimestampMs)}</span>
+            <span className="text-gray-700">/</span>
+            <span>{formatTimestamp(totalDurationMs)}</span>
+          </div>
+          <div className="flex items-center gap-1.5 bg-gray-800/50 px-2 py-1 rounded border border-white/5">
+            <Hash className="w-3 h-3" />
+            <span>Frame {currentFrameIndex + 1} of {frames.length}</span>
+          </div>
         </div>
 
         {/* Timeline Container */}
-        <div className="relative">
+        <div className="relative group">
           {/* Timeline Track */}
           <div
             ref={timelineRef}
-            className="relative h-6 bg-gray-700 rounded-full overflow-visible cursor-pointer"
+            role="slider"
+            aria-label="Playback timeline"
+            aria-valuemin={0}
+            aria-valuemax={frames.length - 1}
+            aria-valuenow={currentFrameIndex}
+            aria-valuetext={`Frame ${currentFrameIndex + 1} of ${frames.length}`}
+            tabIndex={0}
+            className="relative h-2 bg-gray-800/80 rounded-full cursor-pointer overflow-hidden backdrop-blur-sm border border-white/5"
             onClick={handleTimelineClick}
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowRight') onSeek(Math.min(frames.length - 1, currentFrameIndex + 1));
+              if (e.key === 'ArrowLeft') onSeek(Math.max(0, currentFrameIndex - 1));
+            }}
           >
             {/* Progress Fill */}
             <div
@@ -126,23 +140,23 @@ export const TimelineScrubber: React.FC<TimelineScrubberProps> = ({
 
             {/* Frame Type Markers */}
             <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
-              {frames
-                .filter((f) => activeFrameTypes.has(f.type))
+              {useMemo(() => frames
                 .map((frame, idx) => {
+                  if (!activeFrameTypes.has(frame.type)) return null;
                   const position = (idx / frames.length) * 100;
                   const color = frameTypeColorMap[frame.type] || 'bg-gray-500';
 
                   return (
                     <div
                       key={frame.id}
-                      className={`absolute w-0.5 h-8 ${color} opacity-70`}
+                      className={`absolute w-0.5 h-8 ${color} opacity-40`}
                       style={{
                         left: `${position}%`,
                         top: '-4px',
                       }}
                     />
                   );
-                })}
+                }), [frames, activeFrameTypes])}
             </div>
 
             {/* Current Position Handle */}
@@ -160,7 +174,7 @@ export const TimelineScrubber: React.FC<TimelineScrubberProps> = ({
                 commentary={commentary}
                 totalFrames={frames.length}
                 frames={frames}
-                onBubbleClick={() => {}}
+                onBubbleClick={() => { }}
               />
             )}
           </div>
@@ -175,11 +189,18 @@ export const TimelineScrubber: React.FC<TimelineScrubberProps> = ({
                 transform: 'translateX(-50%)',
               }}
             >
-              <div className="text-white">
+              <div className="text-white font-bold mb-1 border-b border-gray-700 pb-1">
                 Frame {hoverInfo.frameIndex + 1}
               </div>
-              <div className="text-gray-400">
-                {frameTypeLabels[frames[hoverInfo.frameIndex]?.type] || 'Unknown'}
+              <div className="flex items-center gap-1.5 mb-2 truncate">
+                <span className="text-lg">{frameTypeLabels[frames[hoverInfo.frameIndex]?.type]?.split(' ')[0] || '❓'}</span>
+                <span className="text-gray-300 font-medium">{frameTypeLabels[frames[hoverInfo.frameIndex]?.type]?.split(' ')[1] || 'Unknown'}</span>
+              </div>
+              <div className="text-[10px] text-gray-400 bg-gray-950/50 p-1.5 rounded leading-tight max-w-[200px] line-clamp-3 italic">
+                {frames[hoverInfo.frameIndex]?.userMessage?.text ||
+                  frames[hoverInfo.frameIndex]?.claudeResponse?.text ||
+                  frames[hoverInfo.frameIndex]?.thinking?.text ||
+                  (frames[hoverInfo.frameIndex]?.toolExecution ? `Tool: ${frames[hoverInfo.frameIndex]?.toolExecution?.tool}` : 'No preview available')}
               </div>
             </div>
           )}

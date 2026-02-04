@@ -293,7 +293,8 @@ if (report.summary.failed > 0) {
 }
 
 // Write machine-readable report
-const reportPath = path.join(__dirname, 'validation_report.json');
+const reportPath = process.env.VALIDATION_REPORT_PATH ||
+  path.join(__dirname, 'validation_report.json');
 fs.writeFileSync(reportPath, JSON.stringify(report, null, 2));
 console.log(`\n📄 Report written to: ${reportPath}`);
 
