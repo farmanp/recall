@@ -54,6 +54,8 @@ function getDirectoryLabel(fullPath: string): string {
 
 export const ClaudeMdPanel: React.FC<ClaudeMdPanelProps> = ({ claudeMdFiles, onClose }) => {
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
+  const [fileContents, setFileContents] = useState<Record<string, string | null>>({});
+  const [loadingPaths, setLoadingPaths] = useState<Set<string>>(new Set());
 
   // Close on Escape key
   useEffect(() => {
@@ -68,8 +70,47 @@ export const ClaudeMdPanel: React.FC<ClaudeMdPanelProps> = ({ claudeMdFiles, onC
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onClose]);
 
+  const fetchContent = async (filePath: string) => {
+    if (fileContents[filePath] !== undefined || loadingPaths.has(filePath)) {
+      return;
+    }
+
+    setLoadingPaths((prev) => new Set(prev).add(filePath));
+
+    try {
+      const response = await fetch(
+        `http://localhost:3001/api/sessions/claudemd/content?path=${encodeURIComponent(filePath)}`
+      );
+      const data = await response.json();
+
+      if (data.exists && data.content) {
+        setFileContents((prev) => ({ ...prev, [filePath]: data.content }));
+      } else {
+        setFileContents((prev) => ({ ...prev, [filePath]: null }));
+      }
+    } catch (error) {
+      console.error('Failed to fetch CLAUDE.md content:', error);
+      setFileContents((prev) => ({ ...prev, [filePath]: null }));
+    } finally {
+      setLoadingPaths((prev) => {
+        const next = new Set(prev);
+        next.delete(filePath);
+        return next;
+      });
+    }
+  };
+
   const toggleExpand = (index: number) => {
-    setExpandedIndex(expandedIndex === index ? null : index);
+    if (expandedIndex === index) {
+      setExpandedIndex(null);
+    } else {
+      setExpandedIndex(index);
+      // Fetch content when expanding
+      const file = claudeMdFiles[index];
+      if (file) {
+        fetchContent(file.path);
+      }
+    }
   };
 
   return (
@@ -135,15 +176,18 @@ export const ClaudeMdPanel: React.FC<ClaudeMdPanelProps> = ({ claudeMdFiles, onC
                   {/* Expanded Content */}
                   {expandedIndex === index && (
                     <div className="border-t border-gray-700 p-4 bg-gray-900">
-                      {file.content ? (
-                        <pre className="text-sm text-gray-300 font-mono whitespace-pre-wrap overflow-x-auto max-h-64 overflow-y-auto">
-                          {file.content}
+                      {loadingPaths.has(file.path) ? (
+                        <p className="text-gray-400 text-sm">Loading content...</p>
+                      ) : fileContents[file.path] ? (
+                        <pre className="text-sm text-gray-300 font-mono whitespace-pre-wrap overflow-x-auto max-h-96 overflow-y-auto">
+                          {fileContents[file.path]}
                         </pre>
-                      ) : (
+                      ) : fileContents[file.path] === null ? (
                         <p className="text-gray-500 text-sm italic">
-                          Content not available. The file was loaded but content was not captured in
-                          the session log.
+                          File not found. The file may have been moved or deleted since the session.
                         </p>
+                      ) : (
+                        <p className="text-gray-400 text-sm">Click to load content...</p>
                       )}
                     </div>
                   )}

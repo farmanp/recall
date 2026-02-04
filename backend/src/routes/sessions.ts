@@ -250,10 +250,16 @@ router.get('/:id', async (req: Request, res: Response) => {
       return;
     }
 
-    // Return timeline without frames
+    // Return timeline without frames, but include claudeMdFiles from indexer metadata
     const { frames, ...timelineMetadata } = timeline;
 
-    res.json(timelineMetadata);
+    res.json({
+      ...timelineMetadata,
+      metadata: {
+        ...timelineMetadata.metadata,
+        claudeMdFiles: metadata.claudeMdFiles || [],
+      },
+    });
   } catch (error) {
     console.error('Error fetching session:', error);
     res.status(500).json({
@@ -601,5 +607,59 @@ async function getOrBuildTimeline(sessionId: string): Promise<SessionTimeline | 
 
   return timeline;
 }
+
+/**
+ * GET /api/claudemd/content
+ * Fetch the content of a CLAUDE.md file from the filesystem
+ *
+ * Query Parameters:
+ * - path: Absolute path to the CLAUDE.md file
+ *
+ * Response:
+ * - content: File content as string
+ * - exists: Whether the file exists
+ *
+ * Security: Only allows reading files named CLAUDE.md
+ */
+router.get('/claudemd/content', async (req: Request, res: Response) => {
+  try {
+    const filePath = getStringParam(req.query.path);
+
+    if (!filePath) {
+      res.status(400).json({ error: 'File path is required' });
+      return;
+    }
+
+    // Security: Only allow reading CLAUDE.md files
+    if (!filePath.endsWith('CLAUDE.md')) {
+      res.status(403).json({ error: 'Only CLAUDE.md files can be read' });
+      return;
+    }
+
+    // Import fs dynamically to read the file
+    const fs = await import('fs');
+    const path = await import('path');
+
+    // Normalize the path and ensure it's absolute
+    const normalizedPath = path.resolve(filePath);
+
+    // Check if file exists
+    if (!fs.existsSync(normalizedPath)) {
+      res.json({ exists: false, content: null });
+      return;
+    }
+
+    // Read the file content
+    const content = fs.readFileSync(normalizedPath, 'utf-8');
+
+    res.json({ exists: true, content });
+  } catch (error) {
+    console.error('Error reading CLAUDE.md file:', error);
+    res.status(500).json({
+      error: 'Failed to read file',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
 
 export default router;

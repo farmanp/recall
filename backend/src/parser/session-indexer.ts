@@ -695,6 +695,18 @@ export class SessionIndexer {
 
             if (!claudeMdPath) continue;
 
+            // Filter out placeholder/example paths that aren't real filesystem paths
+            // Real paths start with / or ~ and contain actual directory names
+            if (
+              (!claudeMdPath.startsWith('/') && !claudeMdPath.startsWith('~')) ||
+              claudeMdPath.includes('/path/') ||
+              claudeMdPath.includes('/path/to/') ||
+              claudeMdPath.startsWith('.../') ||
+              claudeMdPath.startsWith('[')
+            ) {
+              continue;
+            }
+
             // Deduplicate by path (Phase 1 just tracks which files were loaded)
             if (seenPaths.has(claudeMdPath)) {
               continue;
