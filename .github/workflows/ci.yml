@@ -15,13 +15,35 @@ jobs:
         with:
           node-version: 18
           cache: npm
-      - name: Install root deps
+      - name: Install all dependencies
         run: npm ci
-      - name: Install backend deps
-        run: cd backend && npm ci
-      - name: Install frontend deps
-        run: cd frontend && npm ci
       - name: Lint
         run: npm run lint
       - name: Format check
         run: npm run format:check
+
+  test-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+      - name: Install all dependencies
+        run: npm ci
+      - name: Run backend tests
+        run: npm run test:backend
+
+  test-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+      - name: Install all dependencies
+        run: npm ci
+      - name: Run frontend tests
+        run: npm run test:frontend

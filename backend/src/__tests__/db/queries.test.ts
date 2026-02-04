@@ -374,15 +374,32 @@ describe('Database Queries', () => {
       expect(db.open).toBe(true);
     });
 
-    it('should be read-only', () => {
+    it('should support write operations for CLAUDE.md snapshots', () => {
       const db = getDbInstance();
 
-      // Try to insert should fail if readonly is enforced
-      expect(() => {
-        db.prepare(
-          'INSERT INTO sdk_sessions (claude_session_id, sdk_session_id, project, started_at, started_at_epoch, status, prompt_counter) VALUES (?, ?, ?, ?, ?, ?, ?)'
-        ).run('test', 'test', 'test', '2024-01-01', 0, 'active', 0);
-      }).toThrow();
+      // Database should allow writes for CLAUDE.md snapshot storage
+      // Test by writing to the claudemd_snapshots table which was created for this purpose
+      const testHash = `test-hash-${Date.now()}`;
+      const now = Date.now();
+      const nowISO = new Date(now).toISOString();
+
+      // This should NOT throw (database is read-write)
+      // Write to claudemd_snapshots - the table specifically designed for CLAUDE.md storage
+      db.prepare(
+        `INSERT INTO claudemd_snapshots (
+          content_hash, file_path, content, content_size,
+          first_seen_at, first_seen_at_epoch, created_at, created_at_epoch
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+      ).run(testHash, '/test/CLAUDE.md', 'Test content', 12, nowISO, now, nowISO, now);
+
+      // Verify it was inserted - this proves database is writable
+      const inserted = db
+        .prepare('SELECT * FROM claudemd_snapshots WHERE content_hash = ?')
+        .get(testHash);
+      expect(inserted).toBeDefined();
+      expect((inserted as any).content).toBe('Test content');
+
+      // Note: No cleanup needed - test database is recreated for each test run
     });
 
     it('should have foreign keys enabled', () => {

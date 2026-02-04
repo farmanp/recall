@@ -1,0 +1,3 @@
+{"uuid":"meta-1","timestamp":"2024-01-02T10:00:00.000Z","type":"session_metadata","slug":"demo-session","cwd":"/Users/test/projects/demo","sessionId":"session-test-1"}
+{"uuid":"user-1","timestamp":"2024-01-02T10:00:01.000Z","type":"user","message":{"role":"user","content":"Hello, can you help me write a function?"},"cwd":"/Users/test/projects/demo","sessionId":"session-test-1"}
+{"uuid":"assist-1","parentUuid":"user-1","timestamp":"2024-01-02T10:00:02.000Z","type":"assistant","message":{"role":"assistant","model":"claude-3-opus","content":"Sure! I'd be happy to help you write a function. What would you like it to do?"},"cwd":"/Users/test/projects/demo","sessionId":"session-test-1"}

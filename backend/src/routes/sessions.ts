@@ -1,46 +1,40 @@
 import { Router, Request, Response } from 'express';
+import { LRUCache } from 'lru-cache';
 import { getSessionIndexer } from '../parser/session-indexer';
 import { ParserFactory } from '../parser/parser-factory';
 import { detectAgentFromPath } from '../parser/agent-detector';
-import { SessionTimeline, AgentType } from '../types/transcript';
+import { SessionTimeline } from '../types/transcript';
 import {
   getTranscriptSessions,
   getTranscriptFrames,
   searchGlobalFrames,
 } from '../db/transcript-queries';
 import { SearchGlobalRequest } from '../types/transcript';
+import { validateClaudeMdPath } from '../utils/path-security';
+import { validateQuery, validateParams } from '../middleware/validation';
+import {
+  sessionListSchema,
+  sessionIdSchema,
+  frameListSchema,
+  searchQuerySchema,
+  claudeMdCompareSchema,
+  claudeMdPathSchema,
+  SessionListParams,
+  FrameListParams,
+  SearchQueryParams,
+  ClaudeMdCompareParams,
+  ClaudeMdPathParams,
+} from '../validation/schemas';
 
 const router = Router();
 
-// Global cache for parsed timelines (optional optimization)
-const timelineCache = new Map<string, SessionTimeline>();
-
-/**
- * Data source type for session queries
- */
-type DataSource = 'filesystem' | 'db';
-
-/**
- * Helper to get data source from query parameter
- * Defaults to 'filesystem' for backwards compatibility
- */
-function getDataSource(req: Request): DataSource {
-  const source = getStringParam(req.query.source);
-  if (source === 'db') {
-    return 'db';
-  }
-  return 'filesystem';
-}
-
-/**
- * Helper to safely extract string query parameters
- */
-function getStringParam(value: unknown): string | undefined {
-  if (typeof value === 'string') {
-    return value;
-  }
-  return undefined;
-}
+// Global LRU cache for parsed timelines to prevent memory leaks
+// Capped at 50 sessions (~200MB max) with 30-minute TTL
+const timelineCache = new LRUCache<string, SessionTimeline>({
+  max: 50, // Maximum 50 sessions in memory
+  ttl: 1000 * 60 * 30, // 30 minute TTL
+  updateAgeOnGet: true, // Reset TTL on access (LRU behavior)
+});
 
 /**
  * GET /api/agents
@@ -96,16 +90,16 @@ router.get('/agents', async (_req: Request, res: Response) => {
  * GET /api/sessions?project=/Users/fpirzada/Documents/cc_mem_video_player
  * GET /api/sessions?agent=claude
  */
-router.get('/', async (req: Request, res: Response) => {
+router.get('/', validateQuery(sessionListSchema), async (_req: Request, res: Response) => {
   try {
-    const source = getDataSource(req);
-    const offsetStr = getStringParam(req.query.offset);
-    const limitStr = getStringParam(req.query.limit);
-    const offset = offsetStr ? parseInt(offsetStr, 10) : 0;
-    const limit = limitStr ? parseInt(limitStr, 10) : 20;
-    const projectFilter = getStringParam(req.query.project);
-    const agent = getStringParam(req.query.agent) as AgentType | undefined;
-    const hasClaudeMd = req.query.hasClaudeMd === 'true';
+    const {
+      source,
+      offset,
+      limit,
+      project: projectFilter,
+      agent,
+      hasClaudeMd,
+    } = res.locals.validatedQuery as SessionListParams;
 
     if (source === 'db') {
       // Use database
@@ -176,23 +170,20 @@ router.get('/', async (req: Request, res: Response) => {
  * GET /api/sessions/search
  * Global content search across all sessions
  */
-router.get('/search', async (req: Request, res: Response) => {
+router.get('/search', validateQuery(searchQuerySchema), async (_req: Request, res: Response) => {
   try {
-    const query = getStringParam(req.query.q);
-    if (!query) {
-      res.status(400).json({ error: 'Search query "q" is required' });
-      return;
-    }
-
-    const limitStr = getStringParam(req.query.limit);
-    const offsetStr = getStringParam(req.query.offset);
-    const agent = getStringParam(req.query.agent) as any;
-    const project = getStringParam(req.query.project);
+    const {
+      q: query,
+      limit,
+      offset,
+      agent,
+      project,
+    } = res.locals.validatedQuery as SearchQueryParams;
 
     const searchReq: SearchGlobalRequest = {
       query,
-      limit: limitStr ? parseInt(limitStr, 10) : 50,
-      offset: offsetStr ? parseInt(offsetStr, 10) : 0,
+      limit,
+      offset,
       agent,
       project,
     };
@@ -297,57 +288,53 @@ router.get('/:id', async (req: Request, res: Response) => {
  * GET /api/sessions/4b198fdf-b80d-4bbc-806f-2900282cdc56/frames?offset=0&limit=100
  * GET /api/sessions/4b198fdf-b80d-4bbc-806f-2900282cdc56/frames?source=db&offset=0&limit=100
  */
-router.get('/:id/frames', async (req: Request, res: Response) => {
-  try {
-    const sessionId = req.params.id as string;
-    if (!sessionId) {
-      res.status(400).json({ error: 'Session ID is required' });
-      return;
-    }
+router.get(
+  '/:id/frames',
+  validateParams(sessionIdSchema),
+  validateQuery(frameListSchema),
+  async (_req: Request, res: Response) => {
+    try {
+      const { id: sessionId } = res.locals.validatedParams;
+      const { source, offset, limit } = res.locals.validatedQuery as FrameListParams;
 
-    const source = getDataSource(req);
-    const offsetStr = getStringParam(req.query.offset);
-    const limitStr = getStringParam(req.query.limit);
-    const offset = offsetStr ? parseInt(offsetStr, 10) : 0;
-    const limit = limitStr ? parseInt(limitStr, 10) : 100;
+      if (source === 'db') {
+        // Use database
+        const result = getTranscriptFrames(sessionId, { offset, limit });
 
-    if (source === 'db') {
-      // Use database
-      const result = getTranscriptFrames(sessionId, { offset, limit });
+        res.json({
+          frames: result.frames,
+          total: result.total,
+          offset,
+          limit,
+          source: 'db',
+        });
+      } else {
+        // Use filesystem (existing implementation)
+        const timeline = await getOrBuildTimeline(sessionId);
+        if (!timeline) {
+          res.status(404).json({ error: 'Session not found' });
+          return;
+        }
 
-      res.json({
-        frames: result.frames,
-        total: result.total,
-        offset,
-        limit,
-        source: 'db',
-      });
-    } else {
-      // Use filesystem (existing implementation)
-      const timeline = await getOrBuildTimeline(sessionId);
-      if (!timeline) {
-        res.status(404).json({ error: 'Session not found' });
-        return;
+        const paginatedFrames = timeline.frames.slice(offset, offset + limit);
+
+        res.json({
+          frames: paginatedFrames,
+          total: timeline.totalFrames,
+          offset,
+          limit,
+          source: 'filesystem',
+        });
       }
-
-      const paginatedFrames = timeline.frames.slice(offset, offset + limit);
-
-      res.json({
-        frames: paginatedFrames,
-        total: timeline.totalFrames,
-        offset,
-        limit,
-        source: 'filesystem',
+    } catch (error) {
+      console.error('Error fetching session frames:', error);
+      res.status(500).json({
+        error: 'Failed to fetch session frames',
+        message: error instanceof Error ? error.message : 'Unknown error',
       });
     }
-  } catch (error) {
-    console.error('Error fetching session frames:', error);
-    res.status(500).json({
-      error: 'Failed to fetch session frames',
-      message: error instanceof Error ? error.message : 'Unknown error',
-    });
   }
-});
+);
 
 /**
  * GET /api/sessions/:id/frames/:frameId
@@ -508,42 +495,32 @@ router.get('/:id/claudemd-history', async (req: Request, res: Response) => {
  * @example
  * GET /api/claudemd/compare?from=1&to=2
  */
-router.get('/claudemd/compare', async (req: Request, res: Response) => {
-  try {
-    const fromStr = getStringParam(req.query.from);
-    const toStr = getStringParam(req.query.to);
+router.get(
+  '/claudemd/compare',
+  validateQuery(claudeMdCompareSchema),
+  async (_req: Request, res: Response) => {
+    try {
+      const { from: fromId, to: toId } = res.locals.validatedQuery as ClaudeMdCompareParams;
 
-    if (!fromStr || !toStr) {
-      res.status(400).json({ error: 'Both "from" and "to" snapshot IDs are required' });
-      return;
+      const { compareClaudeMdSnapshots } = await import('../db/claudemd-queries');
+
+      const comparison = compareClaudeMdSnapshots(fromId, toId);
+
+      if (!comparison) {
+        res.status(404).json({ error: 'One or both snapshots not found' });
+        return;
+      }
+
+      res.json(comparison);
+    } catch (error) {
+      console.error('Error comparing CLAUDE.md snapshots:', error);
+      res.status(500).json({
+        error: 'Failed to compare snapshots',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
     }
-
-    const fromId = parseInt(fromStr, 10);
-    const toId = parseInt(toStr, 10);
-
-    if (isNaN(fromId) || isNaN(toId)) {
-      res.status(400).json({ error: 'Snapshot IDs must be valid numbers' });
-      return;
-    }
-
-    const { compareClaudeMdSnapshots } = await import('../db/claudemd-queries');
-
-    const comparison = compareClaudeMdSnapshots(fromId, toId);
-
-    if (!comparison) {
-      res.status(404).json({ error: 'One or both snapshots not found' });
-      return;
-    }
-
-    res.json(comparison);
-  } catch (error) {
-    console.error('Error comparing CLAUDE.md snapshots:', error);
-    res.status(500).json({
-      error: 'Failed to compare snapshots',
-      message: error instanceof Error ? error.message : 'Unknown error',
-    });
   }
-});
+);
 
 /**
  * GET /api/sessions/:id/claudemd-snapshots
@@ -619,47 +596,46 @@ async function getOrBuildTimeline(sessionId: string): Promise<SessionTimeline | 
  * - content: File content as string
  * - exists: Whether the file exists
  *
- * Security: Only allows reading files named CLAUDE.md
+ * Security:
+ * - Only allows reading files named exactly CLAUDE.md
+ * - Only allows files within whitelisted directories (~/.claude/projects, ~/Documents, ~/projects)
+ * - Resolves symlinks to prevent traversal escapes
  */
-router.get('/claudemd/content', async (req: Request, res: Response) => {
-  try {
-    const filePath = getStringParam(req.query.path);
+router.get(
+  '/claudemd/content',
+  validateQuery(claudeMdPathSchema),
+  async (_req: Request, res: Response) => {
+    try {
+      const { path: filePath } = res.locals.validatedQuery as ClaudeMdPathParams;
 
-    if (!filePath) {
-      res.status(400).json({ error: 'File path is required' });
-      return;
+      // Security validation with directory whitelist and symlink detection
+      const validation = validateClaudeMdPath(filePath);
+      if (!validation.isValid) {
+        res.status(403).json({ error: validation.error });
+        return;
+      }
+
+      const fs = await import('fs');
+      const safePath = validation.resolvedPath!;
+
+      // Check if file exists
+      if (!fs.existsSync(safePath)) {
+        res.json({ exists: false, content: null });
+        return;
+      }
+
+      // Read the file content
+      const content = fs.readFileSync(safePath, 'utf-8');
+
+      res.json({ exists: true, content });
+    } catch (error) {
+      console.error('Error reading CLAUDE.md file:', error);
+      res.status(500).json({
+        error: 'Failed to read file',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
     }
-
-    // Security: Only allow reading CLAUDE.md files
-    if (!filePath.endsWith('CLAUDE.md')) {
-      res.status(403).json({ error: 'Only CLAUDE.md files can be read' });
-      return;
-    }
-
-    // Import fs dynamically to read the file
-    const fs = await import('fs');
-    const path = await import('path');
-
-    // Normalize the path and ensure it's absolute
-    const normalizedPath = path.resolve(filePath);
-
-    // Check if file exists
-    if (!fs.existsSync(normalizedPath)) {
-      res.json({ exists: false, content: null });
-      return;
-    }
-
-    // Read the file content
-    const content = fs.readFileSync(normalizedPath, 'utf-8');
-
-    res.json({ exists: true, content });
-  } catch (error) {
-    console.error('Error reading CLAUDE.md file:', error);
-    res.status(500).json({
-      error: 'Failed to read file',
-      message: error instanceof Error ? error.message : 'Unknown error',
-    });
   }
-});
+);
 
 export default router;

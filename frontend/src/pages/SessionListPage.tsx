@@ -601,9 +601,9 @@ export const SessionListPage: React.FC = () => {
                     </div>
 
                     <div className="flex items-center gap-3">
-                      {session.duration && (
+                      {session.duration && session.duration > 0 && (
                         <div className="flex items-center gap-1.5 text-[10px] font-black text-blue-400 bg-blue-900/40 px-3 py-1.5 rounded-xl border border-blue-700/30">
-                          {Math.round(session.duration / 60)}M {session.duration % 60}S
+                          {Math.floor(session.duration / 60)}m {Math.round(session.duration % 60)}s
                         </div>
                       )}
                       <div className="w-8 h-8 rounded-full bg-gray-100 text-gray-900 flex items-center justify-center translate-x-4 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-500 shadow-lg">

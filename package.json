@@ -2,17 +2,28 @@
   "name": "recall-player",
   "version": "1.2.0",
   "description": "Replay AI coding sessions like a video player - supports Claude Code, Codex CLI, and Gemini CLI",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
   "bin": {
     "recall": "./bin/recall.js"
   },
   "scripts": {
     "build": "npm run build:backend && npm run build:frontend && npm run copy:frontend",
-    "build:backend": "cd backend && npm install && npm run build",
-    "build:frontend": "cd frontend && npm install && npm run build",
+    "build:backend": "npm run build -w backend",
+    "build:frontend": "npm run build -w frontend",
     "copy:frontend": "mkdir -p backend/public && cp -r frontend/dist/* backend/public/",
+    "dev": "npm run dev -w backend & npm run dev -w frontend",
+    "dev:backend": "npm run dev -w backend",
+    "dev:frontend": "npm run dev -w frontend",
+    "test": "npm run test:backend && npm run test:frontend",
+    "test:backend": "npm test -w backend -- --run",
+    "test:frontend": "npm test -w frontend -- --run",
     "lint": "npm run lint:backend && npm run lint:frontend",
-    "lint:backend": "cd backend && npm run lint",
-    "lint:frontend": "cd frontend && npm run lint",
+    "lint:backend": "npm run lint -w backend",
+    "lint:frontend": "npm run lint -w frontend",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "prepare": "husky install",

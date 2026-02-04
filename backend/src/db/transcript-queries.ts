@@ -157,6 +157,63 @@ export function initializeTranscriptSchema(): void {
     CREATE INDEX IF NOT EXISTS idx_parsing_status
       ON parsing_status(status);
   `);
+
+  // 6. FTS5 FULL-TEXT SEARCH
+  // Create FTS5 virtual table for playback_frames full-text search
+  db.exec(`
+    CREATE VIRTUAL TABLE IF NOT EXISTS playback_frames_fts USING fts5(
+      user_message_text,
+      thinking_text,
+      response_text,
+      content='playback_frames',
+      content_rowid='rowid',
+      tokenize='porter unicode61'
+    );
+  `);
+
+  // Populate FTS5 table if empty and playback_frames has data
+  const ftsCount = db.prepare('SELECT COUNT(*) as count FROM playback_frames_fts').get() as {
+    count: number;
+  };
+  const framesCount = db.prepare('SELECT COUNT(*) as count FROM playback_frames').get() as {
+    count: number;
+  };
+
+  if (ftsCount.count === 0 && framesCount.count > 0) {
+    db.exec(`
+      INSERT INTO playback_frames_fts(rowid, user_message_text, thinking_text, response_text)
+      SELECT 
+        rowid,
+        user_message_text,
+        thinking_text,
+        response_text 
+      FROM playback_frames;
+    `);
+  }
+
+  // Auto-sync triggers for FTS5
+  db.exec(`
+    DROP TRIGGER IF EXISTS playback_frames_ai;
+    CREATE TRIGGER playback_frames_ai AFTER INSERT ON playback_frames BEGIN
+      INSERT INTO playback_frames_fts(rowid, user_message_text, thinking_text, response_text)
+      VALUES (new.rowid, new.user_message_text, new.thinking_text, new.response_text);
+    END;
+
+    DROP TRIGGER IF EXISTS playback_frames_au;
+    CREATE TRIGGER playback_frames_au AFTER UPDATE ON playback_frames BEGIN
+      UPDATE playback_frames_fts
+      SET 
+        user_message_text = new.user_message_text,
+        thinking_text = new.thinking_text,
+        response_text = new.response_text
+      WHERE rowid = old.rowid;
+    END;
+
+    DROP TRIGGER IF EXISTS playback_frames_ad;
+    CREATE TRIGGER playback_frames_ad AFTER DELETE ON playback_frames BEGIN
+      DELETE FROM playback_frames_fts WHERE rowid = old.rowid;
+    END;
+  `);
 }
 
 /**
@@ -242,23 +299,18 @@ export function getTranscriptSessions(query: TranscriptSessionListQuery): {
 
 /**
  * Perform a global search across all transcript content
+ * Uses FTS5 for fast full-text search with BM25 ranking
  */
 export function searchGlobalFrames(req: SearchGlobalRequest): SearchGlobalResponse {
   const db = getTranscriptDbInstance();
   const { query, limit = 50, offset = 0, agent, project } = req;
-  const likeQuery = `%${query}%`;
 
   const whereClauses: string[] = [];
-  const params: any = { likeQuery };
+  const params: any = { query };
 
-  const searchClause = `(
-    f.user_message_text LIKE @likeQuery OR 
-    f.thinking_text LIKE @likeQuery OR 
-    f.response_text LIKE @likeQuery OR 
-    t.output_content LIKE @likeQuery OR 
-    d.new_content LIKE @likeQuery
-  )`;
-  whereClauses.push(searchClause);
+  // FTS5 MATCH clause for fast full-text search on playback_frames
+  // Note: Must reference the virtual table directly in MATCH clause
+  whereClauses.push('playback_frames_fts MATCH @query');
 
   if (agent) {
     whereClauses.push('s.agent_type = @agent');
@@ -271,18 +323,17 @@ export function searchGlobalFrames(req: SearchGlobalRequest): SearchGlobalRespon
 
   const whereClause = 'WHERE ' + whereClauses.join(' AND ');
 
-  // Count total matches
+  // Count total matches using FTS5
   const countQuery = `
     SELECT COUNT(DISTINCT f.id) as total
     FROM playback_frames f
     JOIN session_metadata s ON f.session_id = s.session_id
-    LEFT JOIN tool_executions t ON t.frame_id = f.id
-    LEFT JOIN file_diffs d ON d.tool_execution_id = t.id
+    JOIN playback_frames_fts fts ON f.rowid = fts.rowid
     ${whereClause}
   `;
   const countResult = db.prepare(countQuery).get(params) as { total: number };
 
-  // Get results with snippets
+  // Get results with BM25 ranking and snippets
   const resultsQuery = `
     SELECT 
       f.id as frameId,
@@ -295,15 +346,12 @@ export function searchGlobalFrames(req: SearchGlobalRequest): SearchGlobalRespon
       f.agent_type as agent,
       s.slug,
       s.project,
-      t.output_content,
-      d.new_content as file_content
+      bm25(playback_frames_fts) as rank
     FROM playback_frames f
     JOIN session_metadata s ON f.session_id = s.session_id
-    LEFT JOIN tool_executions t ON t.frame_id = f.id
-    LEFT JOIN file_diffs d ON d.tool_execution_id = t.id
+    JOIN playback_frames_fts fts ON f.rowid = fts.rowid
     ${whereClause}
-    GROUP BY f.id
-    ORDER BY f.timestamp_ms DESC
+    ORDER BY rank ASC, f.timestamp_ms DESC
     LIMIT @limit OFFSET @offset
   `;
 
@@ -326,6 +374,7 @@ export function searchGlobalFrames(req: SearchGlobalRequest): SearchGlobalRespon
     let snippet = '';
     let matchType: SearchResult['matchType'] = 'user_message';
 
+    // Determine match type and create snippet
     if (row.user_message_text?.toLowerCase().includes(query.toLowerCase())) {
       snippet = createSnippet(row.user_message_text) || '';
       matchType = 'user_message';
@@ -335,14 +384,8 @@ export function searchGlobalFrames(req: SearchGlobalRequest): SearchGlobalRespon
     } else if (row.thinking_text?.toLowerCase().includes(query.toLowerCase())) {
       snippet = createSnippet(row.thinking_text) || '';
       matchType = 'thinking';
-    } else if (row.output_content?.toLowerCase().includes(query.toLowerCase())) {
-      snippet = createSnippet(row.output_content) || '';
-      matchType = 'tool_output';
-    } else if (row.file_content?.toLowerCase().includes(query.toLowerCase())) {
-      snippet = createSnippet(row.file_content) || '';
-      matchType = 'file_change';
     } else {
-      // Fallback
+      // Fallback to any available text
       snippet = row.user_message_text || row.response_text || row.thinking_text || '';
       if (snippet.length > 100) snippet = snippet.substring(0, 100) + '...';
     }

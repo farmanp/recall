@@ -199,17 +199,19 @@ export class SessionIndexer {
 
   /**
    * Extract metadata from a session file without parsing the entire transcript
-   * For performance, only reads first and last few entries
+   * OPTIMIZED: For performance, only reads first 2KB and last 2KB chunks
+   * instead of reading the entire file (critical for startup with 100+ sessions)
    */
   private async extractSessionMetadata(
     filePath: string,
     agent?: AgentType
   ): Promise<SessionMetadata> {
-    // Read the file content
-    const content = await fs.readFile(filePath, 'utf-8');
+    const stats = await fs.stat(filePath);
+    const fileSize = stats.size;
 
-    // Handle Gemini's single JSON format differently
+    // Handle Gemini's single JSON format differently (still needs full read for JSON parsing)
     if (agent === 'gemini') {
+      const content = await fs.readFile(filePath, 'utf-8');
       return this.extractGeminiMetadata(filePath, content);
     }
 
@@ -218,175 +220,216 @@ export class SessionIndexer {
     // Claude format: {uuid}.jsonl → extract "{uuid}"
     const sessionId = path.basename(filePath, '.jsonl');
 
-    const lines = content
-      .trim()
-      .split('\n')
-      .filter((line) => line.trim());
+    // Read first 2KB for start timestamp and metadata
+    const startChunkSize = Math.min(2048, fileSize);
+    const startChunk = Buffer.alloc(startChunkSize);
+    const fd = await fs.open(filePath, 'r');
 
-    if (lines.length === 0) {
-      throw new Error('Empty session file');
-    }
+    try {
+      await fd.read(startChunk, 0, startChunkSize, 0);
 
-    // Parse first entry for start time and metadata
-    const firstLine = lines[0];
-    if (!firstLine) {
-      throw new Error('First line is empty');
-    }
-    const firstEntry = JSON.parse(firstLine);
+      // Read last 2KB for end timestamp
+      const endChunkSize = Math.min(2048, fileSize);
+      const endChunk = Buffer.alloc(endChunkSize);
+      const endOffset = Math.max(0, fileSize - endChunkSize);
+      await fd.read(endChunk, 0, endChunkSize, endOffset);
 
-    const lastLine = lines.length > 1 ? lines[lines.length - 1] : firstLine;
-    const lastEntry = lastLine ? JSON.parse(lastLine) : firstEntry;
+      // Parse chunks into lines
+      const startText = startChunk.toString('utf-8');
+      const endText = endChunk.toString('utf-8');
 
-    // Extract project name based on agent type
-    let projectName: string;
-    if (agent === 'codex') {
-      // Codex: Extract project name from session_meta payload's cwd field
-      // Format: { type: "session_meta", payload: { cwd: "/path/to/project", ... } }
-      const codexCwd = firstEntry.payload?.cwd || firstEntry.cwd;
-      if (codexCwd) {
-        // Extract last directory component from cwd as project name
-        const cwdParts = codexCwd.split(path.sep).filter(Boolean);
-        projectName = cwdParts[cwdParts.length - 1] || 'Codex Session';
+      // Extract complete lines from chunks
+      const startLines = startText.split('\n').filter((line) => line.trim());
+      const endLines = endText.split('\n').filter((line) => line.trim());
+
+      // Combine for metadata extraction (we need more lines for slug, model, etc.)
+      const lines = [...startLines, ...endLines].filter((line) => line.trim());
+
+      if (lines.length === 0) {
+        throw new Error('Empty session file');
+      }
+
+      // Parse first entry for start time and metadata
+      const firstLine = lines[0];
+      if (!firstLine) {
+        throw new Error('First line is empty');
+      }
+      const firstEntry = JSON.parse(firstLine);
+
+      const lastLine = lines.length > 1 ? lines[lines.length - 1] : firstLine;
+      const lastEntry = lastLine ? JSON.parse(lastLine) : firstEntry;
+
+      // Extract project name based on agent type
+      let projectName: string;
+      if (agent === 'codex') {
+        // Codex: Extract project name from session_meta payload's cwd field
+        // Format: { type: "session_meta", payload: { cwd: "/path/to/project", ... } }
+        const codexCwd = firstEntry.payload?.cwd || firstEntry.cwd;
+        if (codexCwd) {
+          // Extract last directory component from cwd as project name
+          const cwdParts = codexCwd.split(path.sep).filter(Boolean);
+          projectName = cwdParts[cwdParts.length - 1] || 'Codex Session';
+        } else {
+          projectName = 'Codex Session';
+        }
       } else {
-        projectName = 'Codex Session';
+        // Claude: Extract project name from file path
+        const pathParts = filePath.split(path.sep);
+        const projectsIndex = pathParts.indexOf('projects');
+        const encodedProjectPath = projectsIndex >= 0 ? pathParts[projectsIndex + 1] : undefined;
+        projectName = encodedProjectPath
+          ? this.decodeProjectPath(encodedProjectPath)
+          : 'Unknown Project';
       }
-    } else {
-      // Claude: Extract project name from file path
-      const pathParts = filePath.split(path.sep);
-      const projectsIndex = pathParts.indexOf('projects');
-      const encodedProjectPath = projectsIndex >= 0 ? pathParts[projectsIndex + 1] : undefined;
-      projectName = encodedProjectPath
-        ? this.decodeProjectPath(encodedProjectPath)
-        : 'Unknown Project';
-    }
 
-    // Extract slug - look through first few entries
-    let slug: string;
-    if (agent === 'codex') {
-      // Codex: Check for slug in entry metadata, or default to 'codex-session'
-      slug = 'codex-session';
-      for (let i = 0; i < Math.min(10, lines.length); i++) {
-        const line = lines[i];
-        if (!line) continue;
-        const entry = JSON.parse(line);
-        if (entry.slug) {
-          slug = entry.slug;
-          break;
+      // Extract slug - look through first few entries
+      let slug: string;
+      if (agent === 'codex') {
+        // Codex: Check for slug in entry metadata, or default to 'codex-session'
+        slug = 'codex-session';
+        for (let i = 0; i < Math.min(10, lines.length); i++) {
+          const line = lines[i];
+          if (!line) continue;
+          const entry = JSON.parse(line);
+          if (entry.slug) {
+            slug = entry.slug;
+            break;
+          }
+          if (entry.metadata?.slug) {
+            slug = entry.metadata.slug;
+            break;
+          }
         }
-        if (entry.metadata?.slug) {
-          slug = entry.metadata.slug;
-          break;
-        }
-      }
-    } else {
-      // Claude: Look for slug in entries
-      slug = 'unknown-session';
-      for (let i = 0; i < Math.min(10, lines.length); i++) {
-        const line = lines[i];
-        if (!line) continue;
-        const entry = JSON.parse(line);
-        if (entry.slug) {
-          slug = entry.slug;
-          break;
-        }
-      }
-    }
-
-    // Calculate duration
-    const startTime = firstEntry.timestamp || new Date().toISOString();
-    const endTime = lastEntry.timestamp;
-    const duration = endTime
-      ? (new Date(endTime).getTime() - new Date(startTime).getTime()) / 1000
-      : undefined;
-
-    // Extract first user message
-    let firstUserMessage: string | undefined;
-    for (let i = 0; i < Math.min(20, lines.length); i++) {
-      const line = lines[i];
-      if (!line) continue;
-      const entry = JSON.parse(line);
-
-      // Claude format: { message: { role: "user", content: ... } }
-      if (entry.message?.role === 'user' && entry.message?.content) {
-        if (typeof entry.message.content === 'string') {
-          firstUserMessage = entry.message.content.substring(0, 200);
-          break;
-        } else if (Array.isArray(entry.message.content)) {
-          const textBlock = entry.message.content.find((block: any) => block.type === 'text');
-          if (textBlock) {
-            firstUserMessage = textBlock.text.substring(0, 200);
+      } else {
+        // Claude: Look for slug in entries
+        slug = 'unknown-session';
+        for (let i = 0; i < Math.min(10, lines.length); i++) {
+          const line = lines[i];
+          if (!line) continue;
+          const entry = JSON.parse(line);
+          if (entry.slug) {
+            slug = entry.slug;
             break;
           }
         }
       }
 
-      // Codex format: { type: "response_item", payload: { role: "user", content: [...] } }
-      if (entry.type === 'response_item' && entry.payload?.role === 'user') {
-        const content = entry.payload.content;
-        if (Array.isArray(content)) {
-          const textBlock = content.find(
-            (block: any) => block.type === 'input_text' || block.type === 'text'
-          );
-          if (textBlock?.text) {
-            firstUserMessage = textBlock.text.substring(0, 200);
+      // Calculate duration - find first entry with a valid timestamp
+      // (first entry may be "file-history-snapshot" with null timestamp)
+      let startTime: string | undefined;
+      for (const line of lines) {
+        if (!line) continue;
+        try {
+          const entry = JSON.parse(line);
+          if (entry.timestamp) {
+            startTime = entry.timestamp;
             break;
+          }
+        } catch {
+          continue;
+        }
+      }
+      // Fallback to file mtime if no timestamp found in content
+      if (!startTime) {
+        startTime = stats.mtime.toISOString();
+      }
+      const endTime = lastEntry.timestamp;
+      const duration =
+        startTime && endTime
+          ? (new Date(endTime).getTime() - new Date(startTime).getTime()) / 1000
+          : undefined;
+
+      // Extract first user message
+      let firstUserMessage: string | undefined;
+      for (let i = 0; i < Math.min(20, lines.length); i++) {
+        const line = lines[i];
+        if (!line) continue;
+        const entry = JSON.parse(line);
+
+        // Claude format: { message: { role: "user", content: ... } }
+        if (entry.message?.role === 'user' && entry.message?.content) {
+          if (typeof entry.message.content === 'string') {
+            firstUserMessage = entry.message.content.substring(0, 200);
+            break;
+          } else if (Array.isArray(entry.message.content)) {
+            const textBlock = entry.message.content.find((block: any) => block.type === 'text');
+            if (textBlock) {
+              firstUserMessage = textBlock.text.substring(0, 200);
+              break;
+            }
+          }
+        }
+
+        // Codex format: { type: "response_item", payload: { role: "user", content: [...] } }
+        if (entry.type === 'response_item' && entry.payload?.role === 'user') {
+          const content = entry.payload.content;
+          if (Array.isArray(content)) {
+            const textBlock = content.find(
+              (block: any) => block.type === 'input_text' || block.type === 'text'
+            );
+            if (textBlock?.text) {
+              firstUserMessage = textBlock.text.substring(0, 200);
+              break;
+            }
           }
         }
       }
-    }
 
-    // Get cwd from appropriate field (handle both Claude and Codex formats)
-    const extractedCwd = firstEntry.payload?.cwd || firstEntry.cwd || '';
+      // Get cwd from appropriate field (handle both Claude and Codex formats)
+      const extractedCwd = firstEntry.payload?.cwd || firstEntry.cwd || '';
 
-    // Extract CLAUDE.md files for Claude sessions
-    const claudeMdFiles =
-      agent === 'claude' ? this.extractClaudeMdFiles(lines, startTime) : undefined;
+      // Extract CLAUDE.md files for Claude sessions
+      const claudeMdFiles =
+        agent === 'claude' ? this.extractClaudeMdFiles(lines, startTime) : undefined;
 
-    // Extract model from first assistant entry with a model field
-    let model: string | undefined;
-    for (let i = 0; i < Math.min(30, lines.length); i++) {
-      const line = lines[i];
-      if (!line) continue;
-      try {
-        const entry = JSON.parse(line);
-        // Claude format: { message: { model: "claude-opus-4-5-20251101", ... } }
-        if (entry.message?.model) {
-          model = entry.message.model;
-          break;
+      // Extract model from first assistant entry with a model field
+      let model: string | undefined;
+      for (let i = 0; i < Math.min(30, lines.length); i++) {
+        const line = lines[i];
+        if (!line) continue;
+        try {
+          const entry = JSON.parse(line);
+          // Claude format: { message: { model: "claude-opus-4-5-20251101", ... } }
+          if (entry.message?.model) {
+            model = entry.message.model;
+            break;
+          }
+          // Codex format: { model: "..." } at top level
+          if (entry.model) {
+            model = entry.model;
+            break;
+          }
+          // Codex wrapped format: { type: "...", payload: { model: "..." } }
+          if (entry.payload?.model) {
+            model = entry.payload.model;
+            break;
+          }
+          if (entry.metadata?.model) {
+            model = entry.metadata.model;
+            break;
+          }
+        } catch {
+          // Skip malformed JSON lines
         }
-        // Codex format: { model: "..." } at top level
-        if (entry.model) {
-          model = entry.model;
-          break;
-        }
-        // Codex wrapped format: { type: "...", payload: { model: "..." } }
-        if (entry.payload?.model) {
-          model = entry.payload.model;
-          break;
-        }
-        if (entry.metadata?.model) {
-          model = entry.metadata.model;
-          break;
-        }
-      } catch {
-        // Skip malformed JSON lines
       }
-    }
 
-    return {
-      sessionId,
-      slug,
-      project: projectName,
-      agent,
-      model,
-      startTime,
-      endTime,
-      duration,
-      eventCount: lines.length,
-      cwd: extractedCwd,
-      firstUserMessage,
-      claudeMdFiles,
-    };
+      return {
+        sessionId,
+        slug,
+        project: projectName,
+        agent,
+        model,
+        startTime,
+        endTime,
+        duration,
+        eventCount: lines.length, // Approximate from chunk lines
+        cwd: extractedCwd,
+        firstUserMessage,
+        claudeMdFiles,
+      };
+    } finally {
+      await fd.close();
+    }
   }
 
   /**
