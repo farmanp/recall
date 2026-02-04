@@ -144,12 +144,12 @@ export const SessionListPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-950">
       {/* Header */}
-      <div className="bg-white border-b shadow-sm sticky top-0 z-10">
+      <div className="bg-gray-900/40 backdrop-blur-xl border-b border-blue-500/20 shadow-[0_0_20px_rgba(59,130,246,0.1)] sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 py-6">
-          <h1 className="text-3xl font-bold text-gray-900">Recall</h1>
-          <p className="text-sm text-gray-600 mt-2">
+          <h1 className="text-3xl font-bold text-gray-100">Recall</h1>
+          <p className="text-sm text-gray-400 mt-2">
             {filteredSessions.length} of {total} {total === 1 ? 'session' : 'sessions'}
             {filteredSessions.length !== total && ' (filtered)'}
           </p>
@@ -157,7 +157,7 @@ export const SessionListPage: React.FC = () => {
       </div>
 
       {/* Search and Filters */}
-      <div className="bg-white border-b shadow-sm">
+      <div className="bg-gray-900/40 backdrop-blur-xl border-b border-blue-500/20 shadow-[0_0_20px_rgba(59,130,246,0.1)]">
         <div className="max-w-7xl mx-auto px-4 py-4">
           {/* Search Bar & Mode Toggle */}
           <div className="flex gap-4 mb-4">
@@ -171,7 +171,7 @@ export const SessionListPage: React.FC = () => {
                 }
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm transition-all text-gray-800"
+                className="w-full pl-10 pr-4 py-3 bg-gray-800/50 border border-blue-500/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm transition-all text-gray-100 placeholder:text-gray-500"
               />
               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
               {isLoading || isSearchingContent ? (
@@ -188,16 +188,16 @@ export const SessionListPage: React.FC = () => {
               )}
             </div>
 
-            <div className="flex bg-gray-100 p-1 rounded-xl border border-gray-200 shadow-inner">
+            <div className="flex bg-gray-800/50 p-1 rounded-xl border border-blue-500/30 shadow-inner">
               <button
                 onClick={() => setSearchMode('sessions')}
-                className={`px-4 py-2 text-sm font-bold rounded-lg transition-all ${searchMode === 'sessions' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                className={`px-4 py-2 text-sm font-bold rounded-lg transition-all ${searchMode === 'sessions' ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-400 hover:text-gray-300'}`}
               >
                 Sessions
               </button>
               <button
                 onClick={() => setSearchMode('content')}
-                className={`px-4 py-2 text-sm font-bold rounded-lg transition-all ${searchMode === 'content' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                className={`px-4 py-2 text-sm font-bold rounded-lg transition-all ${searchMode === 'content' ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-400 hover:text-gray-300'}`}
               >
                 Content ✨
               </button>
@@ -236,7 +236,7 @@ export const SessionListPage: React.FC = () => {
           <div className="flex flex-wrap gap-4">
             {/* Date Range Filter */}
             <div className="flex items-center gap-2">
-              <label className="text-sm font-medium text-gray-700">Date:</label>
+              <label className="text-sm font-medium text-gray-300">Date:</label>
               <div className="flex gap-1">
                 {(['all', 'today', 'week', 'month'] as DateRange[]).map((range) => (
                   <button
@@ -245,7 +245,7 @@ export const SessionListPage: React.FC = () => {
                     className={`px-3 py-1 text-sm rounded ${
                       dateRange === range
                         ? 'bg-blue-600 text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700/50 border border-blue-500/20'
                     }`}
                   >
                     {range === 'all'
@@ -262,14 +262,14 @@ export const SessionListPage: React.FC = () => {
 
             {/* Minimum Duration Filter */}
             <div className="flex items-center gap-2">
-              <label htmlFor="min-duration" className="text-sm font-medium text-gray-700">
+              <label htmlFor="min-duration" className="text-sm font-medium text-gray-300">
                 Min Duration:
               </label>
               <select
                 id="min-duration"
                 value={minDuration}
                 onChange={(e) => setMinDuration(Number(e.target.value))}
-                className="px-3 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="px-3 py-1 text-sm bg-gray-800/50 border border-blue-500/30 rounded text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="0">Any</option>
                 <option value="1">1+ min</option>
@@ -282,14 +282,14 @@ export const SessionListPage: React.FC = () => {
 
             {/* Minimum Event Count Filter */}
             <div className="flex items-center gap-2">
-              <label htmlFor="min-events" className="text-sm font-medium text-gray-700">
+              <label htmlFor="min-events" className="text-sm font-medium text-gray-300">
                 Min Events:
               </label>
               <select
                 id="min-events"
                 value={minEventCount}
                 onChange={(e) => setMinEventCount(Number(e.target.value))}
-                className="px-3 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="px-3 py-1 text-sm bg-gray-800/50 border border-blue-500/30 rounded text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="0">Any</option>
                 <option value="5">5+</option>
@@ -314,7 +314,7 @@ export const SessionListPage: React.FC = () => {
                   setMinEventCount(0);
                   setSelectedAgent('all');
                 }}
-                className="ml-auto px-3 py-1 text-sm text-gray-600 hover:text-gray-800 underline"
+                className="ml-auto px-3 py-1 text-sm text-gray-400 hover:text-gray-200 underline"
               >
                 Clear All Filters
               </button>
@@ -329,8 +329,8 @@ export const SessionListPage: React.FC = () => {
           <div className="space-y-6">
             {isSearchingContent && !globalSearchData ? (
               <div className="flex flex-col items-center justify-center py-20">
-                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-500 mb-4"></div>
-                <p className="text-gray-500">Searching through all session contents...</p>
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500 mb-4"></div>
+                <p className="text-gray-400">Searching through all session contents...</p>
               </div>
             ) : globalSearchData?.results.length === 0 ? (
               <div className="bg-white dark:bg-gray-950 rounded-[2.5rem] shadow-xl p-16 text-center border border-gray-100 dark:border-white/5 max-w-2xl mx-auto">
@@ -436,54 +436,54 @@ export const SessionListPage: React.FC = () => {
                 Clear All Filters
               </button>
             ) : (
-              <div className="bg-gray-50 rounded-xl p-8 text-left border border-gray-100">
-                <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
-                  <span className="text-blue-500 font-bold">💡</span> Quick Start Guide:
+              <div className="bg-gray-900/60 backdrop-blur-xl rounded-xl p-8 text-left border border-blue-500/20 shadow-[0_0_30px_rgba(59,130,246,0.15)]">
+                <h3 className="font-bold text-gray-200 mb-4 flex items-center gap-2">
+                  <span className="text-blue-400 font-bold">💡</span> Quick Start Guide:
                 </h3>
-                <ul className="space-y-4 text-sm text-gray-600">
+                <ul className="space-y-4 text-sm text-gray-300">
                   <li className="flex gap-3">
-                    <span className="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold text-xs">
+                    <span className="flex-shrink-0 w-6 h-6 bg-blue-600/20 text-blue-400 rounded-full flex items-center justify-center font-bold text-xs border border-blue-500/30">
                       1
                     </span>
                     <span>
                       Run{' '}
-                      <code className="bg-blue-50 px-1.5 py-0.5 rounded text-blue-700 font-mono">
+                      <code className="bg-blue-900/30 px-1.5 py-0.5 rounded text-blue-400 font-mono border border-blue-500/20">
                         claude-code
                       </code>{' '}
                       in your project terminal.
                     </span>
                   </li>
                   <li className="flex gap-3">
-                    <span className="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold text-xs">
+                    <span className="flex-shrink-0 w-6 h-6 bg-blue-600/20 text-blue-400 rounded-full flex items-center justify-center font-bold text-xs border border-blue-500/30">
                       2
                     </span>
                     <span>
                       Start Recall backend:{' '}
-                      <code className="bg-blue-50 px-1.5 py-0.5 rounded text-blue-700 font-mono">
+                      <code className="bg-blue-900/30 px-1.5 py-0.5 rounded text-blue-400 font-mono border border-blue-500/20">
                         npm run dev
                       </code>{' '}
                       in the backend folder.
                     </span>
                   </li>
                   <li className="flex gap-3">
-                    <span className="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold text-xs">
+                    <span className="flex-shrink-0 w-6 h-6 bg-blue-600/20 text-blue-400 rounded-full flex items-center justify-center font-bold text-xs border border-blue-500/30">
                       3
                     </span>
                     <span>
                       Sessions are automatically indexed from{' '}
-                      <code className="bg-blue-50 px-1.5 py-0.5 rounded text-blue-700 font-mono">
+                      <code className="bg-blue-900/30 px-1.5 py-0.5 rounded text-blue-400 font-mono border border-blue-500/20">
                         ~/.claude-mem/
                       </code>
                       .
                     </span>
                   </li>
                 </ul>
-                <div className="mt-8 pt-6 border-t border-gray-200">
+                <div className="mt-8 pt-6 border-t border-blue-500/20">
                   <a
                     href="https://github.com/farmanp/recall#quick-start"
                     target="_blank"
                     rel="noreferrer"
-                    className="text-blue-600 hover:text-blue-700 font-bold flex items-center justify-center gap-2 group transition-all"
+                    className="text-blue-400 hover:text-blue-300 font-bold flex items-center justify-center gap-2 group transition-all"
                   >
                     Explore Documentation
                     <span className="group-hover:translate-x-1 transition-transform">→</span>
@@ -503,7 +503,7 @@ export const SessionListPage: React.FC = () => {
                   transition={{ delay: idx * 0.05 }}
                   key={session.sessionId}
                   onClick={() => handleSessionClick(session.sessionId)}
-                  className="group relative bg-white dark:bg-gray-900 rounded-[2rem] shadow-sm hover:shadow-2xl transition-all duration-500 cursor-pointer border border-gray-100 dark:border-gray-800 overflow-hidden flex flex-col h-full"
+                  className="group relative bg-gray-900/40 backdrop-blur-xl rounded-[2rem] shadow-sm hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-500 cursor-pointer border border-blue-500/20 hover:border-blue-500/40 overflow-hidden flex flex-col h-full"
                 >
                   {/* Hover Glow Effect */}
                   <div className="absolute inset-0 bg-gradient-to-br from-blue-500/0 via-blue-500/0 to-blue-500/0 group-hover:from-blue-500/5 group-hover:via-transparent group-hover:to-purple-500/5 transition-all duration-500" />
@@ -511,20 +511,20 @@ export const SessionListPage: React.FC = () => {
                   <div className="p-8 flex-1 relative z-10">
                     <div className="flex items-center justify-between mb-6">
                       <AgentBadge agent={session.agent} />
-                      <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider bg-gray-100 dark:bg-gray-800 text-gray-500 px-3 py-1.5 rounded-full">
+                      <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider bg-gray-800 text-gray-400 px-3 py-1.5 rounded-full">
                         <Activity className="w-3 h-3 text-blue-500" />
                         {session.eventCount} Events
                       </div>
                     </div>
 
-                    <h2 className="text-2xl font-black text-gray-900 dark:text-gray-100 mb-3 group-hover:text-blue-600 transition-colors line-clamp-2 leading-tight">
+                    <h2 className="text-2xl font-black text-gray-100 mb-3 group-hover:text-blue-400 transition-colors line-clamp-2 leading-tight">
                       {session.slug !== 'unknown-session'
                         ? session.slug
                         : `Session ${session.sessionId.slice(0, 8)}`}
                     </h2>
 
                     <div className="flex items-center gap-2 text-xs text-gray-400 mb-6 font-mono">
-                      <div className="flex items-center gap-1 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 px-2 py-1 rounded-lg shrink-0">
+                      <div className="flex items-center gap-1 bg-blue-900/20 text-blue-400 px-2 py-1 rounded-lg shrink-0">
                         <Folder className="w-3 h-3" />
                         <span className="font-bold">{session.project.split('/').pop()}</span>
                       </div>
@@ -534,14 +534,14 @@ export const SessionListPage: React.FC = () => {
                     {session.firstUserMessage && (
                       <div className="relative group/msg">
                         <div className="absolute -left-4 top-0 bottom-0 w-1 bg-blue-500 rounded-full scale-y-0 group-hover:scale-y-100 transition-transform duration-500" />
-                        <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-3 italic leading-relaxed">
+                        <p className="text-sm text-gray-300 line-clamp-3 italic leading-relaxed">
                           "{session.firstUserMessage}"
                         </p>
                       </div>
                     )}
                   </div>
 
-                  <div className="px-8 py-6 bg-gray-50/50 dark:bg-gray-800/20 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between mt-auto relative z-10">
+                  <div className="px-8 py-6 bg-gray-800/20 border-t border-gray-700/50 flex items-center justify-between mt-auto relative z-10">
                     <div className="flex flex-col gap-2">
                       <div className="flex items-center gap-3 text-[10px] text-gray-500 font-bold uppercase tracking-widest">
                         <div className="flex items-center gap-1">
@@ -560,11 +560,11 @@ export const SessionListPage: React.FC = () => {
 
                     <div className="flex items-center gap-3">
                       {session.duration && (
-                        <div className="flex items-center gap-1.5 text-[10px] font-black text-blue-600 dark:text-blue-400 bg-blue-100/50 dark:bg-blue-900/40 px-3 py-1.5 rounded-xl border border-blue-200/50 dark:border-blue-700/30">
+                        <div className="flex items-center gap-1.5 text-[10px] font-black text-blue-400 bg-blue-900/40 px-3 py-1.5 rounded-xl border border-blue-700/30">
                           {Math.round(session.duration / 60)}M {session.duration % 60}S
                         </div>
                       )}
-                      <div className="w-8 h-8 rounded-full bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 flex items-center justify-center translate-x-4 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-500 shadow-lg">
+                      <div className="w-8 h-8 rounded-full bg-gray-100 text-gray-900 flex items-center justify-center translate-x-4 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-500 shadow-lg">
                         <ChevronRight className="w-5 h-5" />
                       </div>
                     </div>
