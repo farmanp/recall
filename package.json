@@ -15,6 +15,7 @@
     "lint:frontend": "cd frontend && npm run lint",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "prepare": "husky install",
     "prepublishOnly": "npm run build",
     "start": "node bin/recall.js"
   },
@@ -54,7 +55,14 @@
     "open": "^10.0.0"
   },
   "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^15.2.10",
     "prettier": "^3.5.2"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,json,css,md,yml,yaml}": "npx prettier --write",
+    "backend/**/*.{ts,tsx}": "bash -lc \"cd backend && npx eslint -c eslint.config.cjs\"",
+    "frontend/**/*.{ts,tsx}": "bash -lc \"cd frontend && npx eslint -c eslint.config.js\""
   },
   "engines": {
     "node": ">=18.0.0"

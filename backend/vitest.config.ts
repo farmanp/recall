@@ -14,21 +14,21 @@ export default defineConfig({
         '**/*.d.ts',
         '**/*.config.*',
         '**/index.ts',
-        '**/__tests__/**'
+        '**/__tests__/**',
       ],
       thresholds: {
         lines: 25,
         functions: 35,
         branches: 15,
-        statements: 25
-      }
+        statements: 25,
+      },
     },
     include: ['src/**/*.test.ts'],
-    setupFiles: ['./src/__tests__/setup.ts']
+    setupFiles: ['./src/__tests__/setup.ts'],
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src')
-    }
-  }
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
 });
