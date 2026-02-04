@@ -1,5 +1,6 @@
 # Recall
 
+![Project Status: Beta](https://img.shields.io/badge/status-beta-yellow)
 [![npm version](https://img.shields.io/npm/v/recall-player.svg)](https://www.npmjs.com/package/recall-player)
 [![npm downloads](https://img.shields.io/npm/dm/recall-player.svg)](https://www.npmjs.com/package/recall-player)
 
@@ -10,6 +11,12 @@ A local-first web application that lets you **replay AI coding sessions** like a
 - **Claude Code** - Anthropic's CLI coding assistant
 - **Codex CLI** - OpenAI's command-line coding tool
 - **Gemini CLI** - Google's terminal-based AI assistant
+
+## Screenshots
+
+<!-- TODO: Add screenshots -->
+
+_Screenshots coming soon - showing session list, playback controls, and Work Units dashboard_
 
 ---
 
@@ -87,6 +94,16 @@ npm start
 - Automatically detects and parses sessions from all supported agents
 - Agent-specific badges and colors in the UI
 - Normalized frame format for consistent playback experience
+
+### Work Units
+
+Work Units are atomic units of work that span across sessions. They help you:
+
+- Track progress on specific tasks across multiple coding sessions
+- Review all work related to a feature or bug fix in one place
+- Navigate between related sessions easily
+
+Access Work Units from the `/work-units` route in the web interface.
 
 ---
 

@@ -18,15 +18,24 @@ This document describes the technical architecture of the Recall application.
 
 ## Overview
 
-Recall is a **local-first web application** that visualizes Claude Code sessions as a playable timeline. It reads from the `claude-mem` SQLite database and presents sessions in a video-player-like interface.
+Recall is a **local-first web application** that replays AI coding sessions like a video player. It supports multiple AI coding agents by parsing session files directly from their respective directories.
+
+### Supported Agents
+
+| Agent       | Directory                       | Format |
+| ----------- | ------------------------------- | ------ |
+| Claude Code | `~/.claude/projects/{project}/` | JSONL  |
+| Codex CLI   | `~/.codex/sessions/YYYY/MM/`    | JSONL  |
+| Gemini CLI  | `~/.gemini/tmp/{hash}/chats/`   | JSON   |
 
 ### Key Design Principles
 
-1. **Read-Only Access:** Never modify the claude-mem database
-2. **Local-First:** No cloud dependencies, all data stays local
-3. **Type Safety:** Strict TypeScript for reliability
-4. **Time-First Ordering:** Chronological playback is the primary concern
-5. **Performance:** Efficient pagination for large sessions (900+ events)
+1. **File-Based Parsing:** Parse session files directly from agent directories (no external database)
+2. **Read-Only Access:** Never modify session files
+3. **Local-First:** No cloud dependencies, all data stays local
+4. **Type Safety:** Strict TypeScript for reliability
+5. **Time-First Ordering:** Chronological playback is the primary concern
+6. **Performance:** Efficient pagination for large sessions (900+ events)
 
 ---
 
@@ -58,38 +67,40 @@ Recall is a **local-first web application** that visualizes Claude Code sessions
 │  │  ┌──────────────────────────────────────────────────┐  │  │
 │  │  │           Route Handlers                          │  │  │
 │  │  │  ├── GET /api/health                             │  │  │
+│  │  │  ├── GET /api/agents                             │  │  │
 │  │  │  ├── GET /api/sessions                           │  │  │
 │  │  │  ├── GET /api/sessions/:id                       │  │  │
-│  │  │  ├── GET /api/sessions/:id/events                │  │  │
-│  │  │  └── GET /api/sessions/:id/events/:type/:id      │  │  │
+│  │  │  ├── GET /api/sessions/:id/frames                │  │  │
+│  │  │  └── GET /api/work-units/*                       │  │  │
 │  │  └──────────────────────────────────────────────────┘  │  │
 │  │                     │                                    │  │
 │  │  ┌──────────────────▼──────────────────────────────┐  │  │
-│  │  │          Database Query Layer                    │  │  │
-│  │  │  ├── getSessions()                              │  │  │
-│  │  │  ├── getSessionById()                           │  │  │
-│  │  │  ├── getSessionStats()                          │  │  │
-│  │  │  ├── getSessionEvents() [TIME-FIRST ordering]   │  │  │
-│  │  │  └── getEventById()                             │  │  │
+│  │  │          Parser Layer                            │  │  │
+│  │  │  ├── AgentDetector (detect agent from path)     │  │  │
+│  │  │  ├── ParserFactory (select correct parser)      │  │  │
+│  │  │  ├── ClaudeParser (Claude Code JSONL)           │  │  │
+│  │  │  ├── CodexParser (Codex CLI JSONL)              │  │  │
+│  │  │  ├── GeminiParser (Gemini CLI JSON)             │  │  │
+│  │  │  └── SessionIndexer (scan all agent dirs)       │  │  │
 │  │  └──────────────────────────────────────────────────┘  │  │
 │  │                     │                                    │  │
-│  │  ┌──────────────────▼──────────────────────────────┘  │  │
-│  │  │        Database Connection Singleton              │  │  │
-│  │  │  (better-sqlite3, read-only mode)                 │  │  │
-│  │  └────────────────────────────────────────────────────┘  │  │
+│  │  ┌──────────────────▼──────────────────────────────┐  │  │
+│  │  │        SQLite Cache (session metadata)           │  │  │
+│  │  │  (better-sqlite3, local cache only)              │  │  │
+│  │  └──────────────────────────────────────────────────┘  │  │
 │  └─────────────────────────────────────────────────────────┘  │
 │                          │                                     │
 └──────────────────────────┼─────────────────────────────────────┘
-                           │ SQLite Protocol
+                           │ File System Access
                            │
 ┌──────────────────────────▼─────────────────────────────────────┐
 │                   Local File System                            │
 │                                                                 │
-│           ~/.claude-mem/claude-mem.db                          │
-│                                                                 │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐        │
-│  │ sdk_sessions │  │ user_prompts │  │ observations │        │
-│  └──────────────┘  └──────────────┘  └──────────────┘        │
+│  ┌──────────────────────────────────────────────────────────┐ │
+│  │ ~/.claude/projects/{project}/*.jsonl   (Claude Code)     │ │
+│  │ ~/.codex/sessions/YYYY/MM/*.jsonl      (Codex CLI)       │ │
+│  │ ~/.gemini/tmp/{hash}/chats/session-*.json (Gemini CLI)   │ │
+│  └──────────────────────────────────────────────────────────┘ │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -115,11 +126,21 @@ Recall is a **local-first web application** that visualizes Claude Code sessions
 backend/
 ├── src/
 │   ├── db/
-│   │   ├── connection.ts      # Database singleton
-│   │   ├── schema.ts          # TypeScript types
-│   │   └── queries.ts         # SQL queries
+│   │   ├── connection.ts      # SQLite cache connection
+│   │   └── schema.ts          # TypeScript types
+│   ├── parser/
+│   │   ├── agent-detector.ts  # Detect agent type from file path
+│   │   ├── base-parser.ts     # Abstract base parser class
+│   │   ├── claude-parser.ts   # Claude Code JSONL parser
+│   │   ├── codex-parser.ts    # Codex CLI JSONL parser
+│   │   ├── gemini-parser.ts   # Gemini CLI JSON parser
+│   │   ├── parser-factory.ts  # Parser selection factory
+│   │   └── session-indexer.ts # Scan and index sessions
 │   ├── routes/
-│   │   └── sessions.ts        # API route handlers
+│   │   ├── sessions.ts        # Session API routes
+│   │   └── work-units.ts      # Work unit API routes
+│   ├── services/
+│   │   └── work-unit-service.ts # Work unit business logic
 │   ├── server.ts              # Express app configuration
 │   └── index.ts               # Server entry point
 ├── dist/                      # Compiled JavaScript
@@ -161,35 +182,44 @@ backend/
 - Type-safe parameter extraction
 - Consistent error response format
 
-#### 3. Database Query Layer (`db/queries.ts`)
+#### 3. Parser Layer (`parser/`)
 
 **Responsibilities:**
 
-- Execute SQL queries
-- Transform raw database rows into typed objects
-- Parse JSON fields (facts, concepts, files)
-- Implement timeline ordering algorithm
-- Handle pagination
+- Detect agent type from file paths
+- Select appropriate parser for each agent format
+- Parse session files into unified PlaybackFrame format
+- Scan agent directories to discover sessions
 
 **Design Pattern:**
 
-- Pure functions (no side effects beyond DB reads)
-- Return typed results
-- Consistent pagination interface
+- Factory pattern for parser selection
+- Strategy pattern for agent-specific parsing
+- Abstract base class for shared parsing logic
 
-#### 4. Database Connection Layer (`db/connection.ts`)
+**Key Components:**
+
+- `AgentDetector`: Determines agent type (claude, codex, gemini) from file path
+- `ParserFactory`: Creates correct parser instance based on agent type
+- `BaseParser`: Abstract class with shared JSON/JSONL parsing utilities
+- `ClaudeParser`: Parses Claude Code JSONL format
+- `CodexParser`: Parses Codex CLI JSONL with nested date directories
+- `GeminiParser`: Parses Gemini CLI JSON format
+- `SessionIndexer`: Scans all agent directories and indexes sessions
+
+#### 4. Cache Layer (`db/connection.ts`)
 
 **Responsibilities:**
 
-- Manage SQLite connection singleton
-- Open database in read-only mode
-- Provide connection instance to query layer
+- Cache session metadata for fast listing
+- Store session index for quick lookups
+- Provide SQLite-based persistence
 
 **Design Pattern:**
 
-- Singleton pattern for connection pooling
-- Read-only mode for safety
-- Connection cleanup on shutdown
+- Singleton pattern for connection
+- Cache invalidation on session changes
+- Local-only storage (no external dependencies)
 
 #### 5. Type Layer (`db/schema.ts`)
 
@@ -571,132 +601,84 @@ ts: 1000, prompt_number: 1
 
 ---
 
-## Database Schema
+## Session File Formats
 
-The application reads from the `claude-mem` SQLite database located at:
+The application parses session files directly from agent directories:
 
-```
-~/.claude-mem/claude-mem.db
-```
+### Claude Code (JSONL)
 
-### Key Tables
+**Location:** `~/.claude/projects/{project}/*.jsonl`
 
-#### 1. `sdk_sessions`
+**Format:** One JSON event per line
 
-**Purpose:** Session metadata
-
-**Key Columns:**
-
-```sql
-CREATE TABLE sdk_sessions (
-  id INTEGER PRIMARY KEY,
-  claude_session_id TEXT NOT NULL,  -- UUID (used as API identifier)
-  sdk_session_id TEXT NOT NULL,     -- UUID (same as claude_session_id)
-  project TEXT,                      -- Project name
-  user_prompt TEXT,                  -- First user prompt
-  started_at TEXT,                   -- ISO timestamp
-  started_at_epoch INTEGER,          -- Unix epoch (ms)
-  completed_at TEXT,                 -- ISO timestamp
-  completed_at_epoch INTEGER,        -- Unix epoch (ms)
-  status TEXT,                       -- 'active' | 'completed' | 'failed'
-  prompt_counter INTEGER             -- Total prompts in session
-);
+```json
+{"type": "user", "message": {"content": "Help me with..."}, "timestamp": "2026-02-04T10:00:00Z"}
+{"type": "assistant", "message": {"content": "I'll help..."}, "timestamp": "2026-02-04T10:00:05Z"}
+{"type": "tool_use", "tool": "Read", "input": {"file_path": "/path/to/file"}}
+{"type": "tool_result", "content": "File contents..."}
 ```
 
-**Indexes:**
+### Codex CLI (JSONL)
 
-- Primary key on `id`
-- Index on `claude_session_id` for fast lookups
+**Location:** `~/.codex/sessions/YYYY/MM/*.jsonl`
 
-#### 2. `user_prompts`
+**Format:** Wrapped events with `{type, payload}` structure
 
-**Purpose:** User prompts/questions
-
-**Key Columns:**
-
-```sql
-CREATE TABLE user_prompts (
-  id INTEGER PRIMARY KEY,
-  claude_session_id TEXT NOT NULL,  -- Foreign key to sessions
-  prompt_number INTEGER NOT NULL,   -- Sequential number (1, 2, 3, ...)
-  prompt_text TEXT NOT NULL,        -- User's question
-  created_at TEXT,                  -- ISO timestamp
-  created_at_epoch INTEGER          -- Unix epoch (ms)
-);
+```json
+{"type": "message", "payload": {"role": "user", "content": "..."}}
+{"type": "message", "payload": {"role": "assistant", "content": "..."}}
+{"type": "tool_call", "payload": {"name": "shell", "arguments": {...}}}
 ```
 
-#### 3. `observations`
+### Gemini CLI (JSON)
 
-**Purpose:** Claude's work observations
+**Location:** `~/.gemini/tmp/{hash}/chats/session-*.json`
 
-**Key Columns:**
+**Format:** Single JSON file with conversation array
 
-```sql
-CREATE TABLE observations (
-  id INTEGER PRIMARY KEY,
-  sdk_session_id TEXT NOT NULL,     -- Foreign key to sessions
-  project TEXT,
-  type TEXT,                         -- 'feature' | 'bugfix' | 'decision' | ...
-  title TEXT,
-  subtitle TEXT,
-  text TEXT,                         -- Fallback text
-  facts TEXT,                        -- JSON array
-  narrative TEXT,                    -- Full description
-  concepts TEXT,                     -- JSON array
-  files_read TEXT,                   -- JSON array
-  files_modified TEXT,               -- JSON array
-  prompt_number INTEGER,             -- Links to prompt (can be NULL)
-  created_at TEXT,                   -- ISO timestamp
-  created_at_epoch INTEGER,          -- Unix epoch (ms)
-  discovery_tokens INTEGER           -- Token count
-);
+```json
+{
+  "messages": [
+    { "role": "user", "parts": [{ "text": "..." }] },
+    { "role": "model", "parts": [{ "text": "..." }] }
+  ]
+}
 ```
 
-**Observation Types:**
+### Unified PlaybackFrame Format
 
-- `feature`: New feature implementation
-- `bugfix`: Bug fix
-- `decision`: Architecture/design decision
-- `refactor`: Code refactoring
-- `discovery`: Code exploration
-- `change`: General change
+All parsers convert to a unified `PlaybackFrame` format:
 
-### Data Integrity Findings (Phase 0)
-
-**ID Mapping:**
-
-- 127/127 sessions have `claude_session_id === sdk_session_id` ✅
-
-**Prompt Numbers:**
-
-- 0% of observations have NULL `prompt_number` ✅
-- All observations are linked to prompts
-
-**Session Distribution:**
-
-- 88 multi-turn sessions (>1 prompt)
-- 39 single-turn sessions (1 prompt)
-- Largest session: 902 events (44 prompts, 858 observations)
+```typescript
+interface PlaybackFrame {
+  index: number;
+  timestamp: string;
+  type: 'user_message' | 'assistant_message' | 'tool_use' | 'tool_result';
+  content: {
+    text?: string;
+    tool?: string;
+    input?: object;
+    output?: string;
+  };
+}
+```
 
 ---
 
 ## Security Considerations
 
-### 1. Read-Only Database Access
+### 1. Read-Only File Access
 
 **Implementation:**
 
-```typescript
-const db = new Database(DB_PATH, {
-  readonly: true, // ← Critical for safety
-  fileMustExist: true,
-});
-```
+- Session files are opened in read-only mode
+- The application never writes to agent directories
+- Only the local SQLite cache is writable
 
 **Rationale:**
 
 - Prevents accidental data modification
-- Protects claude-mem database integrity
+- Protects original session files from corruption
 - No risk of corrupting user's session history
 
 ### 2. Local-Only Architecture
@@ -721,34 +703,42 @@ const db = new Database(DB_PATH, {
 **Implementation:**
 
 ```typescript
-// Good: Parameterized query
+// Good: Parameterized query (for local cache)
 db.prepare('SELECT * FROM sessions WHERE id = ?').get(sessionId);
 
 // Bad: String concatenation (vulnerable)
 db.prepare(`SELECT * FROM sessions WHERE id = ${sessionId}`).get();
 ```
 
-**All queries use parameterized statements** via `?` placeholders.
+**All cache queries use parameterized statements** via `?` placeholders.
 
-### 4. JSON Parsing Safety
+### 4. JSON/JSONL Parsing Safety
 
 **Implementation:**
 
 ```typescript
-function tryParseJSON(jsonString: string): string[] | undefined {
+function tryParseJSON(jsonString: string): object | undefined {
   try {
-    const parsed = JSON.parse(jsonString);
-    return Array.isArray(parsed) ? parsed : undefined;
+    return JSON.parse(jsonString);
   } catch {
     return undefined; // Fail gracefully
   }
+}
+
+function parseJSONL(content: string): object[] {
+  return content
+    .split('\n')
+    .filter((line) => line.trim())
+    .map((line) => tryParseJSON(line))
+    .filter(Boolean);
 }
 ```
 
 **Rationale:**
 
-- Malformed JSON in database won't crash the app
+- Malformed JSON in session files won't crash the app
 - Type checking after parsing ensures safety
+- Invalid lines are skipped gracefully
 
 ### 5. Error Exposure
 
@@ -858,17 +848,17 @@ try {
 ### Development
 
 ```
-Frontend (Vite):  http://localhost:5173
+Frontend (Vite):   http://localhost:5173
 Backend (Express): http://localhost:3001
-Database:          ~/.claude-mem/claude-mem.db
+Session Files:     ~/.claude/, ~/.codex/, ~/.gemini/
 ```
 
 ### Production (Local)
 
 ```
-Static Frontend:  Served by Express from /public
+Static Frontend:   Served by Express from /public
 Backend (Express): http://localhost:3001
-Database:          ~/.claude-mem/claude-mem.db
+Session Files:     ~/.claude/, ~/.codex/, ~/.gemini/
 ```
 
 **Build Process:**

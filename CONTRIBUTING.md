@@ -23,8 +23,10 @@ Before you begin, ensure you have the following installed:
 
 - **Node.js 18+** (tested with v22.14.0)
 - **npm** (comes with Node.js)
-- **claude-mem** installed with recorded sessions
-  - Database location: `~/.claude-mem/claude-mem.db`
+- **Session files** from at least one supported AI coding agent:
+  - Claude Code: `~/.claude/projects/`
+  - Codex CLI: `~/.codex/sessions/`
+  - Gemini CLI: `~/.gemini/tmp/`
 
 ### Initial Setup
 
@@ -55,11 +57,20 @@ Before you begin, ensure you have the following installed:
    npm install
    ```
 
-5. **Verify database access:**
+5. **Verify session files exist:**
+
    ```bash
-   ls ~/.claude-mem/claude-mem.db
+   # Check for Claude Code sessions
+   ls ~/.claude/projects/
+
+   # Or check for Codex CLI sessions
+   ls ~/.codex/sessions/
+
+   # Or check for Gemini CLI sessions
+   ls ~/.gemini/tmp/
    ```
-   If the file exists, you're ready to go!
+
+   If any of these directories contain session files, you're ready to go!
 
 ---
 
@@ -67,14 +78,24 @@ Before you begin, ensure you have the following installed:
 
 ```
 recall/
-├── backend/                 # Express + TypeScript + SQLite API
+├── backend/                 # Express + TypeScript API
 │   ├── src/
 │   │   ├── db/
-│   │   │   ├── connection.ts    # Database connection singleton
-│   │   │   ├── schema.ts        # TypeScript types
-│   │   │   └── queries.ts       # Database queries
+│   │   │   ├── connection.ts    # SQLite cache connection
+│   │   │   └── schema.ts        # TypeScript types
+│   │   ├── parser/
+│   │   │   ├── agent-detector.ts  # Detect agent type from path
+│   │   │   ├── base-parser.ts     # Abstract base parser
+│   │   │   ├── claude-parser.ts   # Claude Code parser
+│   │   │   ├── codex-parser.ts    # Codex CLI parser
+│   │   │   ├── gemini-parser.ts   # Gemini CLI parser
+│   │   │   ├── parser-factory.ts  # Parser selection
+│   │   │   └── session-indexer.ts # Session discovery
 │   │   ├── routes/
-│   │   │   └── sessions.ts      # API route handlers
+│   │   │   ├── sessions.ts      # Session API routes
+│   │   │   └── work-units.ts    # Work unit API routes
+│   │   ├── services/
+│   │   │   └── work-unit-service.ts # Work unit logic
 │   │   ├── server.ts            # Express app setup
 │   │   └── index.ts             # Server entry point
 │   ├── dist/                    # Compiled JavaScript (generated)
@@ -493,15 +514,20 @@ Add screenshots for UI changes.
 
 ## Common Issues
 
-### Database Connection Errors
+### No Sessions Found
 
-**Problem:** `Database not found at ~/.claude-mem/claude-mem.db`
+**Problem:** The application shows no sessions
 
 **Solution:**
 
-1. Ensure `claude-mem` is installed
-2. Run Claude Code to create some sessions
-3. Verify file exists: `ls ~/.claude-mem/claude-mem.db`
+1. Ensure you have recorded sessions from at least one supported agent
+2. Run Claude Code, Codex CLI, or Gemini CLI to create some sessions
+3. Verify session files exist:
+   ```bash
+   ls ~/.claude/projects/      # Claude Code
+   ls ~/.codex/sessions/       # Codex CLI
+   ls ~/.gemini/tmp/           # Gemini CLI
+   ```
 
 ### TypeScript Compilation Errors
 

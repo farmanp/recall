@@ -6,12 +6,23 @@ This document provides comprehensive examples for all API endpoints in the Recal
 
 - [Base URL](#base-url)
 - [Health Check](#health-check)
+- [Agent Endpoints](#agent-endpoints)
+  - [List Agents](#list-agents)
 - [Session Endpoints](#session-endpoints)
   - [List Sessions](#list-sessions)
   - [Get Session Details](#get-session-details)
+  - [Get Session Frames](#get-session-frames)
   - [Get Session Timeline](#get-session-timeline)
   - [Get Single Event](#get-single-event)
   - [Get Projects](#get-projects)
+  - [Get Session Work Unit](#get-session-work-unit)
+- [Work Units](#work-units)
+  - [List Work Units](#list-work-units)
+  - [Get Work Unit by ID](#get-work-unit-by-id)
+  - [Get Work Unit Statistics](#get-work-unit-statistics)
+  - [Recompute Work Units](#recompute-work-units)
+  - [Update Work Unit](#update-work-unit)
+  - [Delete Work Unit](#delete-work-unit)
 - [Query Parameters](#query-parameters)
 - [Error Responses](#error-responses)
 - [Advanced Examples](#advanced-examples)
@@ -52,6 +63,39 @@ curl http://localhost:3001/api/health
 
 - `200 OK`: Server is healthy
 - `500 Internal Server Error`: Database connection failed
+
+---
+
+## Agent Endpoints
+
+### List Agents
+
+#### `GET /api/agents`
+
+Returns all supported agents with their session counts.
+
+#### Example Request
+
+```bash
+curl http://localhost:3001/api/agents
+```
+
+#### Example Response
+
+```json
+{
+  "agents": [
+    { "id": "claude", "name": "Claude Code", "sessionCount": 42 },
+    { "id": "codex", "name": "Codex CLI", "sessionCount": 15 },
+    { "id": "gemini", "name": "Gemini CLI", "sessionCount": 8 }
+  ]
+}
+```
+
+#### Response Codes
+
+- `200 OK`: Agents retrieved successfully
+- `500 Internal Server Error`: Failed to retrieve agents
 
 ---
 
@@ -201,6 +245,48 @@ curl http://localhost:3001/api/sessions/invalid-uuid
 ```
 
 **Status Code:** `404 Not Found`
+
+---
+
+### Get Session Frames
+
+#### `GET /api/sessions/:id/frames`
+
+Returns all playback frames for a session.
+
+#### Example Request
+
+```bash
+curl http://localhost:3001/api/sessions/abc123/frames
+```
+
+#### Example Response
+
+```json
+{
+  "frames": [
+    {
+      "index": 0,
+      "timestamp": "2026-02-04T10:30:00Z",
+      "type": "user_message",
+      "content": { "text": "Hello, can you help me..." }
+    },
+    {
+      "index": 1,
+      "timestamp": "2026-02-04T10:30:05Z",
+      "type": "assistant_message",
+      "content": { "text": "Of course! Let me..." }
+    }
+  ],
+  "totalFrames": 156
+}
+```
+
+#### Response Codes
+
+- `200 OK`: Frames retrieved successfully
+- `404 Not Found`: Session not found
+- `500 Internal Server Error`: Failed to parse session
 
 ---
 
@@ -439,6 +525,247 @@ curl http://localhost:3001/api/sessions/meta/projects
   ]
 }
 ```
+
+---
+
+### Get Session Work Unit
+
+#### `GET /api/sessions/:id/work-unit`
+
+Get the work unit associated with a specific session.
+
+#### Example Request
+
+```bash
+curl http://localhost:3001/api/sessions/abc123/work-unit
+```
+
+#### Example Response
+
+```json
+{
+  "workUnit": {
+    "id": "wu_456",
+    "title": "Bug fix for login flow",
+    "status": "in_progress"
+  }
+}
+```
+
+#### Response Codes
+
+- `200 OK`: Work unit retrieved successfully
+- `404 Not Found`: Session or work unit not found
+
+---
+
+## Work Units
+
+Work Units are atomic units of work that may span multiple sessions.
+
+### List Work Units
+
+#### `GET /api/work-units`
+
+Get a list of all work units with optional filtering.
+
+#### Example Requests
+
+```bash
+# Get all work units
+curl http://localhost:3001/api/work-units
+
+# Filter by status
+curl 'http://localhost:3001/api/work-units?status=in_progress'
+
+# Filter by session ID
+curl 'http://localhost:3001/api/work-units?sessionId=abc123'
+```
+
+#### Example Response
+
+```json
+{
+  "workUnits": [
+    {
+      "id": "wu_123",
+      "title": "Implement user authentication",
+      "status": "completed",
+      "confidence": 0.95,
+      "sessions": ["session1", "session2"],
+      "createdAt": "2026-02-01T10:00:00Z",
+      "updatedAt": "2026-02-03T15:30:00Z"
+    }
+  ],
+  "total": 1
+}
+```
+
+#### Response Codes
+
+- `200 OK`: Work units retrieved successfully
+- `500 Internal Server Error`: Failed to retrieve work units
+
+---
+
+### Get Work Unit by ID
+
+#### `GET /api/work-units/:id`
+
+Get details for a specific work unit.
+
+#### Example Request
+
+```bash
+curl http://localhost:3001/api/work-units/wu_123
+```
+
+#### Example Response
+
+```json
+{
+  "workUnit": {
+    "id": "wu_123",
+    "title": "Implement user authentication",
+    "status": "completed",
+    "confidence": 0.95,
+    "sessions": ["session1", "session2"],
+    "createdAt": "2026-02-01T10:00:00Z",
+    "updatedAt": "2026-02-03T15:30:00Z"
+  }
+}
+```
+
+#### Response Codes
+
+- `200 OK`: Work unit retrieved successfully
+- `404 Not Found`: Work unit not found
+
+---
+
+### Get Work Unit Statistics
+
+#### `GET /api/work-units/stats`
+
+Get aggregate statistics for all work units.
+
+#### Example Request
+
+```bash
+curl http://localhost:3001/api/work-units/stats
+```
+
+#### Example Response
+
+```json
+{
+  "total": 25,
+  "byStatus": {
+    "pending": 5,
+    "in_progress": 8,
+    "completed": 12
+  },
+  "averageConfidence": 0.87
+}
+```
+
+#### Response Codes
+
+- `200 OK`: Statistics retrieved successfully
+- `500 Internal Server Error`: Failed to calculate statistics
+
+---
+
+### Recompute Work Units
+
+#### `POST /api/work-units/recompute`
+
+Triggers recomputation of work units from session data.
+
+#### Example Request
+
+```bash
+curl -X POST http://localhost:3001/api/work-units/recompute
+```
+
+#### Example Response
+
+```json
+{
+  "message": "Work units recomputation started",
+  "status": "processing"
+}
+```
+
+#### Response Codes
+
+- `200 OK`: Recomputation started successfully
+- `500 Internal Server Error`: Failed to start recomputation
+
+---
+
+### Update Work Unit
+
+#### `PATCH /api/work-units/:id`
+
+Update a work unit's properties.
+
+#### Example Request
+
+```bash
+curl -X PATCH http://localhost:3001/api/work-units/wu_123 \
+  -H "Content-Type: application/json" \
+  -d '{"title": "Updated title", "status": "completed"}'
+```
+
+#### Example Response
+
+```json
+{
+  "workUnit": {
+    "id": "wu_123",
+    "title": "Updated title",
+    "status": "completed",
+    "confidence": 0.95,
+    "sessions": ["session1", "session2"],
+    "createdAt": "2026-02-01T10:00:00Z",
+    "updatedAt": "2026-02-04T12:00:00Z"
+  }
+}
+```
+
+#### Response Codes
+
+- `200 OK`: Work unit updated successfully
+- `400 Bad Request`: Invalid update data
+- `404 Not Found`: Work unit not found
+
+---
+
+### Delete Work Unit
+
+#### `DELETE /api/work-units/:id`
+
+Delete a work unit.
+
+#### Example Request
+
+```bash
+curl -X DELETE http://localhost:3001/api/work-units/wu_123
+```
+
+#### Example Response
+
+```json
+{
+  "message": "Work unit deleted successfully"
+}
+```
+
+#### Response Codes
+
+- `200 OK`: Work unit deleted successfully
+- `404 Not Found`: Work unit not found
 
 ---
 
