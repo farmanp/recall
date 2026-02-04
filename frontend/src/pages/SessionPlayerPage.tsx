@@ -16,6 +16,7 @@ import ReactMarkdown from 'react-markdown';
 import { CodeBlock } from '../components/CodeBlock';
 import { DiffViewer } from '../components/DiffViewer';
 import { AgentBadge } from '../components/AgentBadge';
+import { ModelBadge } from '../components/ModelBadge';
 import {
   ChevronLeft,
   Share2,
@@ -369,8 +370,9 @@ export const SessionPlayerPage: React.FC = () => {
               <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">
                 Agent
               </span>
-              <div className="mt-0.5">
+              <div className="mt-0.5 flex items-center gap-2">
                 <AgentBadge agent={sessionDetails?.agent} />
+                <ModelBadge model={sessionDetails?.metadata?.agentVersion} />
               </div>
             </div>
           </div>

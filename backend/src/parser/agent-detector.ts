@@ -275,8 +275,13 @@ export function getAgentInfo(filePath: string, firstEntry?: any): AgentInfo {
  */
 function extractAgentVersion(entry: any, agentType: AgentType): string | undefined {
   // Look for model field in various locations
+  // Claude stores model in message.model, so check that first
   const model =
-    entry.model || entry.metadata?.model || entry.claudeVersion || entry.metadata?.claudeVersion;
+    entry.message?.model ||
+    entry.model ||
+    entry.metadata?.model ||
+    entry.claudeVersion ||
+    entry.metadata?.claudeVersion;
 
   if (model) {
     return String(model);

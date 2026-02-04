@@ -72,6 +72,11 @@ export class ClaudeParser extends AgentParser {
       (entry as any).slug = rawEntry.slug;
     }
 
+    // Preserve model information if present (stored in message.model for Claude)
+    if (rawEntry.message?.model) {
+      (entry as any).model = rawEntry.message.model;
+    }
+
     return entry;
   }
 

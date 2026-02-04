@@ -337,11 +337,43 @@ export class SessionIndexer {
     // Get cwd from appropriate field (handle both Claude and Codex formats)
     const extractedCwd = firstEntry.payload?.cwd || firstEntry.cwd || '';
 
+    // Extract model from first assistant entry with a model field
+    let model: string | undefined;
+    for (let i = 0; i < Math.min(30, lines.length); i++) {
+      const line = lines[i];
+      if (!line) continue;
+      try {
+        const entry = JSON.parse(line);
+        // Claude format: { message: { model: "claude-opus-4-5-20251101", ... } }
+        if (entry.message?.model) {
+          model = entry.message.model;
+          break;
+        }
+        // Codex format: { model: "..." } at top level
+        if (entry.model) {
+          model = entry.model;
+          break;
+        }
+        // Codex wrapped format: { type: "...", payload: { model: "..." } }
+        if (entry.payload?.model) {
+          model = entry.payload.model;
+          break;
+        }
+        if (entry.metadata?.model) {
+          model = entry.metadata.model;
+          break;
+        }
+      } catch {
+        // Skip malformed JSON lines
+      }
+    }
+
     return {
       sessionId,
       slug,
       project: projectName,
       agent,
+      model,
       startTime,
       endTime,
       duration,
@@ -385,11 +417,21 @@ export class SessionIndexer {
       }
     }
 
+    // Extract model from first gemini message that has a model field
+    let model: string | undefined;
+    if (session.messages?.length) {
+      const geminiMsg = session.messages.find((m: any) => m.type === 'gemini' && m.model);
+      if (geminiMsg?.model) {
+        model = geminiMsg.model;
+      }
+    }
+
     return {
       sessionId,
       slug: 'gemini-session',
       project: projectName,
       agent: 'gemini',
+      model,
       startTime,
       endTime,
       duration,

@@ -183,6 +183,7 @@ export interface SessionMetadata {
   slug: string;
   project: string;
   agent?: AgentType; // Which agent produced this session
+  model?: string; // AI model used (e.g., "claude-opus-4-5-20251101")
   startTime: string;
   endTime?: string;
   duration?: number; // seconds

@@ -10,6 +10,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useSessions, useGlobalSearch } from '../hooks/useTranscriptApi';
 import type { SessionMetadata, AgentType, SearchResult } from '../types/transcript';
 import { AgentBadge } from '../components/AgentBadge';
+import { ModelBadge } from '../components/ModelBadge';
 import { ErrorMessage } from '../components/shared/ErrorMessage';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, Clock, ChevronRight, Hash, Folder, Activity, Search } from 'lucide-react';
@@ -510,7 +511,10 @@ export const SessionListPage: React.FC = () => {
 
                   <div className="p-8 flex-1 relative z-10">
                     <div className="flex items-center justify-between mb-6">
-                      <AgentBadge agent={session.agent} />
+                      <div className="flex items-center gap-2">
+                        <AgentBadge agent={session.agent} />
+                        <ModelBadge model={session.model} />
+                      </div>
                       <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider bg-gray-800 text-gray-400 px-3 py-1.5 rounded-full">
                         <Activity className="w-3 h-3 text-blue-500" />
                         {session.eventCount} Events
