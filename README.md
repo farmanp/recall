@@ -1,5 +1,8 @@
 # Recall
 
+[![npm version](https://img.shields.io/npm/v/recall-player.svg)](https://www.npmjs.com/package/recall-player)
+[![npm downloads](https://img.shields.io/npm/dm/recall-player.svg)](https://www.npmjs.com/package/recall-player)
+
 A local-first web application that lets you **replay AI coding sessions** like a video player. Watch how features were built, decisions made, and problems solved across multiple AI coding agents.
 
 **Supported Agents:**
@@ -21,41 +24,35 @@ A local-first web application that lets you **replay AI coding sessions** like a
 
 ### Installation
 
+**Option 1: npx (Recommended)**
+```bash
+npx recall-player
+```
+This will start Recall and automatically open your browser.
+
+**Option 2: Global Install**
+```bash
+npm install -g recall-player
+recall
+```
+
+**Option 3: Development Setup**
 ```bash
 # Clone the repository
-git clone https://github.com/anthropics/recall.git
+git clone https://github.com/farmanp/recall.git
 cd recall
 
-# Install backend dependencies
-cd backend
+# Install and build
 npm install
+npm run build
 
-# Install frontend dependencies
-cd ../frontend
-npm install
+# Start the server
+npm start
 ```
-
-### Running the Application
-
-You need to run both the backend and frontend servers:
-
-**Terminal 1 - Backend:**
-```bash
-cd backend
-npm run dev
-```
-Backend will start on http://localhost:3001
-
-**Terminal 2 - Frontend:**
-```bash
-cd frontend
-npm run dev
-```
-Frontend will start on http://localhost:5173 (or next available port)
 
 ### Using Recall
 
-1. Open your browser to http://localhost:5173
+1. Recall will automatically open your browser to http://localhost:3001
 2. You'll see a list of all your AI coding sessions
 3. Use the filter tabs (All, Claude, Codex, Gemini) to filter by agent
 4. Click on any session to open the replay player
@@ -164,6 +161,14 @@ curl 'http://localhost:3001/api/sessions/{sessionId}/frames'
 
 ## Development
 
+### Quick Development Setup
+```bash
+git clone https://github.com/farmanp/recall.git
+cd recall
+npm run build    # Build everything
+npm start        # Start the server
+```
+
 ### Backend Development
 ```bash
 cd backend
@@ -176,10 +181,16 @@ npm test         # Run tests
 ### Frontend Development
 ```bash
 cd frontend
-npm run dev      # Development with hot reload
+npm run dev      # Development with hot reload (with API proxy)
 npm run build    # Build for production
 npm run lint     # Run ESLint
 npm run preview  # Preview production build
+```
+
+### Publishing
+```bash
+npm run build              # Build backend + frontend
+npm publish --access public --otp=CODE  # Publish to npm
 ```
 
 ---
