@@ -13,7 +13,16 @@ import { AgentBadge } from '../components/AgentBadge';
 import { ModelBadge } from '../components/ModelBadge';
 import { ErrorMessage } from '../components/shared/ErrorMessage';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, Clock, ChevronRight, Hash, Folder, Activity, Search } from 'lucide-react';
+import {
+  Calendar,
+  Clock,
+  ChevronRight,
+  Hash,
+  Folder,
+  Activity,
+  Search,
+  FileText,
+} from 'lucide-react';
 
 type DateRange = 'all' | 'today' | 'week' | 'month';
 
@@ -514,6 +523,15 @@ export const SessionListPage: React.FC = () => {
                       <div className="flex items-center gap-2">
                         <AgentBadge agent={session.agent} />
                         <ModelBadge model={session.model} />
+                        {session.claudeMdFiles && session.claudeMdFiles.length > 0 && (
+                          <div
+                            className="flex items-center gap-1 px-2 py-0.5 bg-emerald-900/30 text-emerald-400 text-[10px] font-bold rounded-full border border-emerald-700/30"
+                            title={`${session.claudeMdFiles.length} CLAUDE.md files loaded`}
+                          >
+                            <FileText className="w-3 h-3" />
+                            {session.claudeMdFiles.length}
+                          </div>
+                        )}
                       </div>
                       <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider bg-gray-800 text-gray-400 px-3 py-1.5 rounded-full">
                         <Activity className="w-3 h-3 text-blue-500" />

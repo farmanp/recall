@@ -85,7 +85,17 @@ export interface SessionTimeline {
     agentVersion?: string;
     gitBranch?: string;
     cwd: string;
+    claudeMdFiles?: ClaudeMdInfo[]; // CLAUDE.md files loaded during session
   };
+}
+
+/**
+ * CLAUDE.md file information for observability
+ */
+export interface ClaudeMdInfo {
+  path: string; // Full path to the CLAUDE.md file
+  loadedAt: string; // ISO 8601 timestamp when first seen
+  content?: string; // Optional: the actual content (fetched on demand)
 }
 
 /**
@@ -103,6 +113,7 @@ export interface SessionMetadata {
   eventCount: number;
   cwd: string;
   firstUserMessage?: string;
+  claudeMdFiles?: ClaudeMdInfo[]; // CLAUDE.md files loaded during session
 }
 
 /**
@@ -128,6 +139,7 @@ export interface SessionDetailsResponse {
     agentVersion?: string;
     gitBranch?: string;
     cwd: string;
+    claudeMdFiles?: ClaudeMdInfo[]; // CLAUDE.md files loaded during session
   };
 }
 

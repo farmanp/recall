@@ -33,6 +33,7 @@ import {
   Hash,
   MessageSquare,
   Layout,
+  FileText,
 } from 'lucide-react';
 import { CommentaryTimeline, CommentaryCard } from '../components/CommentaryBubble';
 import { TimelineScrubber } from '../components/session-player/TimelineScrubber';
@@ -44,6 +45,7 @@ import {
 } from '../components/session-player/frameTypeFiltersUtils';
 import { HelpPanel } from '../components/session-player/HelpPanel';
 import { StatsPanel } from '../components/session-player/StatsPanel';
+import { ClaudeMdPanel } from '../components/session-player/ClaudeMdPanel';
 import { useSessionStats } from '../hooks/useSessionStats';
 import {
   findMatchingFrameIndices,
@@ -76,6 +78,7 @@ export const SessionPlayerPage: React.FC = () => {
   const [compressionEnabled, setCompressionEnabled] = useState(true);
   const [showHelp, setShowHelp] = useState(false);
   const [showStats, setShowStats] = useState(false);
+  const [showClaudeMd, setShowClaudeMd] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'timeline' | 'chat'>('timeline');
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
@@ -209,6 +212,11 @@ export const SessionPlayerPage: React.FC = () => {
           e.preventDefault();
           setShowStats((prev) => !prev);
           break;
+        case 'd':
+        case 'D':
+          e.preventDefault();
+          setShowClaudeMd((prev) => !prev);
+          break;
         case '1':
         case '2':
         case '3':
@@ -223,6 +231,8 @@ export const SessionPlayerPage: React.FC = () => {
             setShowHelp(false);
           } else if (showStats) {
             setShowStats(false);
+          } else if (showClaudeMd) {
+            setShowClaudeMd(false);
           } else {
             navigate('/');
           }
@@ -291,6 +301,7 @@ export const SessionPlayerPage: React.FC = () => {
     navigate,
     showHelp,
     showStats,
+    showClaudeMd,
   ]);
 
   if (loadingDetails || loadingFrames) {
@@ -408,6 +419,21 @@ export const SessionPlayerPage: React.FC = () => {
             ) : (
               <Layout className="w-5 h-5" />
             )}
+          </button>
+
+          <button
+            onClick={() => setShowClaudeMd(!showClaudeMd)}
+            className={`p-2.5 rounded-xl transition-all border active:scale-95 ${
+              showClaudeMd
+                ? 'bg-emerald-600 border-emerald-500 text-white'
+                : sessionDetails?.metadata?.claudeMdFiles?.length
+                  ? 'bg-gray-800 border-white/5 text-gray-400 hover:text-white'
+                  : 'bg-gray-800 border-white/5 text-gray-600 cursor-not-allowed'
+            }`}
+            title={`Project instructions (d) - ${sessionDetails?.metadata?.claudeMdFiles?.length || 0} CLAUDE.md files`}
+            disabled={!sessionDetails?.metadata?.claudeMdFiles?.length}
+          >
+            <FileText className="w-5 h-5" />
           </button>
 
           <button
@@ -652,6 +678,12 @@ export const SessionPlayerPage: React.FC = () => {
       )}
       {showHelp && <HelpPanel onClose={() => setShowHelp(false)} />}
       {showStats && <StatsPanel stats={stats} onClose={() => setShowStats(false)} />}
+      {showClaudeMd && (
+        <ClaudeMdPanel
+          claudeMdFiles={sessionDetails?.metadata?.claudeMdFiles || []}
+          onClose={() => setShowClaudeMd(false)}
+        />
+      )}
     </div>
   );
 };

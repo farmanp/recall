@@ -1,7 +1,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import os from 'os';
-import { SessionMetadata, AgentType } from '../types/transcript';
+import { SessionMetadata, AgentType, ClaudeMdInfo } from '../types/transcript';
 
 /**
  * Session indexer - scans agent session directories for all available sessions
@@ -337,6 +337,10 @@ export class SessionIndexer {
     // Get cwd from appropriate field (handle both Claude and Codex formats)
     const extractedCwd = firstEntry.payload?.cwd || firstEntry.cwd || '';
 
+    // Extract CLAUDE.md files for Claude sessions
+    const claudeMdFiles =
+      agent === 'claude' ? this.extractClaudeMdFiles(lines, startTime) : undefined;
+
     // Extract model from first assistant entry with a model field
     let model: string | undefined;
     for (let i = 0; i < Math.min(30, lines.length); i++) {
@@ -380,6 +384,7 @@ export class SessionIndexer {
       eventCount: lines.length,
       cwd: extractedCwd,
       firstUserMessage,
+      claudeMdFiles,
     };
   }
 
@@ -633,6 +638,62 @@ export class SessionIndexer {
     } catch {
       return false;
     }
+  }
+
+  /**
+   * Extract CLAUDE.md file references from session content
+   * Looks for patterns like "Contents of /path/to/CLAUDE.md" in system-reminders
+   */
+  private extractClaudeMdFiles(lines: string[], startTime: string): ClaudeMdInfo[] {
+    const claudeMdFiles: ClaudeMdInfo[] = [];
+    const seenPaths = new Set<string>();
+
+    // Pattern to match CLAUDE.md paths in system-reminder content
+    // Matches: "Contents of /path/to/CLAUDE.md" or "Contents of /path/to/CLAUDE.md:"
+    const claudeMdPattern = /Contents of ([^\s:]+CLAUDE\.md)/gi;
+
+    for (const line of lines) {
+      if (!line) continue;
+
+      try {
+        const entry = JSON.parse(line);
+
+        // Get timestamp for this entry
+        const entryTimestamp = entry.timestamp || startTime;
+
+        // Check message content for CLAUDE.md references
+        if (entry.message?.content) {
+          const content = entry.message.content;
+
+          // Handle content as array or string
+          const textContent = Array.isArray(content)
+            ? content
+                .filter((block: any) => block.type === 'text')
+                .map((block: any) => block.text)
+                .join('\n')
+            : typeof content === 'string'
+              ? content
+              : '';
+
+          // Find all CLAUDE.md references
+          let match;
+          while ((match = claudeMdPattern.exec(textContent)) !== null) {
+            const claudeMdPath = match[1];
+            if (claudeMdPath && !seenPaths.has(claudeMdPath)) {
+              seenPaths.add(claudeMdPath);
+              claudeMdFiles.push({
+                path: claudeMdPath,
+                loadedAt: entryTimestamp,
+              });
+            }
+          }
+        }
+      } catch {
+        // Skip malformed JSON lines
+      }
+    }
+
+    return claudeMdFiles;
   }
 }
 
