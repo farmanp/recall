@@ -88,13 +88,13 @@ export const WorkUnitListPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900">
+    <div className="min-h-screen bg-gray-950">
       {/* Header */}
-      <div className="bg-gray-800 border-b border-gray-700 sticky top-0 z-10">
+      <div className="bg-gray-900/40 backdrop-blur-xl border-b border-blue-500/20 shadow-[0_0_20px_rgba(59,130,246,0.1)] sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-white flex items-center gap-3">
+              <h1 className="text-3xl font-bold text-gray-100 flex items-center gap-3">
                 <Layers className="w-8 h-8 text-blue-500" />
                 Work Units
               </h1>
@@ -111,7 +111,7 @@ export const WorkUnitListPage: React.FC = () => {
             <div className="flex items-center gap-3">
               <Link
                 to="/"
-                className="px-4 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded-lg transition-colors flex items-center gap-2"
+                className="px-4 py-2 text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-lg transition-colors flex items-center gap-2 border border-blue-500/20"
               >
                 <List className="w-4 h-4" />
                 Sessions
@@ -133,18 +133,18 @@ export const WorkUnitListPage: React.FC = () => {
 
       {/* Stats Bar */}
       {stats && (
-        <div className="bg-gray-850 border-b border-gray-700">
+        <div className="bg-gray-900/40 backdrop-blur-xl border-b border-blue-500/20 shadow-[0_0_20px_rgba(59,130,246,0.1)]">
           <div className="max-w-7xl mx-auto px-4 py-4">
             <div className="flex items-center gap-6">
               <div className="flex items-center gap-2 text-sm">
-                <span className="text-gray-500">Confidence:</span>
-                <span className="px-2 py-0.5 bg-green-700 text-green-100 rounded text-xs">
+                <span className="text-gray-400">Confidence:</span>
+                <span className="px-2 py-0.5 bg-green-600/20 text-green-400 rounded text-xs border border-green-500/30">
                   High: {stats.byConfidence.high}
                 </span>
-                <span className="px-2 py-0.5 bg-yellow-700 text-yellow-100 rounded text-xs">
+                <span className="px-2 py-0.5 bg-yellow-600/20 text-yellow-400 rounded text-xs border border-yellow-500/30">
                   Medium: {stats.byConfidence.medium}
                 </span>
-                <span className="px-2 py-0.5 bg-gray-600 text-gray-100 rounded text-xs">
+                <span className="px-2 py-0.5 bg-gray-600/20 text-gray-400 rounded text-xs border border-gray-500/30">
                   Low: {stats.byConfidence.low}
                 </span>
               </div>
@@ -156,12 +156,12 @@ export const WorkUnitListPage: React.FC = () => {
                     key={agent}
                     className={`px-2 py-0.5 rounded text-xs ${
                       agent === 'claude'
-                        ? 'bg-orange-600 text-orange-100'
+                        ? 'bg-orange-600/20 text-orange-400 border border-orange-500/30'
                         : agent === 'codex'
-                          ? 'bg-green-600 text-green-100'
+                          ? 'bg-green-600/20 text-green-400 border border-green-500/30'
                           : agent === 'gemini'
-                            ? 'bg-blue-600 text-blue-100'
-                            : 'bg-gray-600 text-gray-100'
+                            ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30'
+                            : 'bg-gray-600/20 text-gray-400 border border-gray-500/30'
                     }`}
                   >
                     {agent}: {count}
@@ -174,7 +174,7 @@ export const WorkUnitListPage: React.FC = () => {
       )}
 
       {/* Filters */}
-      <div className="bg-gray-850 border-b border-gray-700">
+      <div className="bg-gray-900/40 backdrop-blur-xl border-b border-blue-500/20 shadow-[0_0_20px_rgba(59,130,246,0.1)]">
         <div className="max-w-7xl mx-auto px-4 py-3">
           <div className="flex items-center gap-4">
             {/* Confidence Filter */}
@@ -250,12 +250,12 @@ export const WorkUnitListPage: React.FC = () => {
       {/* Work Unit List */}
       <div className="max-w-7xl mx-auto px-4 py-8">
         {workUnits.length === 0 ? (
-          <div className="bg-gray-800 rounded-2xl p-16 text-center border border-gray-700 max-w-2xl mx-auto">
+          <div className="bg-gray-900/60 backdrop-blur-xl rounded-2xl p-16 text-center border border-blue-500/20 shadow-[0_0_30px_rgba(59,130,246,0.15)] max-w-2xl mx-auto">
             <div className="text-6xl mb-6">
               <Layers className="w-16 h-16 mx-auto text-gray-600" />
             </div>
-            <h2 className="text-2xl font-bold text-white mb-3">No Work Units Found</h2>
-            <p className="text-gray-400 mb-8 leading-relaxed">
+            <h2 className="text-2xl font-bold text-gray-100 mb-3">No Work Units Found</h2>
+            <p className="text-gray-300 mb-8 leading-relaxed">
               {selectedConfidence !== 'all' || selectedAgent !== 'all'
                 ? 'No work units match your current filters. Try adjusting them.'
                 : "Work units are created by analyzing patterns across your coding sessions. Click 'Recompute' to analyze your sessions and create work units."}
@@ -307,7 +307,7 @@ export const WorkUnitListPage: React.FC = () => {
             <button
               onClick={handlePrevPage}
               disabled={offset === 0}
-              className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-700"
+              className="px-4 py-2 bg-gray-900/40 backdrop-blur-xl border border-blue-500/20 rounded-lg text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-800/50"
             >
               Previous
             </button>
@@ -319,7 +319,7 @@ export const WorkUnitListPage: React.FC = () => {
             <button
               onClick={handleNextPage}
               disabled={offset + LIMIT >= total}
-              className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-700"
+              className="px-4 py-2 bg-gray-900/40 backdrop-blur-xl border border-blue-500/20 rounded-lg text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-800/50"
             >
               Next
             </button>

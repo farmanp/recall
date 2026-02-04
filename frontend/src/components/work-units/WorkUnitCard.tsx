@@ -13,11 +13,26 @@ interface WorkUnitCardProps {
 
 const confidenceConfig: Record<
   WorkUnitConfidence,
-  { label: string; color: string; bgColor: string }
+  { label: string; color: string; bgColor: string; borderColor: string }
 > = {
-  high: { label: 'High', color: 'text-green-100', bgColor: 'bg-green-700' },
-  medium: { label: 'Medium', color: 'text-yellow-100', bgColor: 'bg-yellow-700' },
-  low: { label: 'Low', color: 'text-gray-100', bgColor: 'bg-gray-600' },
+  high: {
+    label: 'High',
+    color: 'text-green-400',
+    bgColor: 'bg-green-600/20',
+    borderColor: 'border-green-500/30',
+  },
+  medium: {
+    label: 'Medium',
+    color: 'text-yellow-400',
+    bgColor: 'bg-yellow-600/20',
+    borderColor: 'border-yellow-500/30',
+  },
+  low: {
+    label: 'Low',
+    color: 'text-gray-400',
+    bgColor: 'bg-gray-600/20',
+    borderColor: 'border-gray-500/30',
+  },
 };
 
 function formatDuration(seconds: number): string {
@@ -47,7 +62,9 @@ function formatRelativeTime(isoDate: string): string {
 function ConfidenceBadge({ confidence }: { confidence: WorkUnitConfidence }) {
   const config = confidenceConfig[confidence];
   return (
-    <span className={`${config.bgColor} ${config.color} px-2 py-0.5 text-xs rounded font-medium`}>
+    <span
+      className={`${config.bgColor} ${config.color} px-2.5 py-1 text-xs rounded font-medium border ${config.borderColor}`}
+    >
       {config.label}
     </span>
   );
@@ -63,15 +80,15 @@ export function WorkUnitCard({ workUnit }: WorkUnitCardProps) {
   return (
     <Link
       to={`/work-units/${workUnit.id}`}
-      className="block bg-gray-800 rounded-lg p-4 hover:bg-gray-750 transition-colors border border-gray-700 hover:border-gray-600"
+      className="group block bg-gray-900/40 backdrop-blur-xl rounded-2xl p-6 hover:bg-gray-800/50 transition-all duration-500 border border-blue-500/20 hover:border-blue-500/40 hover:shadow-2xl hover:shadow-blue-500/10"
     >
       {/* Header */}
       <div className="flex items-start justify-between gap-4 mb-3">
         <div className="flex-1 min-w-0">
-          <h3 className="text-white font-medium text-lg truncate" title={workUnit.name}>
+          <h3 className="text-gray-100 font-bold text-lg truncate" title={workUnit.name}>
             {workUnit.name}
           </h3>
-          <p className="text-gray-400 text-sm truncate" title={workUnit.projectPath}>
+          <p className="text-gray-400 text-sm truncate mt-1" title={workUnit.projectPath}>
             {workUnit.projectPath}
           </p>
         </div>
@@ -79,7 +96,7 @@ export function WorkUnitCard({ workUnit }: WorkUnitCardProps) {
       </div>
 
       {/* Preview */}
-      <p className="text-gray-300 text-sm mb-4 line-clamp-2">{truncatedPreview}</p>
+      <p className="text-gray-300 text-sm mb-4 line-clamp-2 leading-relaxed">{truncatedPreview}</p>
 
       {/* Stats row */}
       <div className="flex items-center gap-4 text-sm text-gray-400 mb-3">
