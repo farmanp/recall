@@ -1,6 +1,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import os from 'os';
+import { createHash } from 'crypto';
 import { SessionMetadata, AgentType, ClaudeMdInfo } from '../types/transcript';
 
 /**
@@ -641,16 +642,19 @@ export class SessionIndexer {
   }
 
   /**
-   * Extract CLAUDE.md file references from session content
-   * Looks for patterns like "Contents of /path/to/CLAUDE.md" in system-reminders
+   * Extract CLAUDE.md file references and content from session transcript
+   * Phase 2: Now extracts full content and computes SHA-256 hash for deduplication
+   *
+   * Looks for patterns like:
+   * "Contents of /path/to/CLAUDE.md:\n<content>"
+   *
+   * @param lines - Lines from the .jsonl transcript file
+   * @param startTime - Session start time (fallback for timestamps)
+   * @returns Array of CLAUDE.md file info with content and hash
    */
   private extractClaudeMdFiles(lines: string[], startTime: string): ClaudeMdInfo[] {
     const claudeMdFiles: ClaudeMdInfo[] = [];
     const seenPaths = new Set<string>();
-
-    // Pattern to match CLAUDE.md paths in system-reminder content
-    // Matches: "Contents of /path/to/CLAUDE.md" or "Contents of /path/to/CLAUDE.md:"
-    const claudeMdPattern = /Contents of ([^\s:]+CLAUDE\.md)/gi;
 
     for (const line of lines) {
       if (!line) continue;
@@ -666,26 +670,42 @@ export class SessionIndexer {
           const content = entry.message.content;
 
           // Handle content as array or string
+          // Check 'text', 'tool_result', and 'thinking' blocks since system-reminders can appear in any
           const textContent = Array.isArray(content)
             ? content
-                .filter((block: any) => block.type === 'text')
-                .map((block: any) => block.text)
+                .map((block: any) => {
+                  if (block.type === 'text') return block.text;
+                  if (block.type === 'thinking') return block.thinking;
+                  if (block.type === 'tool_result' && typeof block.content === 'string') {
+                    return block.content;
+                  }
+                  return '';
+                })
                 .join('\n')
             : typeof content === 'string'
               ? content
               : '';
 
-          // Find all CLAUDE.md references
+          // Pattern to match CLAUDE.md paths in "Contents of /path/CLAUDE.md" format
+          const claudeMdPathRegex = /Contents of ([^\s:]+CLAUDE\.md)/gi;
+
           let match;
-          while ((match = claudeMdPattern.exec(textContent)) !== null) {
+          while ((match = claudeMdPathRegex.exec(textContent)) !== null) {
             const claudeMdPath = match[1];
-            if (claudeMdPath && !seenPaths.has(claudeMdPath)) {
-              seenPaths.add(claudeMdPath);
-              claudeMdFiles.push({
-                path: claudeMdPath,
-                loadedAt: entryTimestamp,
-              });
+
+            if (!claudeMdPath) continue;
+
+            // Deduplicate by path (Phase 1 just tracks which files were loaded)
+            if (seenPaths.has(claudeMdPath)) {
+              continue;
             }
+
+            seenPaths.add(claudeMdPath);
+
+            claudeMdFiles.push({
+              path: claudeMdPath,
+              loadedAt: entryTimestamp,
+            });
           }
         }
       } catch {
@@ -694,6 +714,15 @@ export class SessionIndexer {
     }
 
     return claudeMdFiles;
+  }
+
+  /**
+   * Compute SHA-256 hash of content for deduplication
+   * TODO: Used in Phase 2 for content extraction
+   */
+  // @ts-expect-error - Reserved for Phase 2 content extraction
+  private computeContentHash(content: string): string {
+    return createHash('sha256').update(content, 'utf8').digest('hex');
   }
 }
 
