@@ -158,6 +158,7 @@ export interface SessionListQuery {
   limit?: number;
   project?: string;
   agent?: AgentType;
+  hasClaudeMd?: boolean;
 }
 
 export interface SessionFramesQuery {

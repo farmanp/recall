@@ -38,6 +38,7 @@ export const SessionListPage: React.FC = () => {
   const [minDuration, setMinDuration] = useState<number>(0);
   const [minEventCount, setMinEventCount] = useState<number>(0);
   const [selectedAgent, setSelectedAgent] = useState<AgentType | 'all'>('all');
+  const [hasClaudeMdFilter, setHasClaudeMdFilter] = useState<boolean>(false);
   const [searchMode, setSearchMode] = useState<'sessions' | 'content'>(
     (searchParams.get('mode') as 'sessions' | 'content') || 'sessions'
   );
@@ -46,6 +47,7 @@ export const SessionListPage: React.FC = () => {
     offset,
     limit: LIMIT,
     ...(selectedAgent !== 'all' && { agent: selectedAgent }),
+    ...(hasClaudeMdFilter && { hasClaudeMd: true }),
   });
 
   const { data: globalSearchData, isLoading: isSearchingContent } = useGlobalSearch({
@@ -310,12 +312,28 @@ export const SessionListPage: React.FC = () => {
               </select>
             </div>
 
+            {/* CLAUDE.md Filter Toggle */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setHasClaudeMdFilter(!hasClaudeMdFilter)}
+                className={`px-3 py-1 text-sm rounded flex items-center gap-1.5 transition-all ${
+                  hasClaudeMdFilter
+                    ? 'bg-emerald-600 text-white'
+                    : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700/50 border border-emerald-500/20'
+                }`}
+              >
+                <FileText className="w-3.5 h-3.5" />
+                CLAUDE.md
+              </button>
+            </div>
+
             {/* Clear Filters Button */}
             {(searchQuery ||
               dateRange !== 'all' ||
               minDuration > 0 ||
               minEventCount > 0 ||
-              selectedAgent !== 'all') && (
+              selectedAgent !== 'all' ||
+              hasClaudeMdFilter) && (
               <button
                 onClick={() => {
                   setSearchQuery('');
@@ -323,6 +341,7 @@ export const SessionListPage: React.FC = () => {
                   setMinDuration(0);
                   setMinEventCount(0);
                   setSelectedAgent('all');
+                  setHasClaudeMdFilter(false);
                 }}
                 className="ml-auto px-3 py-1 text-sm text-gray-400 hover:text-gray-200 underline"
               >
@@ -440,6 +459,7 @@ export const SessionListPage: React.FC = () => {
                   setMinDuration(0);
                   setMinEventCount(0);
                   setSelectedAgent('all');
+                  setHasClaudeMdFilter(false);
                 }}
                 className="px-8 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-500/25 active:scale-95"
               >

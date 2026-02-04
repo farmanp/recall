@@ -37,6 +37,7 @@ export async function fetchSessions(query: SessionListQuery = {}): Promise<Sessi
   if (query.limit !== undefined) params.append('limit', query.limit.toString());
   if (query.project) params.append('project', query.project);
   if (query.agent) params.append('agent', query.agent);
+  if (query.hasClaudeMd) params.append('hasClaudeMd', 'true');
 
   const url = `${API_BASE_URL}/sessions?${params.toString()}`;
   const response = await fetch(url);
