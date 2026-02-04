@@ -66,12 +66,28 @@ npm publish          # Publish to npm
    cd frontend && npm test
    ```
 
-2. **Update version** in `package.json` following semver:
+2. **CRITICAL: Verify all backend dependencies are in root package.json**:
+
+   For `npx recall-player` to work, ALL runtime dependencies used by backend must also be in the root `package.json`. This is because npx installs from root, not from backend/.
+
+   ```bash
+   # Check for any backend deps missing from root
+   diff <(cat backend/package.json | jq -r '.dependencies | keys[]' | sort) \
+        <(cat package.json | jq -r '.dependencies | keys[]' | sort)
+   ```
+
+   If any backend dependency is missing from root, add it:
+
+   ```bash
+   npm install <missing-package> --save
+   ```
+
+3. **Update version** in `package.json` following semver:
    - `patch` (1.0.x): Bug fixes
    - `minor` (1.x.0): New features (backward compatible)
    - `major` (x.0.0): Breaking changes
 
-3. **Update CHANGELOG.md** with the new version and changes:
+4. **Update CHANGELOG.md** with the new version and changes:
 
    ```markdown
    ## [x.y.z] - YYYY-MM-DD
@@ -89,7 +105,7 @@ npm publish          # Publish to npm
    - Bug fixes
    ```
 
-4. **Commit and push** the version bump and changelog:
+5. **Commit and push** the version bump and changelog:
    ```bash
    git add package.json CHANGELOG.md
    git commit -m "chore: bump version to x.y.z and update changelog"
