@@ -4,11 +4,26 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Recall is a local-first web application that visualizes Claude Code sessions like a video player. It reads from the `claude-mem` SQLite database (`~/.claude-mem/claude-mem.db`) in read-only mode.
+Recall is a local-first web application that replays AI coding sessions like a video player. It supports multiple AI coding agents:
 
-## Commands
+- **Claude Code** - Sessions from `~/.claude/projects/`
+- **Codex CLI** - Sessions from `~/.codex/sessions/`
+- **Gemini CLI** - Sessions from `~/.gemini/tmp/`
 
-### Backend (Express + TypeScript + SQLite)
+## Quick Start
+
+```bash
+# Run via npx (recommended)
+npx recall-player
+
+# Or install globally
+npm install -g recall-player
+recall
+```
+
+## Development Commands
+
+### Backend (Express + TypeScript)
 
 ```bash
 cd backend
@@ -19,7 +34,6 @@ npm start            # Production (from dist/)
 npm test             # Run Vitest tests
 npm run test:ui      # Tests with UI
 npm run test:coverage # Tests with coverage report
-npm run import       # Import transcripts CLI
 ```
 
 ### Frontend (React + Vite + TypeScript)
@@ -33,50 +47,76 @@ npm run lint         # Run ESLint
 npm run preview      # Preview production build
 ```
 
+### Full Build & Publish
+
+```bash
+npm run build        # Build backend + frontend
+npm start            # Start production server
+npm publish          # Publish to npm
+```
+
 ### Testing the API
 
 ```bash
 curl http://localhost:3001/api/health
-curl 'http://localhost:3001/api/sessions?limit=5'
-curl http://localhost:3001/api/sessions/<session_id>
-curl 'http://localhost:3001/api/sessions/<session_id>/events?limit=100'
+curl http://localhost:3001/api/agents                    # List agents with counts
+curl 'http://localhost:3001/api/sessions?agent=claude'   # Filter by agent
+curl 'http://localhost:3001/api/sessions/<id>/frames'    # Get session frames
 ```
 
 ## Architecture
 
-### Dual Database System
+### Multi-Agent Parser System
 
-- **claude-mem database** (`~/.claude-mem/claude-mem.db`): Main session data (sessions, prompts, observations)
-- **Transcript database** (`backend/src/db/transcript-*`): Imported raw transcripts for detailed replay
+The parser system uses a factory pattern to handle different agent formats:
+
+```
+File Path → AgentDetector → ParserFactory → AgentParser → PlaybackFrames
+```
+
+**Parser files** (`backend/src/parser/`):
+
+- `agent-detector.ts` - Detects agent type from file path
+- `base-parser.ts` - Abstract base class with shared parsing logic
+- `claude-parser.ts` - Claude Code JSONL format
+- `codex-parser.ts` - Codex CLI JSONL format (with nested date directories)
+- `gemini-parser.ts` - Gemini CLI JSON format
+- `parser-factory.ts` - Selects appropriate parser based on agent type
+- `session-indexer.ts` - Scans and indexes sessions from all agents
 
 ### Backend Layers
 
-1. **Server Layer** (`src/index.ts`, `src/server.ts`): Express app setup, middleware, graceful shutdown
-2. **Route Layer** (`src/routes/`): HTTP handlers for sessions, commentary, import
-3. **Query Layer** (`src/db/queries.ts`): SQL with TIME-FIRST ordering algorithm
-4. **Connection Layer** (`src/db/connection.ts`): SQLite singleton (read-only mode)
+1. **Server Layer** (`src/index.ts`, `src/server.ts`): Express app, static file serving, graceful shutdown
+2. **Route Layer** (`src/routes/sessions.ts`): API handlers with agent filtering
+3. **Parser Layer** (`src/parser/`): Multi-agent session parsing
+4. **Database Layer** (`src/db/`): SQLite with session caching
 
 ### Frontend Structure
 
 - **State**: Zustand for global state, React Query for server state
 - **Routing**: React Router with `/` (session list) and `/session/:sessionId` (player)
 - **Components**: `src/components/` with specialized viewers (DiffViewer, SyntaxHighlighter)
-- **API Client**: `src/api/client.ts` and `src/api/transcriptClient.ts`
+- **Pages**: `SessionListPage` with agent filter tabs, `SessionPlayerPage` with playback controls
 
-### Timeline Ordering Algorithm
+### Session File Formats
 
-Events are sorted using TIME-FIRST ordering:
-```sql
-ORDER BY
-  ts ASC,                              -- PRIMARY: Chronological time
-  COALESCE(prompt_number, 999999) ASC, -- SECONDARY: Group by prompt
-  kind_rank ASC,                       -- TERTIARY: Prompt before observation
-  row_id ASC                           -- FINAL: Stable tiebreaker
-```
+| Agent  | Directory                       | Format | Notes                     |
+| ------ | ------------------------------- | ------ | ------------------------- |
+| Claude | `~/.claude/projects/{project}/` | JSONL  | One event per line        |
+| Codex  | `~/.codex/sessions/YYYY/MM/`    | JSONL  | `{type, payload}` wrapper |
+| Gemini | `~/.gemini/tmp/{hash}/chats/`   | JSON   | `session-*.json` files    |
 
 ## Key Constraints
 
-- **Read-only database access**: Never modify the claude-mem database
-- **Local-only**: No cloud deployment (session data may contain sensitive info)
+- **Read-only file access**: Never modify session files
+- **Local-only**: No cloud deployment (sessions may contain sensitive data)
+- **TypeScript strict mode**: Both backend and frontend use strict compiler options
 - **Parameterized queries**: All SQL uses `?` placeholders (no string concatenation)
-- **TypeScript strict mode**: Backend uses strict compiler options
+
+## Adding a New Agent
+
+1. Create `backend/src/parser/{agent}-parser.ts` extending `BaseParser`
+2. Add agent type to `AgentDetector.detectAgent()`
+3. Register parser in `ParserFactory`
+4. Add directory scanning in `SessionIndexer`
+5. Add filter tab in `frontend/src/pages/SessionListPage.tsx`

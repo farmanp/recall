@@ -44,10 +44,7 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
 
     if (!lastItem) return;
 
-    if (
-      lastItem.index >= events.length - 1 &&
-      events.length < totalEvents
-    ) {
+    if (lastItem.index >= events.length - 1 && events.length < totalEvents) {
       onLoadMore();
     }
   }, [virtualizer.getVirtualItems(), events.length, totalEvents, onLoadMore]);

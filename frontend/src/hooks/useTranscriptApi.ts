@@ -3,7 +3,11 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import type { SessionListQuery, SessionFramesQuery, SearchGlobalRequest } from '../types/transcript';
+import type {
+  SessionListQuery,
+  SessionFramesQuery,
+  SearchGlobalRequest,
+} from '../types/transcript';
 import * as api from '../api/transcriptClient';
 
 /**
@@ -30,10 +34,7 @@ export function useSessionDetails(sessionId: string | undefined) {
 /**
  * Fetch session frames (playback data)
  */
-export function useSessionFrames(
-  sessionId: string | undefined,
-  query: SessionFramesQuery = {}
-) {
+export function useSessionFrames(sessionId: string | undefined, query: SessionFramesQuery = {}) {
   return useQuery({
     queryKey: ['session-frames', sessionId, query],
     queryFn: () => api.fetchSessionFrames(sessionId!, query),

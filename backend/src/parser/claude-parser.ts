@@ -108,9 +108,7 @@ export class ClaudeParser extends AgentParser {
 
       // Handle content as array or string
       const content = entry.message.content;
-      const contentBlocks: ContentBlock[] = Array.isArray(content)
-        ? content
-        : [];
+      const contentBlocks: ContentBlock[] = Array.isArray(content) ? content : [];
 
       // Extract tool_result blocks
       for (const block of contentBlocks) {

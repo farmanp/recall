@@ -6,10 +6,7 @@
  * file diffs for fast querying without re-parsing .jsonl files.
  */
 
-import type {
-  SessionMetadata,
-  PlaybackFrame,
-} from '../types/transcript';
+import type { SessionMetadata, PlaybackFrame } from '../types/transcript';
 
 /**
  * Database row for session_metadata table
@@ -19,15 +16,15 @@ export interface SessionMetadataRow {
   session_id: string;
   slug: string;
   project: string;
-  agent_type: string;           // 'claude', 'codex', 'gemini', 'unknown'
-  start_time: string;           // ISO 8601 timestamp
-  end_time: string | null;      // ISO 8601 timestamp
+  agent_type: string; // 'claude', 'codex', 'gemini', 'unknown'
+  start_time: string; // ISO 8601 timestamp
+  end_time: string | null; // ISO 8601 timestamp
   duration_seconds: number | null;
   event_count: number;
   frame_count: number;
   cwd: string;
   first_user_message: string | null;
-  parsed_at: string;            // ISO 8601 timestamp when imported
+  parsed_at: string; // ISO 8601 timestamp when imported
 }
 
 /**
@@ -38,16 +35,16 @@ export interface PlaybackFrameRow {
   id: string;
   session_id: string;
   frame_type: 'user_message' | 'claude_thinking' | 'claude_response' | 'tool_execution';
-  timestamp_ms: number;         // epoch milliseconds
-  duration_ms: number | null;   // duration to next frame
+  timestamp_ms: number; // epoch milliseconds
+  duration_ms: number | null; // duration to next frame
   user_message_text: string | null;
   thinking_text: string | null;
   thinking_signature: string | null;
   response_text: string | null;
   cwd: string;
-  files_read: string | null;    // JSON array
+  files_read: string | null; // JSON array
   files_modified: string | null; // JSON array
-  agent_type: string;           // 'claude', 'codex', 'gemini', 'unknown'
+  agent_type: string; // 'claude', 'codex', 'gemini', 'unknown'
 }
 
 /**
@@ -57,11 +54,11 @@ export interface PlaybackFrameRow {
 export interface ToolExecutionRow {
   id: string;
   frame_id: string;
-  tool_name: string;            // "Bash", "Read", "Write", "Edit", etc.
-  tool_input: string;           // JSON object
+  tool_name: string; // "Bash", "Read", "Write", "Edit", etc.
+  tool_input: string; // JSON object
   output_content: string;
-  is_error: number;             // SQLite stores boolean as INTEGER (0 or 1)
-  exit_code: number | null;     // for Bash commands
+  is_error: number; // SQLite stores boolean as INTEGER (0 or 1)
+  exit_code: number | null; // for Bash commands
 }
 
 /**
@@ -72,9 +69,9 @@ export interface FileDiffRow {
   id: string;
   tool_execution_id: string;
   file_path: string;
-  old_content: string | null;   // null for new files
+  old_content: string | null; // null for new files
   new_content: string;
-  language: string;             // for syntax highlighting
+  language: string; // for syntax highlighting
 }
 
 /**
@@ -87,8 +84,8 @@ export interface ParsingStatusRow {
   total_entries: number;
   frames_created: number;
   status: 'pending' | 'completed' | 'failed';
-  started_at: string;           // ISO 8601 timestamp
-  completed_at: string | null;  // ISO 8601 timestamp
+  started_at: string; // ISO 8601 timestamp
+  completed_at: string | null; // ISO 8601 timestamp
   error_message: string | null;
 }
 
@@ -138,23 +135,23 @@ export interface TranscriptSessionListQuery {
   limit?: number;
   project?: string;
   agent?: 'claude' | 'codex' | 'gemini' | 'unknown';
-  dateStart?: string;   // ISO 8601
-  dateEnd?: string;     // ISO 8601
+  dateStart?: string; // ISO 8601
+  dateEnd?: string; // ISO 8601
 }
 
 export interface TranscriptFramesQuery {
   offset?: number;
   limit?: number;
-  afterTimestamp?: number;  // epoch ms
-  frameTypes?: string;      // comma-separated: "user_message,tool_execution"
+  afterTimestamp?: number; // epoch ms
+  frameTypes?: string; // comma-separated: "user_message,tool_execution"
 }
 
 /**
  * Import job configuration
  */
 export interface ImportJobConfig {
-  sourcePath?: string;          // default: ~/.claude/projects/
-  parallel?: number;            // default: 10
-  skipExisting?: boolean;       // default: true
+  sourcePath?: string; // default: ~/.claude/projects/
+  parallel?: number; // default: 10
+  skipExisting?: boolean; // default: true
   onProgress?: (completed: number, total: number) => void;
 }

@@ -24,12 +24,14 @@ const DB_PATH = path.join(process.env.HOME || '', '.claude-mem', 'claude-mem.db'
  */
 export function getDatabase(): Database.Database {
   if (!fs.existsSync(DB_PATH)) {
-    throw new Error(`Database not found at ${DB_PATH}. Make sure claude-mem is installed and has recorded sessions.`);
+    throw new Error(
+      `Database not found at ${DB_PATH}. Make sure claude-mem is installed and has recorded sessions.`
+    );
   }
 
   const db = new Database(DB_PATH, {
-    readonly: true,      // Prevent accidental writes
-    fileMustExist: true  // Fail if file doesn't exist
+    readonly: true, // Prevent accidental writes
+    fileMustExist: true, // Fail if file doesn't exist
   });
 
   // Enable better error messages for foreign key violations

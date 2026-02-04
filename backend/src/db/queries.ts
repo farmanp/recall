@@ -1,16 +1,14 @@
 import { getDbInstance } from './connection';
-import type {
-  Session,
-  SessionEvent,
-  SessionListQuery,
-  SessionEventsQuery
-} from './schema';
+import type { Session, SessionEvent, SessionListQuery, SessionEventsQuery } from './schema';
 
 /**
  * Raw event from database (before JSON parsing)
  * JSON fields are still strings and need to be parsed
  */
-interface RawSessionEvent extends Omit<SessionEvent, 'facts' | 'concepts' | 'files_read' | 'files_modified'> {
+interface RawSessionEvent extends Omit<
+  SessionEvent,
+  'facts' | 'concepts' | 'files_read' | 'files_modified'
+> {
   facts?: string;
   concepts?: string;
   files_read?: string;
@@ -52,13 +50,7 @@ interface RawSessionEvent extends Omit<SessionEvent, 'facts' | 'concepts' | 'fil
 export function getSessions(query: SessionListQuery): { sessions: Session[]; total: number } {
   const db = getDbInstance();
 
-  const {
-    offset = 0,
-    limit = 20,
-    project,
-    dateStart,
-    dateEnd
-  } = query;
+  const { offset = 0, limit = 20, project, dateStart, dateEnd } = query;
 
   // Build WHERE clauses
   const whereClauses: string[] = [];
@@ -79,9 +71,7 @@ export function getSessions(query: SessionListQuery): { sessions: Session[]; tot
     params.dateEnd = new Date(dateEnd).getTime();
   }
 
-  const whereClause = whereClauses.length > 0
-    ? 'WHERE ' + whereClauses.join(' AND ')
-    : '';
+  const whereClause = whereClauses.length > 0 ? 'WHERE ' + whereClauses.join(' AND ') : '';
 
   // Get total count
   const countQuery = `SELECT COUNT(*) as total FROM sdk_sessions ${whereClause}`;
@@ -100,7 +90,7 @@ export function getSessions(query: SessionListQuery): { sessions: Session[]; tot
   const sessions = db.prepare(sessionsQuery).all({
     ...params,
     limit,
-    offset
+    offset,
   }) as Session[];
 
   return { sessions, total };
@@ -125,11 +115,15 @@ export function getSessions(query: SessionListQuery): { sessions: Session[]; tot
 export function getSessionById(sessionId: string): Session | null {
   const db = getDbInstance();
 
-  const session = db.prepare(`
+  const session = db
+    .prepare(
+      `
     SELECT *
     FROM sdk_sessions
     WHERE claude_session_id = ?
-  `).get(sessionId) as Session | undefined;
+  `
+    )
+    .get(sessionId) as Session | undefined;
 
   return session || null;
 }
@@ -160,19 +154,27 @@ export function getSessionStats(sessionId: string): {
   const db = getDbInstance();
 
   // Get prompt count
-  const promptCountResult = db.prepare(`
+  const promptCountResult = db
+    .prepare(
+      `
     SELECT COUNT(*) as count
     FROM user_prompts
     WHERE claude_session_id = ?
-  `).get(sessionId) as { count: number } | undefined;
+  `
+    )
+    .get(sessionId) as { count: number } | undefined;
 
   // Get observation count
-  const obsCountResult = db.prepare(`
+  const obsCountResult = db
+    .prepare(
+      `
     SELECT COUNT(*) as count
     FROM observations o
     INNER JOIN sdk_sessions s ON o.sdk_session_id = s.sdk_session_id
     WHERE s.claude_session_id = ?
-  `).get(sessionId) as { count: number } | undefined;
+  `
+    )
+    .get(sessionId) as { count: number } | undefined;
 
   if (!promptCountResult || !obsCountResult) {
     return null;
@@ -184,7 +186,7 @@ export function getSessionStats(sessionId: string): {
   return {
     eventCount: promptCount + observationCount,
     promptCount,
-    observationCount
+    observationCount,
   };
 }
 
@@ -243,19 +245,14 @@ export function getSessionEvents(
 ): { events: SessionEvent[]; total: number } {
   const db = getDbInstance();
 
-  const {
-    offset = 0,
-    limit = 100,
-    types,
-    afterTs
-  } = query;
+  const { offset = 0, limit = 100, types, afterTs } = query;
 
   // Build observation type filter
   let obsTypeFilter = '';
   const obsParams: string[] = [];
 
   if (types) {
-    const typeArray = types.split(',').map(t => t.trim());
+    const typeArray = types.split(',').map((t) => t.trim());
     obsTypeFilter = ` AND o.type IN (${typeArray.map(() => '?').join(',')})`;
     obsParams.push(...typeArray);
   }
@@ -286,12 +283,9 @@ export function getSessionEvents(
     ${afterTsFilter}
   `;
 
-  const countResult = db.prepare(countQuery).get(
-    sessionId,
-    sessionId,
-    ...obsParams,
-    ...afterTsParam
-  ) as { total: number };
+  const countResult = db
+    .prepare(countQuery)
+    .get(sessionId, sessionId, ...obsParams, ...afterTsParam) as { total: number };
 
   const total = countResult.total;
 
@@ -347,17 +341,12 @@ export function getSessionEvents(
     LIMIT ? OFFSET ?
   `;
 
-  const rawEvents = db.prepare(eventsQuery).all(
-    sessionId,
-    sessionId,
-    ...obsParams,
-    ...afterTsParam,
-    limit,
-    offset
-  ) as RawSessionEvent[];
+  const rawEvents = db
+    .prepare(eventsQuery)
+    .all(sessionId, sessionId, ...obsParams, ...afterTsParam, limit, offset) as RawSessionEvent[];
 
   // Parse JSON fields
-  const parsedEvents: SessionEvent[] = rawEvents.map(event => {
+  const parsedEvents: SessionEvent[] = rawEvents.map((event) => {
     if (event.event_type === 'observation') {
       return {
         ...event,
@@ -399,11 +388,16 @@ export function getSessionEvents(
  *   console.log(`Files modified: ${obs.files_modified?.join(', ')}`);
  * }
  */
-export function getEventById(eventType: 'prompt' | 'observation', eventId: number): SessionEvent | null {
+export function getEventById(
+  eventType: 'prompt' | 'observation',
+  eventId: number
+): SessionEvent | null {
   const db = getDbInstance();
 
   if (eventType === 'prompt') {
-    const prompt = db.prepare(`
+    const prompt = db
+      .prepare(
+        `
       SELECT
         'prompt' as event_type,
         id as row_id,
@@ -413,11 +407,15 @@ export function getEventById(eventType: 'prompt' | 'observation', eventId: numbe
         0 as kind_rank
       FROM user_prompts
       WHERE id = ?
-    `).get(eventId) as SessionEvent | undefined;
+    `
+      )
+      .get(eventId) as SessionEvent | undefined;
 
     return prompt || null;
   } else {
-    const rawObs = db.prepare(`
+    const rawObs = db
+      .prepare(
+        `
       SELECT
         'observation' as event_type,
         id as row_id,
@@ -435,7 +433,9 @@ export function getEventById(eventType: 'prompt' | 'observation', eventId: numbe
         files_modified
       FROM observations
       WHERE id = ?
-    `).get(eventId) as RawSessionEvent | undefined;
+    `
+      )
+      .get(eventId) as RawSessionEvent | undefined;
 
     if (!rawObs) {
       return null;
@@ -469,13 +469,17 @@ export function getEventById(eventType: 'prompt' | 'observation', eventId: numbe
 export function getProjects(): string[] {
   const db = getDbInstance();
 
-  const results = db.prepare(`
+  const results = db
+    .prepare(
+      `
     SELECT DISTINCT project
     FROM sdk_sessions
     ORDER BY project ASC
-  `).all() as { project: string }[];
+  `
+    )
+    .all() as { project: string }[];
 
-  return results.map(r => r.project);
+  return results.map((r) => r.project);
 }
 
 /**

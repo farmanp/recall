@@ -27,6 +27,7 @@ The commentary route provides an API endpoint to query claude-mem observations:
 **Endpoint**: `GET /api/sessions/:id/commentary`
 
 **Response Format**:
+
 ```json
 {
   "commentary": [
@@ -45,6 +46,7 @@ The commentary route provides an API endpoint to query claude-mem observations:
 ```
 
 **Implementation Details**:
+
 - Queries claude-mem MCP server via `claude mcp call` command
 - Falls back gracefully if claude-mem is not available
 - Alternative direct SQLite access method available (`queryClaudeMemDirect`)
@@ -62,6 +64,7 @@ Three main sub-components:
 #### 2. **SessionPlayerPage Integration** (`/frontend/src/pages/SessionPlayerPage.tsx`)
 
 Updates include:
+
 - Fetches commentary data via `useSessionCommentary` hook
 - Renders `CommentaryTimeline` overlay on progress bar
 - Shows `CommentaryCard` modal when bubble is clicked
@@ -70,15 +73,15 @@ Updates include:
 ### API Client & Hooks
 
 **API Client** (`/frontend/src/api/transcriptClient.ts`):
+
 ```typescript
-export async function fetchSessionCommentary(
-  sessionId: string
-): Promise<CommentaryResponse>
+export async function fetchSessionCommentary(sessionId: string): Promise<CommentaryResponse>;
 ```
 
 **React Query Hook** (`/frontend/src/hooks/useTranscriptApi.ts`):
+
 ```typescript
-export function useSessionCommentary(sessionId: string | undefined)
+export function useSessionCommentary(sessionId: string | undefined);
 ```
 
 ## Usage
@@ -86,6 +89,7 @@ export function useSessionCommentary(sessionId: string | undefined)
 ### Prerequisites
 
 1. **Install claude-mem** (if not already installed):
+
    ```bash
    npm install -g @anthropic/claude-mem
    ```
@@ -95,6 +99,7 @@ export function useSessionCommentary(sessionId: string | undefined)
 ### Recording Observations
 
 During a Claude Code session, observations are automatically recorded by claude-mem when:
+
 - Important decisions are made
 - Features are implemented
 - Bugs are fixed
@@ -139,6 +144,7 @@ Render CommentaryTimeline on progress bar
 ### Backend Environment Variables
 
 No additional configuration required. The backend automatically:
+
 - Attempts to query claude-mem MCP server
 - Falls back gracefully if unavailable
 - Returns empty array if no observations found
@@ -166,6 +172,7 @@ The implementation is designed to be fault-tolerant:
 ### Adding New Observation Types
 
 1. Update `typeColors` in `CommentaryBubble.tsx`:
+
    ```typescript
    const typeColors: Record<string, string> = {
      // ... existing types
@@ -178,6 +185,7 @@ The implementation is designed to be fault-tolerant:
 ### Changing Bubble Position
 
 Edit `getBubblePosition` function in `CommentaryTimeline` component:
+
 ```typescript
 const getBubblePosition = (timestamp: number): number => {
   // Custom positioning logic
@@ -187,6 +195,7 @@ const getBubblePosition = (timestamp: number): number => {
 ### Styling
 
 All styles use Tailwind CSS classes. Key customization points:
+
 - Bubble size: `w-4 h-4` class in `TimelineBubbleIcon`
 - Modal width: `max-w-2xl` class in `CommentaryCard`
 - Color scheme: `typeColors` objects in both components
@@ -196,12 +205,15 @@ All styles use Tailwind CSS classes. Key customization points:
 ### Commentary Not Appearing
 
 1. **Check if claude-mem is installed**:
+
    ```bash
    claude mcp list
    ```
+
    Should show `claude-mem` in the list.
 
 2. **Verify observations exist**:
+
    ```bash
    sqlite3 ~/.claude-mem/memory.db "SELECT COUNT(*) FROM observations WHERE session_id='<SESSION_ID>'"
    ```
@@ -225,6 +237,7 @@ All styles use Tailwind CSS classes. Key customization points:
 ## Future Enhancements
 
 Possible improvements:
+
 1. Timeline scrubbing to jump to commentary timestamps
 2. Filtering by observation type
 3. Search/filter commentary
@@ -236,10 +249,12 @@ Possible improvements:
 ## Files Modified/Created
 
 ### Created:
+
 - `/backend/src/routes/commentary.ts` - Backend API route
 - `/frontend/src/components/CommentaryBubble.tsx` - UI components
 
 ### Modified:
+
 - `/backend/src/server.ts` - Mount commentary routes
 - `/frontend/src/types/transcript.ts` - Add commentary types
 - `/frontend/src/api/transcriptClient.ts` - Add API client
@@ -251,9 +266,11 @@ Possible improvements:
 ### GET /api/sessions/:id/commentary
 
 **Parameters**:
+
 - `id` (path): Session UUID
 
 **Response**:
+
 ```typescript
 interface CommentaryResponse {
   commentary: CommentaryData[];
@@ -273,6 +290,7 @@ interface CommentaryData {
 ```
 
 **Status Codes**:
+
 - 200: Success
 - 400: Invalid session ID
 - 500: Server error

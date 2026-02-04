@@ -30,7 +30,7 @@ export const PlaybackControls: React.FC<PlaybackControlsProps> = ({
   speed,
   canGoPrevious,
   canGoNext,
-  className = ''
+  className = '',
 }) => {
   const [showSpeedMenu, setShowSpeedMenu] = React.useState(false);
 
@@ -44,7 +44,12 @@ export const PlaybackControls: React.FC<PlaybackControlsProps> = ({
         title="Previous event (←)"
         aria-label="Previous event"
       >
-        <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg
+          className="w-5 h-5 text-gray-700"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
         </svg>
       </button>
@@ -75,7 +80,12 @@ export const PlaybackControls: React.FC<PlaybackControlsProps> = ({
         title="Next event (→)"
         aria-label="Next event"
       >
-        <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg
+          className="w-5 h-5 text-gray-700"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
         </svg>
       </button>
@@ -88,17 +98,19 @@ export const PlaybackControls: React.FC<PlaybackControlsProps> = ({
           aria-label="Playback speed"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M13 10V3L4 14h7v7l9-11h-7z"
+            />
           </svg>
           <span>{speed}x</span>
         </button>
 
         {showSpeedMenu && (
           <>
-            <div
-              className="fixed inset-0 z-10"
-              onClick={() => setShowSpeedMenu(false)}
-            />
+            <div className="fixed inset-0 z-10" onClick={() => setShowSpeedMenu(false)} />
             <div className="absolute bottom-full mb-2 left-0 bg-white rounded-lg shadow-xl border border-gray-200 py-1 z-20 min-w-[100px]">
               {SPEEDS.map((s) => (
                 <button
@@ -111,8 +123,7 @@ export const PlaybackControls: React.FC<PlaybackControlsProps> = ({
                     s === speed ? 'bg-indigo-50 text-indigo-600 font-medium' : 'text-gray-700'
                   }`}
                 >
-                  {s}x
-                  {s === 1 && <span className="text-gray-400 ml-1">(normal)</span>}
+                  {s}x{s === 1 && <span className="text-gray-400 ml-1">(normal)</span>}
                 </button>
               ))}
             </div>

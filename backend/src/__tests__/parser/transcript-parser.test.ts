@@ -16,12 +16,7 @@ describe('transcript-parser', () => {
 
   beforeEach(() => {
     tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'recall-transcript-'));
-    const projectDir = path.join(
-      tempDir,
-      '.claude',
-      'projects',
-      '-Users-test-projects-demo'
-    );
+    const projectDir = path.join(tempDir, '.claude', 'projects', '-Users-test-projects-demo');
     fs.mkdirSync(projectDir, { recursive: true });
     filePath = path.join(projectDir, 'session-123.jsonl');
 

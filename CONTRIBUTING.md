@@ -29,23 +29,27 @@ Before you begin, ensure you have the following installed:
 ### Initial Setup
 
 1. **Clone the repository:**
+
    ```bash
    git clone <repository-url>
    cd recall
    ```
 
 2. **Install root dependencies:**
+
    ```bash
    npm install
    ```
 
 3. **Install backend dependencies:**
+
    ```bash
    cd backend
    npm install
    ```
 
 4. **Install frontend dependencies (when available):**
+
    ```bash
    cd frontend
    npm install
@@ -100,6 +104,7 @@ recall/
 ### Backend Server
 
 **Development mode (with hot reload):**
+
 ```bash
 cd backend
 npm run dev
@@ -108,6 +113,7 @@ npm run dev
 The server will start on `http://localhost:3001` and automatically restart when you make changes to `.ts` files.
 
 **Production build:**
+
 ```bash
 cd backend
 npm run build    # Compile TypeScript
@@ -117,6 +123,7 @@ npm start        # Run compiled code
 **Environment Variables:**
 
 Create a `.env` file in the `backend/` directory if needed:
+
 ```env
 PORT=3001
 NODE_ENV=development
@@ -134,6 +141,7 @@ npm run preview  # Preview production build
 ### Running Validation Script
 
 Test the timeline ordering algorithm:
+
 ```bash
 # Validate most recent session
 node validate_timeline.js
@@ -169,6 +177,7 @@ We use **strict TypeScript** settings for type safety:
 5. **Handle null/undefined** explicitly
 
 **Example:**
+
 ```typescript
 // Good
 export function getSessionById(sessionId: string): Session | null {
@@ -185,6 +194,7 @@ export function getSessionById(sessionId: any) {
 ### Code Organization
 
 1. **Group imports logically:**
+
    ```typescript
    // External dependencies
    import express from 'express';
@@ -210,6 +220,7 @@ export function getSessionById(sessionId: any) {
 ### Documentation
 
 1. **Add JSDoc comments** for all exported functions:
+
    ```typescript
    /**
     * Get session timeline events with TIME-FIRST ordering
@@ -252,6 +263,7 @@ Follow the [Conventional Commits](https://www.conventionalcommits.org/) format:
 ```
 
 **Types:**
+
 - `feat`: New feature
 - `fix`: Bug fix
 - `docs`: Documentation changes
@@ -260,6 +272,7 @@ Follow the [Conventional Commits](https://www.conventionalcommits.org/) format:
 - `chore`: Maintenance tasks
 
 **Examples:**
+
 ```bash
 git commit -m "feat(api): add observation type filtering"
 git commit -m "fix(timeline): correct timestamp ordering logic"
@@ -269,23 +282,27 @@ git commit -m "docs(readme): update quick start instructions"
 ### Workflow Steps
 
 1. **Create a feature branch:**
+
    ```bash
    git checkout -b feature/your-feature-name
    ```
 
 2. **Make your changes** and commit frequently:
+
    ```bash
    git add src/db/queries.ts
    git commit -m "feat(db): add getProjects query"
    ```
 
 3. **Keep your branch up to date:**
+
    ```bash
    git fetch origin
    git rebase origin/main
    ```
 
 4. **Push your branch:**
+
    ```bash
    git push origin feature/your-feature-name
    ```
@@ -299,6 +316,7 @@ git commit -m "docs(readme): update quick start instructions"
 ### Adding a New API Endpoint
 
 1. **Define types** in `backend/src/db/schema.ts`:
+
    ```typescript
    export interface NewFeatureQuery {
      param1?: string;
@@ -307,6 +325,7 @@ git commit -m "docs(readme): update quick start instructions"
    ```
 
 2. **Add database query** in `backend/src/db/queries.ts`:
+
    ```typescript
    export function getNewFeature(query: NewFeatureQuery): Result {
      const db = getDbInstance();
@@ -315,6 +334,7 @@ git commit -m "docs(readme): update quick start instructions"
    ```
 
 3. **Add route handler** in `backend/src/routes/sessions.ts` (or new route file):
+
    ```typescript
    router.get('/new-feature', (req: Request, res: Response) => {
      // Handle request
@@ -322,6 +342,7 @@ git commit -m "docs(readme): update quick start instructions"
    ```
 
 4. **Test the endpoint:**
+
    ```bash
    curl http://localhost:3001/api/new-feature
    ```
@@ -331,11 +352,13 @@ git commit -m "docs(readme): update quick start instructions"
 ### Adding a New Database Query
 
 1. **Validate SQL** using the validation script first:
+
    ```bash
    node validate_timeline.js
    ```
 
 2. **Use parameterized queries** to prevent SQL injection:
+
    ```typescript
    // Good
    db.prepare('SELECT * FROM sessions WHERE id = ?').get(id);
@@ -370,11 +393,13 @@ git commit -m "docs(readme): update quick start instructions"
 ### Manual Testing
 
 1. **Start the backend server:**
+
    ```bash
    cd backend && npm run dev
    ```
 
 2. **Test API endpoints:**
+
    ```bash
    # Health check
    curl http://localhost:3001/api/health
@@ -411,16 +436,19 @@ npm run test:coverage # Coverage report
 ### Before Submitting
 
 1. **Run validation script** to ensure timeline logic is correct:
+
    ```bash
    node validate_timeline.js
    ```
 
 2. **Test API endpoints** manually:
+
    ```bash
    curl http://localhost:3001/api/health
    ```
 
 3. **Build the project** to catch TypeScript errors:
+
    ```bash
    cd backend && npm run build
    ```
@@ -441,19 +469,23 @@ npm run test:coverage # Coverage report
 
 ```markdown
 ## Description
+
 Brief description of what this PR does.
 
 ## Changes
+
 - Added X feature
 - Fixed Y bug
 - Refactored Z module
 
 ## Testing
+
 - [ ] Tested API endpoint manually
 - [ ] Ran validation script
 - [ ] Built project successfully
 
 ## Screenshots (if applicable)
+
 Add screenshots for UI changes.
 ```
 
@@ -466,6 +498,7 @@ Add screenshots for UI changes.
 **Problem:** `Database not found at ~/.claude-mem/claude-mem.db`
 
 **Solution:**
+
 1. Ensure `claude-mem` is installed
 2. Run Claude Code to create some sessions
 3. Verify file exists: `ls ~/.claude-mem/claude-mem.db`
@@ -475,6 +508,7 @@ Add screenshots for UI changes.
 **Problem:** Type errors when building
 
 **Solution:**
+
 1. Check `tsconfig.json` settings
 2. Run `npm install` to ensure all `@types/*` packages are installed
 3. Use explicit type annotations
@@ -484,6 +518,7 @@ Add screenshots for UI changes.
 **Problem:** `EADDRINUSE: address already in use :::3001`
 
 **Solution:**
+
 ```bash
 # Find process using port 3001
 lsof -i :3001
@@ -493,6 +528,7 @@ kill -9 <PID>
 ```
 
 Or change the port in `.env`:
+
 ```env
 PORT=3002
 ```

@@ -5,7 +5,9 @@ A fully typed API client library for the Recall frontend application.
 ## Files Created
 
 ### 1. Shared Types (`/shared/types.ts`)
+
 Contains all TypeScript types shared between frontend and backend:
+
 - Database entity types: `Session`, `Observation`, `UserPrompt`
 - Event types: `SessionEvent`
 - API response types: `SessionListResponse`, `SessionDetailsResponse`, `SessionEventsResponse`, `HealthCheckResponse`
@@ -14,7 +16,9 @@ Contains all TypeScript types shared between frontend and backend:
 - Frontend utility types
 
 ### 2. API Client (`/frontend/src/api/client.ts`)
+
 Type-safe API client with the following features:
+
 - `ApiClient` class with configurable base URL and timeout
 - `ApiClientError` class for structured error handling
 - Methods for all API endpoints
@@ -22,7 +26,9 @@ Type-safe API client with the following features:
 - Query string building helper
 
 ### 3. React Query Hooks (`/frontend/src/hooks/useApi.ts`)
+
 React Query hooks for data fetching with caching and state management:
+
 - `useHealthCheck()` - Health check endpoint
 - `useSessions(query)` - List sessions with filtering
 - `useSession(id)` - Get session details
@@ -34,30 +40,35 @@ React Query hooks for data fetching with caching and state management:
 ## API Endpoints
 
 ### Health Check
+
 ```typescript
 GET /api/health
 Response: { status: 'ok' | 'error', timestamp: number, database?: string }
 ```
 
 ### List Sessions
+
 ```typescript
 GET /api/sessions?offset=0&limit=20&project=...&dateStart=...&dateEnd=...
 Response: { sessions: Session[], total: number, offset: number, limit: number }
 ```
 
 ### Get Session Details
+
 ```typescript
 GET /api/sessions/:id
 Response: { session: Session, eventCount: number, promptCount: number, observationCount: number }
 ```
 
 ### Get Session Events
+
 ```typescript
 GET /api/sessions/:id/events?offset=0&limit=100&types=...&afterTs=...
 Response: { events: SessionEvent[], total: number, offset: number, limit: number, sessionId: string }
 ```
 
 ### Get Specific Event
+
 ```typescript
 GET /api/sessions/:sessionId/events/:eventType/:eventId
 Response: SessionEvent | Observation | UserPrompt
@@ -77,7 +88,7 @@ const health = await apiClient.healthCheck();
 const sessions = await apiClient.listSessions({
   offset: 0,
   limit: 20,
-  project: 'my-project'
+  project: 'my-project',
 });
 
 // Get session details
@@ -87,7 +98,7 @@ const sessionDetails = await apiClient.getSession(123);
 const events = await apiClient.getSessionEvents(123, {
   offset: 0,
   limit: 100,
-  types: 'decision,bugfix'
+  types: 'decision,bugfix',
 });
 
 // Get specific event
@@ -201,12 +212,14 @@ function MyComponent() {
 ## Testing the API Client
 
 ### Run the JavaScript Test
+
 ```bash
 cd /Users/fpirzada/Documents/cc_mem_video_player
 node test-api-client.js
 ```
 
 This will test all API endpoints and verify:
+
 - Health check is working
 - Sessions can be listed
 - Session details can be retrieved
@@ -215,6 +228,7 @@ This will test all API endpoints and verify:
 - Error handling works correctly
 
 ### Expected Test Output
+
 ```
 Starting API Client Tests...
 
@@ -241,19 +255,19 @@ All API calls are fully typed:
 const sessions = await apiClient.listSessions({
   offset: 0,
   limit: 20,
-  invalidParam: 'test' // ❌ Type error: invalidParam doesn't exist
+  invalidParam: 'test', // ❌ Type error: invalidParam doesn't exist
 });
 
 // Response types are inferred
 const health = await apiClient.healthCheck();
-health.status // ✓ Type: 'ok' | 'error'
-health.timestamp // ✓ Type: number
-health.invalidField // ❌ Type error: Property doesn't exist
+health.status; // ✓ Type: 'ok' | 'error'
+health.timestamp; // ✓ Type: number
+health.invalidField; // ❌ Type error: Property doesn't exist
 
 // Query parameters are typed
 const { data } = useSessions({
   offset: 0,
-  limit: 'not-a-number' // ❌ Type error: limit must be number
+  limit: 'not-a-number', // ❌ Type error: limit must be number
 });
 ```
 
@@ -286,10 +300,12 @@ try {
 ## Configuration
 
 ### Default Configuration
+
 - Base URL: `http://localhost:3001`
 - Timeout: 30 seconds
 
 ### Custom Configuration
+
 ```typescript
 import { ApiClient } from './api/client';
 
@@ -302,17 +318,20 @@ const apiClient = new ApiClient({
 ## Dependencies
 
 Required packages (should be installed in the frontend):
+
 - `@tanstack/react-query` - For React Query hooks
 - TypeScript 4.5+ - For type support
 
 ## Next Steps
 
 1. Install React Query in the frontend:
+
    ```bash
    npm install @tanstack/react-query
    ```
 
 2. Set up React Query provider in your app:
+
    ```typescript
    import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
@@ -328,6 +347,7 @@ Required packages (should be installed in the frontend):
    ```
 
 3. Import and use the hooks in your components:
+
    ```typescript
    import { useSessions, useSession } from './hooks/useApi';
    ```

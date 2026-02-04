@@ -53,6 +53,7 @@ npm run dev
 **URL:** `http://localhost:5173`
 
 The dev server includes:
+
 - Hot module replacement (HMR)
 - TypeScript type checking
 - API proxy to backend (`/api` → `http://localhost:3001`)
@@ -139,6 +140,7 @@ import { formatTimestamp } from '@/lib/formatters';
 ### Strict Mode
 
 The project uses TypeScript strict mode:
+
 - `strict: true`
 - `noUnusedLocals: true`
 - `noUnusedParameters: true`
@@ -152,6 +154,7 @@ The project uses TypeScript strict mode:
 **Route:** `/`
 
 **Features:**
+
 - Fetches sessions from `/api/sessions`
 - Virtualized list (handles 127+ sessions)
 - Infinite scroll pagination
@@ -164,6 +167,7 @@ The project uses TypeScript strict mode:
 **Route:** `/session/:sessionId`
 
 **Features:**
+
 - Fetches session details from `/api/sessions/:sessionId`
 - Fetches events from `/api/sessions/:sessionId/events`
 - Virtualized event timeline (handles 900+ events)
@@ -171,6 +175,7 @@ The project uses TypeScript strict mode:
 - Back navigation
 
 **Deep Link Support (Phase 2):**
+
 - `/session/:id?t=1738507438000` - Jump to timestamp
 - `/session/:id?e=15` - Jump to event index
 
@@ -218,24 +223,27 @@ The project uses TypeScript strict mode:
 Custom theme extensions in `tailwind.config.js`:
 
 **Observation Colors:**
+
 ```tsx
-className="text-obs-feature"  // Purple
-className="bg-obs-bugfix"     // Red
-className="border-obs-decision" // Yellow
+className = 'text-obs-feature'; // Purple
+className = 'bg-obs-bugfix'; // Red
+className = 'border-obs-decision'; // Yellow
 ```
 
 **Animations:**
+
 ```tsx
-className="animate-pulse-slow"  // Slow pulse
-className="animate-slide-in"    // Slide in from top
-className="animate-spin"        // Loading spinner
+className = 'animate-pulse-slow'; // Slow pulse
+className = 'animate-slide-in'; // Slide in from top
+className = 'animate-spin'; // Loading spinner
 ```
 
 **Custom Colors:**
+
 ```tsx
-className="bg-bg-card"       // Light gray card background
-className="border-border-card" // Gray card border
-className="text-prompt"       // Green for prompts
+className = 'bg-bg-card'; // Light gray card background
+className = 'border-border-card'; // Gray card border
+className = 'text-prompt'; // Green for prompts
 ```
 
 ### Responsive Design
@@ -281,11 +289,13 @@ const events = await fetchSessionEvents(sessionId, {
 ### API Base URL
 
 Set via environment variable:
+
 ```env
 VITE_API_BASE_URL=http://localhost:3001
 ```
 
 Or configure in `lib/api.ts`:
+
 ```typescript
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
 ```
@@ -299,8 +309,8 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001
 ```typescript
 import { formatTimestamp, formatDuration, formatRelativeTime } from '@/lib/formatters';
 
-formatTimestamp(1738507438000);     // "Feb 2, 10:30 AM"
-formatDuration(3600000);            // "1h 0m"
+formatTimestamp(1738507438000); // "Feb 2, 10:30 AM"
+formatDuration(3600000); // "1h 0m"
 formatRelativeTime(Date.now() - 3600000); // "1 hour ago"
 ```
 
@@ -331,14 +341,15 @@ The project uses `@tanstack/react-virtual` for efficient rendering of large list
 import { useVirtualizer } from '@tanstack/react-virtual';
 
 const virtualizer = useVirtualizer({
-  count: total,                        // Total item count
+  count: total, // Total item count
   getScrollElement: () => parentRef.current,
-  estimateSize: () => 120,             // Estimated row height
-  overscan: 5,                         // Render extra rows
+  estimateSize: () => 120, // Estimated row height
+  overscan: 5, // Render extra rows
 });
 ```
 
 **Performance:**
+
 - Renders only visible items
 - Handles 1000+ items smoothly
 - Dynamic row heights supported
@@ -350,7 +361,7 @@ const virtualizer = useVirtualizer({
   count: totalEvents,
   getScrollElement: () => parentRef.current,
   estimateSize: (index) => {
-    return expandedEvents.has(index) ? 400 : 80;  // Dynamic heights
+    return expandedEvents.has(index) ? 400 : 80; // Dynamic heights
   },
   overscan: 10,
 });
@@ -397,6 +408,7 @@ interface EventDisplayProps {
 Phase 1 focus is on architecture. Testing infrastructure to be added in Phase 2+.
 
 **Planned:**
+
 - Vitest for unit tests
 - React Testing Library for component tests
 - Playwright for E2E tests
@@ -408,6 +420,7 @@ Phase 1 focus is on architecture. Testing infrastructure to be added in Phase 2+
 ### 1. Virtualization
 
 Always use virtualized lists for large datasets:
+
 - SessionList: 127+ sessions
 - EventTimeline: 900+ events
 - FilePanel: 100+ files (Phase 2)
@@ -449,6 +462,7 @@ const FilePanel = lazy(() => import('./FilePanel'));
 ### Issue: Module not found '@/...'
 
 **Solution:** Ensure path alias is configured:
+
 1. Check `tsconfig.json` has `"baseUrl": "."` and `"paths": { "@/*": ["src/*"] }`
 2. Check `vite.config.ts` has alias resolver
 3. Restart dev server
@@ -456,12 +470,14 @@ const FilePanel = lazy(() => import('./FilePanel'));
 ### Issue: API calls fail with CORS error
 
 **Solution:** Backend must be running on `http://localhost:3001`
+
 - Check backend is running: `curl http://localhost:3001/api/health`
 - Vite proxy is configured in `vite.config.ts`
 
 ### Issue: Virtualized list not rendering
 
 **Solution:** Ensure parent has fixed height:
+
 ```tsx
 <div ref={parentRef} className="h-screen overflow-auto">
 ```
@@ -469,6 +485,7 @@ const FilePanel = lazy(() => import('./FilePanel'));
 ### Issue: TypeScript errors in strict mode
 
 **Solution:** Fix type issues:
+
 - Add explicit types to props
 - Use `!` for non-null assertions (sparingly)
 - Use optional chaining `?.` for nullable values

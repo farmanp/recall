@@ -57,10 +57,7 @@ export const FrameTypeFilters: React.FC<FrameTypeFiltersProps> = ({
   const allActive = activeFrameTypes.size === 4;
 
   // Frame type metadata (agent-agnostic labels)
-  const frameTypeMetadata: Record<
-    FrameType,
-    { label: string; icon: string; color: string }
-  > = {
+  const frameTypeMetadata: Record<FrameType, { label: string; icon: string; color: string }> = {
     user_message: {
       label: 'User Messages',
       icon: '👤',
@@ -169,10 +166,11 @@ export const FrameTypeFilters: React.FC<FrameTypeFiltersProps> = ({
             return (
               <label
                 key={type}
-                className={`flex items-center gap-2 px-3 py-2 rounded border transition-all cursor-pointer ${isActive
-                  ? 'bg-gray-700 border-gray-600'
-                  : 'bg-gray-900 border-gray-800 opacity-50'
-                  }`}
+                className={`flex items-center gap-2 px-3 py-2 rounded border transition-all cursor-pointer ${
+                  isActive
+                    ? 'bg-gray-700 border-gray-600'
+                    : 'bg-gray-900 border-gray-800 opacity-50'
+                }`}
               >
                 <input
                   type="checkbox"
@@ -193,39 +191,3 @@ export const FrameTypeFilters: React.FC<FrameTypeFiltersProps> = ({
     </div>
   );
 };
-
-/**
- * Helper: Find next visible frame index
- * Used by SessionPlayerPage for Prev/Next navigation
- */
-export function findNextVisibleFrame(
-  startIndex: number,
-  frames: PlaybackFrame[],
-  activeTypes: Set<string>
-): number {
-  for (let i = startIndex; i < frames.length; i++) {
-    if (activeTypes.has(frames[i].type)) {
-      return i;
-    }
-  }
-  // If no visible frame found, return last frame
-  return frames.length - 1;
-}
-
-/**
- * Helper: Find previous visible frame index
- * Used by SessionPlayerPage for Prev/Next navigation
- */
-export function findPrevVisibleFrame(
-  startIndex: number,
-  frames: PlaybackFrame[],
-  activeTypes: Set<string>
-): number {
-  for (let i = startIndex; i >= 0; i--) {
-    if (activeTypes.has(frames[i].type)) {
-      return i;
-    }
-  }
-  // If no visible frame found, return first frame
-  return 0;
-}

@@ -46,8 +46,8 @@ export const SessionListPage: React.FC = () => {
   });
 
   // Extract data early to use in hooks (must be before any early returns)
-  const sessions = data?.sessions || [];
-  const total = data?.total || 0;
+  const sessions = useMemo(() => data?.sessions ?? [], [data?.sessions]);
+  const total = data?.total ?? 0;
 
   // Filter sessions based on search and filter criteria
   // MUST be called before early returns to maintain consistent hook order
@@ -111,11 +111,7 @@ export const SessionListPage: React.FC = () => {
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 p-6">
-        <ErrorMessage
-          error={error}
-          onRetry={refetch}
-          context="Sessions"
-        />
+        <ErrorMessage error={error} onRetry={refetch} context="Sessions" />
       </div>
     );
   }
@@ -152,9 +148,7 @@ export const SessionListPage: React.FC = () => {
       {/* Header */}
       <div className="bg-white border-b shadow-sm sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 py-6">
-          <h1 className="text-3xl font-bold text-gray-900">
-            Recall
-          </h1>
+          <h1 className="text-3xl font-bold text-gray-900">Recall</h1>
           <p className="text-sm text-gray-600 mt-2">
             {filteredSessions.length} of {total} {total === 1 ? 'session' : 'sessions'}
             {filteredSessions.length !== total && ' (filtered)'}
@@ -170,7 +164,11 @@ export const SessionListPage: React.FC = () => {
             <div className="flex-1 relative">
               <input
                 type="text"
-                placeholder={searchMode === 'sessions' ? "Search sessions by project, slug, or title..." : "Deep search through all session content (messages, thinking, logs)..."}
+                placeholder={
+                  searchMode === 'sessions'
+                    ? 'Search sessions by project, slug, or title...'
+                    : 'Deep search through all session content (messages, thinking, logs)...'
+                }
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm transition-all text-gray-800"
@@ -178,13 +176,15 @@ export const SessionListPage: React.FC = () => {
               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
               {isLoading || isSearchingContent ? (
                 <div className="absolute right-4 top-1/2 -translate-y-1/2 animate-spin rounded-full h-4 w-4 border-2 border-blue-500 border-t-transparent"></div>
-              ) : searchQuery && (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 font-bold"
-                >
-                  ×
-                </button>
+              ) : (
+                searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 font-bold"
+                  >
+                    ×
+                  </button>
+                )
               )}
             </div>
 
@@ -242,12 +242,19 @@ export const SessionListPage: React.FC = () => {
                   <button
                     key={range}
                     onClick={() => setDateRange(range)}
-                    className={`px-3 py-1 text-sm rounded ${dateRange === range
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
+                    className={`px-3 py-1 text-sm rounded ${
+                      dateRange === range
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
                   >
-                    {range === 'all' ? 'All Time' : range === 'today' ? 'Today' : range === 'week' ? 'This Week' : 'This Month'}
+                    {range === 'all'
+                      ? 'All Time'
+                      : range === 'today'
+                        ? 'Today'
+                        : range === 'week'
+                          ? 'This Week'
+                          : 'This Month'}
                   </button>
                 ))}
               </div>
@@ -294,7 +301,11 @@ export const SessionListPage: React.FC = () => {
             </div>
 
             {/* Clear Filters Button */}
-            {(searchQuery || dateRange !== 'all' || minDuration > 0 || minEventCount > 0 || selectedAgent !== 'all') && (
+            {(searchQuery ||
+              dateRange !== 'all' ||
+              minDuration > 0 ||
+              minEventCount > 0 ||
+              selectedAgent !== 'all') && (
               <button
                 onClick={() => {
                   setSearchQuery('');
@@ -324,10 +335,12 @@ export const SessionListPage: React.FC = () => {
             ) : globalSearchData?.results.length === 0 ? (
               <div className="bg-white dark:bg-gray-950 rounded-[2.5rem] shadow-xl p-16 text-center border border-gray-100 dark:border-white/5 max-w-2xl mx-auto">
                 <div className="text-6xl mb-6">🔍</div>
-                <h2 className="text-2xl font-black text-gray-900 dark:text-white mb-3 tracking-tight">No content matches</h2>
+                <h2 className="text-2xl font-black text-gray-900 dark:text-white mb-3 tracking-tight">
+                  No content matches
+                </h2>
                 <p className="text-gray-600 dark:text-gray-400 mb-8 leading-relaxed font-medium">
-                  We couldn't find "{searchQuery}" in any session messages, thinking, or logs.
-                  Try a different keyword or check your filters.
+                  We couldn't find "{searchQuery}" in any session messages, thinking, or logs. Try a
+                  different keyword or check your filters.
                 </p>
               </div>
             ) : (
@@ -369,7 +382,11 @@ export const SessionListPage: React.FC = () => {
                         <div
                           className="leading-relaxed"
                           dangerouslySetInnerHTML={{
-                            __html: result.snippet.replace(new RegExp(searchQuery, 'gi'), match => `<mark class="bg-blue-500 text-white px-1 shadow-[0_0_10px_rgba(59,130,246,0.5)] rounded font-bold">${match}</mark>`)
+                            __html: result.snippet.replace(
+                              new RegExp(searchQuery, 'gi'),
+                              (match) =>
+                                `<mark class="bg-blue-500 text-white px-1 shadow-[0_0_10px_rgba(59,130,246,0.5)] rounded font-bold">${match}</mark>`
+                            ),
                           }}
                         />
                         <div className="absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-gray-50 dark:from-gray-950/50 to-transparent" />
@@ -392,12 +409,20 @@ export const SessionListPage: React.FC = () => {
             <h2 className="text-2xl font-bold text-gray-900 mb-3">No sessions found</h2>
             <p className="text-gray-600 mb-8 leading-relaxed">
               Recall visualizes coding sessions from AI assistants like Claude Code.
-              {searchQuery || dateRange !== 'all' || minDuration > 0 || minEventCount > 0 || selectedAgent !== 'all'
-                ? " Try adjusting your filters to see more results."
+              {searchQuery ||
+              dateRange !== 'all' ||
+              minDuration > 0 ||
+              minEventCount > 0 ||
+              selectedAgent !== 'all'
+                ? ' Try adjusting your filters to see more results.'
                 : " Make sure you've run some sessions and the backend is correctly configured."}
             </p>
 
-            {(searchQuery || dateRange !== 'all' || minDuration > 0 || minEventCount > 0 || selectedAgent !== 'all') ? (
+            {searchQuery ||
+            dateRange !== 'all' ||
+            minDuration > 0 ||
+            minEventCount > 0 ||
+            selectedAgent !== 'all' ? (
               <button
                 onClick={() => {
                   setSearchQuery('');
@@ -417,16 +442,40 @@ export const SessionListPage: React.FC = () => {
                 </h3>
                 <ul className="space-y-4 text-sm text-gray-600">
                   <li className="flex gap-3">
-                    <span className="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold text-xs">1</span>
-                    <span>Run <code className="bg-blue-50 px-1.5 py-0.5 rounded text-blue-700 font-mono">claude-code</code> in your project terminal.</span>
+                    <span className="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold text-xs">
+                      1
+                    </span>
+                    <span>
+                      Run{' '}
+                      <code className="bg-blue-50 px-1.5 py-0.5 rounded text-blue-700 font-mono">
+                        claude-code
+                      </code>{' '}
+                      in your project terminal.
+                    </span>
                   </li>
                   <li className="flex gap-3">
-                    <span className="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold text-xs">2</span>
-                    <span>Start Recall backend: <code className="bg-blue-50 px-1.5 py-0.5 rounded text-blue-700 font-mono">npm run dev</code> in the backend folder.</span>
+                    <span className="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold text-xs">
+                      2
+                    </span>
+                    <span>
+                      Start Recall backend:{' '}
+                      <code className="bg-blue-50 px-1.5 py-0.5 rounded text-blue-700 font-mono">
+                        npm run dev
+                      </code>{' '}
+                      in the backend folder.
+                    </span>
                   </li>
                   <li className="flex gap-3">
-                    <span className="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold text-xs">3</span>
-                    <span>Sessions are automatically indexed from <code className="bg-blue-50 px-1.5 py-0.5 rounded text-blue-700 font-mono">~/.claude-mem/</code>.</span>
+                    <span className="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold text-xs">
+                      3
+                    </span>
+                    <span>
+                      Sessions are automatically indexed from{' '}
+                      <code className="bg-blue-50 px-1.5 py-0.5 rounded text-blue-700 font-mono">
+                        ~/.claude-mem/
+                      </code>
+                      .
+                    </span>
                   </li>
                 </ul>
                 <div className="mt-8 pt-6 border-t border-gray-200">
@@ -469,7 +518,9 @@ export const SessionListPage: React.FC = () => {
                     </div>
 
                     <h2 className="text-2xl font-black text-gray-900 dark:text-gray-100 mb-3 group-hover:text-blue-600 transition-colors line-clamp-2 leading-tight">
-                      {session.slug !== 'unknown-session' ? session.slug : `Session ${session.sessionId.slice(0, 8)}`}
+                      {session.slug !== 'unknown-session'
+                        ? session.slug
+                        : `Session ${session.sessionId.slice(0, 8)}`}
                     </h2>
 
                     <div className="flex items-center gap-2 text-xs text-gray-400 mb-6 font-mono">
@@ -499,7 +550,10 @@ export const SessionListPage: React.FC = () => {
                         </div>
                         <div className="flex items-center gap-1">
                           <Clock className="w-3 h-3 text-gray-400" />
-                          {new Date(session.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          {new Date(session.startTime).toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
                         </div>
                       </div>
                     </div>

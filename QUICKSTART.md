@@ -5,6 +5,7 @@
 ## Current Status: ✅ FULLY FUNCTIONAL
 
 Both servers are running and ready:
+
 - **Backend API:** http://localhost:3001
 - **Frontend App:** http://localhost:5174
 
@@ -44,6 +45,7 @@ Visit: **http://localhost:5174**
 Click any session to start playback.
 
 **Playback Controls:**
+
 - **▶️ Play** - Auto-advance through frames
 - **⏸ Pause** - Stop auto-advance
 - **⏮ Prev** - Go to previous frame
@@ -52,6 +54,7 @@ Click any session to start playback.
 - **Show Thinking** - Toggle Claude's thinking blocks
 
 **Keyboard Shortcuts:**
+
 - `Space` - Play/Pause
 - `→` - Next frame
 - `←` - Previous frame
@@ -61,6 +64,7 @@ Click any session to start playback.
 ### 4. Frame Types
 
 Each frame is color-coded:
+
 - 🔵 **Blue** - User messages
 - 🟣 **Purple** - Claude thinking (internal reasoning)
 - 🟢 **Green** - Claude responses
@@ -71,6 +75,7 @@ Each frame is color-coded:
 ### Backend (backend/)
 
 **Powered by:**
+
 - Node.js + TypeScript + Express
 - Reads `.jsonl` transcript files from `~/.claude/projects/`
 - Parses entries into playback frames
@@ -78,6 +83,7 @@ Each frame is color-coded:
 - Serves REST API on port 3001
 
 **Key Files:**
+
 - `src/parser/transcript-parser.ts` - Parses .jsonl files
 - `src/parser/timeline-builder.ts` - Builds playback frames
 - `src/parser/session-indexer.ts` - Indexes all sessions
@@ -86,12 +92,14 @@ Each frame is color-coded:
 ### Frontend (frontend/)
 
 **Powered by:**
+
 - React 18 + TypeScript + Vite
 - TailwindCSS for styling
 - React Query for data fetching
 - React Router for navigation
 
 **Key Files:**
+
 - `src/pages/SessionListPage.tsx` - Session browser
 - `src/pages/SessionPlayerPage.tsx` - Video player UI
 - `src/api/transcriptClient.ts` - API client
@@ -110,6 +118,7 @@ POST /api/sessions/:id/refresh        - Refresh cached timeline
 ## Example Session Data
 
 **Current session (4b198fdf-b80d-4bbc-806f-2900282cdc56):**
+
 - Total frames: 462
 - User messages: 27
 - Claude thinking: 189
@@ -121,12 +130,14 @@ POST /api/sessions/:id/refresh        - Refresh cached timeline
 ### Start Servers
 
 Backend:
+
 ```bash
 cd backend
 npm run dev  # Runs on http://localhost:3001
 ```
 
 Frontend:
+
 ```bash
 cd frontend
 npm run dev  # Runs on http://localhost:5174
@@ -153,16 +164,19 @@ cd frontend && npm run build
 ## Troubleshooting
 
 **Frontend not loading?**
+
 - Check that both servers are running
 - Verify ports 3001 and 5174 are available
 - Check browser console for errors
 
 **No sessions showing?**
+
 - Verify `~/.claude/projects/` directory exists
 - Check that .jsonl files are present
 - Look at backend logs for indexing errors
 
 **Frames not advancing?**
+
 - Check playback speed setting
 - Verify frame has duration value
 - Check browser console for JavaScript errors
@@ -170,16 +184,19 @@ cd frontend && npm run build
 ## Architecture Highlights
 
 **Local-First Design:**
+
 - Reads directly from `~/.claude/projects/`
 - No external database needed
 - Fast session discovery (6,404 sessions indexed)
 
 **Performance:**
+
 - Frames cached in memory
 - Pagination for large session lists
 - React Query for efficient data fetching
 
 **Type Safety:**
+
 - Full TypeScript coverage
 - Shared types between frontend/backend
 - Compile-time error detection
@@ -188,4 +205,4 @@ cd frontend && npm run build
 
 **Enjoy watching your Claude Code sessions! 🎬**
 
-*Built with Claude Code*
+_Built with Claude Code_

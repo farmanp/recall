@@ -41,6 +41,7 @@ npm install
 ```
 
 This will install:
+
 - Express (web framework)
 - better-sqlite3 (database driver)
 - TypeScript and type definitions
@@ -88,6 +89,7 @@ curl http://localhost:3001/api/health
 ```
 
 **Expected output:**
+
 ```json
 {
   "status": "ok",
@@ -103,6 +105,7 @@ curl http://localhost:3001/api/sessions?limit=5
 ```
 
 **Expected output:**
+
 ```json
 {
   "sessions": [
@@ -131,6 +134,7 @@ curl "http://localhost:3001/api/sessions/$SESSION_ID"
 ```
 
 **Expected output:**
+
 ```json
 {
   "session": {
@@ -153,6 +157,7 @@ curl "http://localhost:3001/api/sessions/$SESSION_ID/events?limit=10"
 ```
 
 **Expected output:**
+
 ```json
 {
   "events": [
@@ -215,6 +220,7 @@ node validate_timeline.js <session_id>
 ```
 
 **Expected output:**
+
 ```
 📊 Validating Session: <session_id>
 
@@ -291,6 +297,7 @@ Now that you have the backend running, you can:
 ### Issue: Database Not Found
 
 **Error:**
+
 ```
 Error: Database not found at ~/.claude-mem/claude-mem.db
 ```
@@ -298,11 +305,13 @@ Error: Database not found at ~/.claude-mem/claude-mem.db
 **Solution:**
 
 1. Ensure claude-mem is installed:
+
    ```bash
    which claude-mem
    ```
 
 2. Run Claude Code to create sessions:
+
    ```bash
    claude-code
    # Ask Claude Code to help with something
@@ -318,6 +327,7 @@ Error: Database not found at ~/.claude-mem/claude-mem.db
 ### Issue: Port Already in Use
 
 **Error:**
+
 ```
 Error: listen EADDRINUSE: address already in use :::3001
 ```
@@ -325,12 +335,14 @@ Error: listen EADDRINUSE: address already in use :::3001
 **Solution:**
 
 **Option 1:** Kill the process using port 3001:
+
 ```bash
 lsof -i :3001
 kill -9 <PID>
 ```
 
 **Option 2:** Use a different port:
+
 ```bash
 # Create .env file in backend/
 echo "PORT=3002" > .env
@@ -342,6 +354,7 @@ npm run dev
 ### Issue: CORS Errors (Frontend)
 
 **Error (in browser console):**
+
 ```
 Access to fetch blocked by CORS policy
 ```
@@ -431,14 +444,14 @@ NODE_ENV=development
 
 ### API Endpoints
 
-| Endpoint                                    | Description                        |
-|---------------------------------------------|------------------------------------|
-| `GET /api/health`                           | Health check                       |
-| `GET /api/sessions`                         | List all sessions                  |
-| `GET /api/sessions/:id`                     | Get session details                |
-| `GET /api/sessions/:id/events`              | Get session timeline               |
-| `GET /api/sessions/:id/events/:type/:id`    | Get single event                   |
-| `GET /api/sessions/meta/projects`           | Get all project names              |
+| Endpoint                                 | Description           |
+| ---------------------------------------- | --------------------- |
+| `GET /api/health`                        | Health check          |
+| `GET /api/sessions`                      | List all sessions     |
+| `GET /api/sessions/:id`                  | Get session details   |
+| `GET /api/sessions/:id/events`           | Get session timeline  |
+| `GET /api/sessions/:id/events/:type/:id` | Get single event      |
+| `GET /api/sessions/meta/projects`        | Get all project names |
 
 ### Default Ports
 

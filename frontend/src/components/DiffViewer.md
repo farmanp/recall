@@ -36,7 +36,7 @@ import { DiffViewer } from '../components/DiffViewer';
   newContent="const x = 2;"
   language="typescript"
   isEdit={true}
-/>
+/>;
 ```
 
 ### Write Tool Example
@@ -69,13 +69,13 @@ import { DiffViewer } from '../components/DiffViewer';
 
 ## Props
 
-| Prop | Type | Required | Default | Description |
-|------|------|----------|---------|-------------|
-| `filePath` | `string` | Yes | - | Path to the file being diffed |
-| `oldContent` | `string` | No | `''` | Original content (before changes) |
-| `newContent` | `string` | Yes | - | New content (after changes) |
-| `language` | `string` | Yes | - | Programming language for syntax highlighting |
-| `isEdit` | `boolean` | No | `true` | Whether this is an Edit operation (true) or Write operation (false) |
+| Prop         | Type      | Required | Default | Description                                                         |
+| ------------ | --------- | -------- | ------- | ------------------------------------------------------------------- |
+| `filePath`   | `string`  | Yes      | -       | Path to the file being diffed                                       |
+| `oldContent` | `string`  | No       | `''`    | Original content (before changes)                                   |
+| `newContent` | `string`  | Yes      | -       | New content (after changes)                                         |
+| `language`   | `string`  | Yes      | -       | Programming language for syntax highlighting                        |
+| `isEdit`     | `boolean` | No       | `true`  | Whether this is an Edit operation (true) or Write operation (false) |
 
 ## View Modes
 
@@ -113,18 +113,18 @@ Shows all changes in a single column with +/- indicators:
 
 The component automatically assigns icons based on file extensions:
 
-| Extension | Icon |
-|-----------|------|
-| `.ts` | 📘 |
-| `.tsx`, `.jsx` | ⚛️ |
-| `.js` | 📜 |
-| `.py` | 🐍 |
-| `.json` | 📋 |
-| `.md` | 📝 |
-| `.css` | 🎨 |
-| `.html` | 🌐 |
-| `.yml`, `.yaml` | ⚙️ |
-| Other | 📄 |
+| Extension       | Icon |
+| --------------- | ---- |
+| `.ts`           | 📘   |
+| `.tsx`, `.jsx`  | ⚛️   |
+| `.js`           | 📜   |
+| `.py`           | 🐍   |
+| `.json`         | 📋   |
+| `.md`           | 📝   |
+| `.css`          | 🎨   |
+| `.html`         | 🌐   |
+| `.yml`, `.yaml` | ⚙️   |
+| Other           | 📄   |
 
 ## Styling
 
@@ -139,6 +139,7 @@ The component uses Tailwind CSS with a dark theme optimized for code viewing:
 ## Performance
 
 The diff computation is memoized using React's `useMemo` hook, ensuring:
+
 - Recalculation only when oldContent or newContent changes
 - Efficient rendering even with large files
 - Smooth user interactions
@@ -159,6 +160,7 @@ The component sets a max-height of 600px and provides scrolling for larger files
 ### Smart Diff Algorithm
 
 Uses the `diff` library's line-based diffing algorithm:
+
 - Accurately identifies changed, added, and removed lines
 - Handles edge cases like empty files
 - Preserves line number accuracy
@@ -166,6 +168,7 @@ Uses the `diff` library's line-based diffing algorithm:
 ### Responsive Design
 
 The split view maintains equal widths for both panels, ensuring:
+
 - Consistent comparison experience
 - Proper alignment of line numbers
 - Clean visual hierarchy

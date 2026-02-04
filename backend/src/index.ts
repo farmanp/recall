@@ -24,14 +24,18 @@ function start(): void {
     // Test claude-mem database connection
     console.log('Testing claude-mem database connection...');
     const db = getDbInstance();
-    const result = db.prepare('SELECT COUNT(*) as count FROM sdk_sessions').get() as { count: number };
+    const result = db.prepare('SELECT COUNT(*) as count FROM sdk_sessions').get() as {
+      count: number;
+    };
     console.log(`✅ Claude-mem database: ${result.count} sessions found`);
 
     // Initialize transcript database
     console.log('Initializing transcript database...');
     initializeTranscriptSchema();
     const transcriptDb = getTranscriptDbInstance();
-    const transcriptResult = transcriptDb.prepare('SELECT COUNT(*) as count FROM session_metadata').get() as { count: number };
+    const transcriptResult = transcriptDb
+      .prepare('SELECT COUNT(*) as count FROM session_metadata')
+      .get() as { count: number };
     console.log(`✅ Transcript database: ${transcriptResult.count} sessions imported`);
     console.log(`   Location: ${getTranscriptDbPath()}`);
 
@@ -97,7 +101,6 @@ function start(): void {
       console.log('\n⏹️  SIGINT received, shutting down gracefully...');
       shutdown();
     });
-
   } catch (error) {
     console.error('❌ Failed to start server:', error);
     process.exit(1);

@@ -28,9 +28,8 @@ export const PromptCard: React.FC<PromptCardProps> = ({
 }) => {
   const previewLength = 100;
   const isLong = event.text.length > previewLength;
-  const displayText = !expanded && isLong
-    ? event.text.substring(0, previewLength) + '...'
-    : event.text;
+  const displayText =
+    !expanded && isLong ? event.text.substring(0, previewLength) + '...' : event.text;
 
   const handleClick = () => {
     if (onClick) {
@@ -52,19 +51,13 @@ export const PromptCard: React.FC<PromptCardProps> = ({
       {/* Header */}
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
-          <span className="text-green-600 font-semibold text-sm">
-            🟢 User Prompt
-          </span>
+          <span className="text-green-600 font-semibold text-sm">🟢 User Prompt</span>
           {event.prompt_number !== null && (
-            <span className="text-xs text-gray-500">
-              #{event.prompt_number}
-            </span>
+            <span className="text-xs text-gray-500">#{event.prompt_number}</span>
           )}
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-500">
-            {formatTimestamp(event.ts)}
-          </span>
+          <span className="text-xs text-gray-500">{formatTimestamp(event.ts)}</span>
           {isLong && onToggleExpand && (
             <button
               onClick={(e) => {
@@ -93,9 +86,7 @@ export const PromptCard: React.FC<PromptCardProps> = ({
       </div>
 
       {/* Content */}
-      <div className="text-gray-800 whitespace-pre-wrap">
-        {displayText}
-      </div>
+      <div className="text-gray-800 whitespace-pre-wrap">{displayText}</div>
     </div>
   );
 };

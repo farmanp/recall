@@ -168,9 +168,7 @@ export abstract class AgentParser {
    * @param entries - All transcript entries
    * @returns Map of tool_use_id -> tool result
    */
-  abstract collectToolResults(
-    entries: TranscriptEntry[]
-  ): Map<string, ToolResultBlock>;
+  abstract collectToolResults(entries: TranscriptEntry[]): Map<string, ToolResultBlock>;
 
   /**
    * Extract playback frames from a single transcript entry
@@ -191,10 +189,7 @@ export abstract class AgentParser {
   /**
    * Extract session ID from entries or filename
    */
-  protected extractSessionId(
-    entries: TranscriptEntry[],
-    filePath: string
-  ): string {
+  protected extractSessionId(entries: TranscriptEntry[], filePath: string): string {
     // Try to get from first entry
     if (entries[0]?.sessionId) {
       return entries[0].sessionId;
@@ -206,10 +201,7 @@ export abstract class AgentParser {
   /**
    * Extract metadata from parsed transcript entries
    */
-  protected extractMetadata(
-    entries: TranscriptEntry[],
-    filePath: string
-  ): TranscriptMetadata {
+  protected extractMetadata(entries: TranscriptEntry[], filePath: string): TranscriptMetadata {
     const firstEntry = entries[0];
     const lastEntry = entries[entries.length - 1];
 
@@ -401,12 +393,7 @@ export abstract class AgentParser {
       };
     }
 
-    if (
-      toolUse.name === 'Edit' &&
-      input.file_path &&
-      input.old_string &&
-      input.new_string
-    ) {
+    if (toolUse.name === 'Edit' && input.file_path && input.old_string && input.new_string) {
       return {
         filePath: input.file_path,
         oldContent: input.old_string,
@@ -431,10 +418,7 @@ export abstract class AgentParser {
       context.filesRead = [toolUse.input.file_path];
     }
 
-    if (
-      (toolUse.name === 'Write' || toolUse.name === 'Edit') &&
-      toolUse.input.file_path
-    ) {
+    if ((toolUse.name === 'Write' || toolUse.name === 'Edit') && toolUse.input.file_path) {
       context.filesModified = [toolUse.input.file_path];
     }
 

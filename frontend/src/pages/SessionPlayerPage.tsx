@@ -4,22 +4,51 @@
  * Video player-style interface for replaying Claude Code sessions
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useSessionDetails, useSessionFrames, useSessionCommentary } from '../hooks/useTranscriptApi';
+import {
+  useSessionDetails,
+  useSessionFrames,
+  useSessionCommentary,
+} from '../hooks/useTranscriptApi';
 import type { PlaybackFrame, CommentaryData, SessionTimeline } from '../types/transcript';
 import { CodeBlock } from '../components/CodeBlock';
 import { DiffViewer } from '../components/DiffViewer';
 import { AgentBadge } from '../components/AgentBadge';
-import { ChevronLeft, Share2, Play, Pause, FastForward, Settings, Download, Info, Zap, Search as SearchIcon, Folder, Calendar, Hash, MessageSquare, Layout } from 'lucide-react';
+import {
+  ChevronLeft,
+  Share2,
+  Play,
+  Pause,
+  FastForward,
+  Settings,
+  Download,
+  Info,
+  Zap,
+  Search as SearchIcon,
+  Folder,
+  Calendar,
+  Hash,
+  MessageSquare,
+  Layout,
+} from 'lucide-react';
 import { CommentaryTimeline, CommentaryCard } from '../components/CommentaryBubble';
 import { TimelineScrubber } from '../components/session-player/TimelineScrubber';
 import { ChatView } from '../components/session-player/ChatView';
-import { FrameTypeFilters, findNextVisibleFrame, findPrevVisibleFrame } from '../components/session-player/FrameTypeFilters';
+import { FrameTypeFilters } from '../components/session-player/FrameTypeFilters';
+import {
+  findNextVisibleFrame,
+  findPrevVisibleFrame,
+} from '../components/session-player/frameTypeFiltersUtils';
 import { HelpPanel } from '../components/session-player/HelpPanel';
 import { StatsPanel } from '../components/session-player/StatsPanel';
 import { useSessionStats } from '../hooks/useSessionStats';
-import { findMatchingFrameIndices, findNextMatchIndex, findPrevMatchIndex, highlightText } from '../lib/frameSearch';
+import {
+  findMatchingFrameIndices,
+  findNextMatchIndex,
+  findPrevMatchIndex,
+  highlightText,
+} from '../lib/frameSearch';
 import { sessionToMarkdown, downloadFile } from '../lib/exportSession';
 
 type FrameType = 'user_message' | 'claude_thinking' | 'claude_response' | 'tool_execution';
@@ -59,8 +88,8 @@ export const SessionPlayerPage: React.FC = () => {
   // Fetch commentary observations from claude-mem
   const { data: commentaryData } = useSessionCommentary(sessionId);
 
-  const frames = framesData?.frames || [];
-  const currentFrame = frames[currentFrameIndex];
+  const frames = useMemo(() => framesData?.frames ?? [], [framesData?.frames]);
+  const currentFrame = useMemo(() => frames[currentFrameIndex], [frames, currentFrameIndex]);
 
   // Session statistics
   const stats = useSessionStats(frames);
@@ -75,7 +104,7 @@ export const SessionPlayerPage: React.FC = () => {
   const currentMatchRank = React.useMemo(() => {
     if (searchMatches.length === 0) return -1;
     // Find the closest previous or current match index
-    const index = [...searchMatches].reverse().findIndex(m => m <= currentFrameIndex);
+    const index = [...searchMatches].reverse().findIndex((m) => m <= currentFrameIndex);
     if (index === -1) return -1;
     return searchMatches.length - 1 - index;
   }, [searchMatches, currentFrameIndex]);
@@ -88,8 +117,8 @@ export const SessionPlayerPage: React.FC = () => {
 
     // Use compressed duration if compression is enabled, otherwise use original
     const baseDuration = compressionEnabled
-      ? (currentFrame.duration || 2000)
-      : (currentFrame.originalDuration || currentFrame.duration || 2000);
+      ? currentFrame.duration || 2000
+      : currentFrame.originalDuration || currentFrame.duration || 2000;
     const duration = baseDuration / playbackSpeed;
 
     timeoutRef.current = setTimeout(() => {
@@ -102,7 +131,16 @@ export const SessionPlayerPage: React.FC = () => {
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [isPlaying, currentFrameIndex, currentFrame, playbackSpeed, frames.length, frames, activeFrameTypes, compressionEnabled]);
+  }, [
+    isPlaying,
+    currentFrameIndex,
+    currentFrame,
+    playbackSpeed,
+    frames.length,
+    frames,
+    activeFrameTypes,
+    compressionEnabled,
+  ]);
 
   // Sync currentFrameIndex with URL and localStorage
   useEffect(() => {
@@ -133,12 +171,16 @@ export const SessionPlayerPage: React.FC = () => {
           break;
         case 'ArrowRight':
           e.preventDefault();
-          setCurrentFrameIndex(findNextVisibleFrame(currentFrameIndex + 1, frames, activeFrameTypes));
+          setCurrentFrameIndex(
+            findNextVisibleFrame(currentFrameIndex + 1, frames, activeFrameTypes)
+          );
           setIsPlaying(false);
           break;
         case 'ArrowLeft':
           e.preventDefault();
-          setCurrentFrameIndex(findPrevVisibleFrame(currentFrameIndex - 1, frames, activeFrameTypes));
+          setCurrentFrameIndex(
+            findPrevVisibleFrame(currentFrameIndex - 1, frames, activeFrameTypes)
+          );
           setIsPlaying(false);
           break;
         case 'Home':
@@ -185,22 +227,30 @@ export const SessionPlayerPage: React.FC = () => {
           break;
         case 'u':
           // Jump to next user message
-          const nextUser = frames.findIndex((f, i) => i > currentFrameIndex && f.type === 'user_message');
+          const nextUser = frames.findIndex(
+            (f, i) => i > currentFrameIndex && f.type === 'user_message'
+          );
           if (nextUser !== -1) setCurrentFrameIndex(nextUser);
           break;
         case 't':
           // Jump to next tool execution
-          const nextTool = frames.findIndex((f, i) => i > currentFrameIndex && f.type === 'tool_execution');
+          const nextTool = frames.findIndex(
+            (f, i) => i > currentFrameIndex && f.type === 'tool_execution'
+          );
           if (nextTool !== -1) setCurrentFrameIndex(nextTool);
           break;
         case 'r':
           // Jump to next AI response
-          const nextResp = frames.findIndex((f, i) => i > currentFrameIndex && f.type === 'claude_response');
+          const nextResp = frames.findIndex(
+            (f, i) => i > currentFrameIndex && f.type === 'claude_response'
+          );
           if (nextResp !== -1) setCurrentFrameIndex(nextResp);
           break;
         case 'm':
           // Jump to next thinking frame
-          const nextThink = frames.findIndex((f, i) => i > currentFrameIndex && f.type === 'claude_thinking');
+          const nextThink = frames.findIndex(
+            (f, i) => i > currentFrameIndex && f.type === 'claude_thinking'
+          );
           if (nextThink !== -1) setCurrentFrameIndex(nextThink);
           break;
         case 'n':
@@ -230,7 +280,16 @@ export const SessionPlayerPage: React.FC = () => {
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [frames.length, frames, currentFrameIndex, activeFrameTypes, searchMatches]);
+  }, [
+    frames.length,
+    frames,
+    currentFrameIndex,
+    activeFrameTypes,
+    searchMatches,
+    navigate,
+    showHelp,
+    showStats,
+  ]);
 
   if (loadingDetails || loadingFrames) {
     return (
@@ -248,7 +307,10 @@ export const SessionPlayerPage: React.FC = () => {
       <div className="flex items-center justify-center h-screen bg-gray-950">
         <div className="text-center">
           <p className="text-xl text-gray-400">Session not found</p>
-          <button onClick={() => navigate('/')} className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+          <button
+            onClick={() => navigate('/')}
+            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
             Back to Dashboard
           </button>
         </div>
@@ -286,7 +348,9 @@ export const SessionPlayerPage: React.FC = () => {
               <span>{sessionDetails?.project.split('/').pop()}</span>
               <span className="opacity-30">•</span>
               <Calendar className="w-3 h-3" />
-              <span>{sessionDetails && new Date(sessionDetails.startedAt).toLocaleDateString()}</span>
+              <span>
+                {sessionDetails && new Date(sessionDetails.startedAt).toLocaleDateString()}
+              </span>
             </div>
           </div>
         </div>
@@ -294,13 +358,19 @@ export const SessionPlayerPage: React.FC = () => {
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-3 mr-4 px-4 py-2 bg-gray-800/50 rounded-2xl border border-white/5">
             <div className="flex flex-col items-end">
-              <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Total Events</span>
+              <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                Total Events
+              </span>
               <span className="text-sm font-bold text-white">{frames.length}</span>
             </div>
             <div className="w-[1px] h-6 bg-gray-700" />
             <div className="flex flex-col items-end">
-              <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Agent</span>
-              <div className="mt-0.5"><AgentBadge agent={sessionDetails?.agent} /></div>
+              <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                Agent
+              </span>
+              <div className="mt-0.5">
+                <AgentBadge agent={sessionDetails?.agent} />
+              </div>
             </div>
           </div>
 
@@ -323,21 +393,27 @@ export const SessionPlayerPage: React.FC = () => {
 
           <button
             onClick={() => setViewMode(viewMode === 'timeline' ? 'chat' : 'timeline')}
-            className={`p-2.5 rounded-xl transition-all border active:scale-95 ${viewMode === 'chat'
-              ? 'bg-purple-600 border-purple-500 text-white'
-              : 'bg-gray-800 border-white/5 text-gray-400 hover:text-white'
-              }`}
+            className={`p-2.5 rounded-xl transition-all border active:scale-95 ${
+              viewMode === 'chat'
+                ? 'bg-purple-600 border-purple-500 text-white'
+                : 'bg-gray-800 border-white/5 text-gray-400 hover:text-white'
+            }`}
             title={`Switch to ${viewMode === 'timeline' ? 'Chat' : 'Timeline'} View`}
           >
-            {viewMode === 'timeline' ? <MessageSquare className="w-5 h-5" /> : <Layout className="w-5 h-5" />}
+            {viewMode === 'timeline' ? (
+              <MessageSquare className="w-5 h-5" />
+            ) : (
+              <Layout className="w-5 h-5" />
+            )}
           </button>
 
           <button
             onClick={() => setShowStats(!showStats)}
-            className={`p-2.5 rounded-xl transition-all border active:scale-95 ${showStats
-              ? 'bg-blue-600 border-blue-500 text-white'
-              : 'bg-gray-800 border-white/5 text-gray-400 hover:text-white'
-              }`}
+            className={`p-2.5 rounded-xl transition-all border active:scale-95 ${
+              showStats
+                ? 'bg-blue-600 border-blue-500 text-white'
+                : 'bg-gray-800 border-white/5 text-gray-400 hover:text-white'
+            }`}
             title="Toggle statistics panel (s)"
           >
             <Settings className="w-5 h-5 shadow-lg" />
@@ -361,7 +437,9 @@ export const SessionPlayerPage: React.FC = () => {
             {currentFrame?.isCompressed && compressionEnabled && (
               <div className="mb-4 px-4 py-2 bg-amber-900/50 border border-amber-700 rounded-lg flex items-center gap-2 text-amber-300 text-sm">
                 <Zap className="w-4 h-4 fill-current" />
-                <span>Compressed Gap: {Math.round((currentFrame.originalDuration || 0) / 1000)}s</span>
+                <span>
+                  Compressed Gap: {Math.round((currentFrame.originalDuration || 0) / 1000)}s
+                </span>
                 <span className="text-amber-500">→</span>
                 <span>{Math.round((currentFrame.duration || 0) / 1000)}s</span>
               </div>
@@ -369,14 +447,18 @@ export const SessionPlayerPage: React.FC = () => {
 
             {currentFrame && activeFrameTypes.has(currentFrame.type) ? (
               <FrameRenderer frame={currentFrame} searchQuery={searchQuery} />
-            ) : currentFrame && (
-              <div className="text-center py-24 text-gray-600">
-                <div className="w-16 h-16 bg-gray-900 rounded-full flex items-center justify-center mx-auto mb-4 border border-white/5">
-                  <SearchIcon className="w-8 h-8 opacity-20" />
+            ) : (
+              currentFrame && (
+                <div className="text-center py-24 text-gray-600">
+                  <div className="w-16 h-16 bg-gray-900 rounded-full flex items-center justify-center mx-auto mb-4 border border-white/5">
+                    <SearchIcon className="w-8 h-8 opacity-20" />
+                  </div>
+                  <p className="font-bold uppercase tracking-widest text-[10px]">Frame Filtered</p>
+                  <p className="text-sm mt-1 opacity-50">
+                    Enable "{currentFrame.type.replace('_', ' ')}" to view this part of the session.
+                  </p>
                 </div>
-                <p className="font-bold uppercase tracking-widest text-[10px]">Frame Filtered</p>
-                <p className="text-sm mt-1 opacity-50">Enable "{currentFrame.type.replace('_', ' ')}" to view this part of the session.</p>
-              </div>
+              )
             )}
           </div>
         </div>
@@ -396,7 +478,10 @@ export const SessionPlayerPage: React.FC = () => {
             });
           }}
           onToggleAll={(showAll) => {
-            if (showAll) setActiveFrameTypes(new Set(['user_message', 'claude_response', 'tool_execution', 'claude_thinking']));
+            if (showAll)
+              setActiveFrameTypes(
+                new Set(['user_message', 'claude_response', 'tool_execution', 'claude_thinking'])
+              );
             else setActiveFrameTypes(new Set());
           }}
           searchQuery={searchQuery}
@@ -405,11 +490,17 @@ export const SessionPlayerPage: React.FC = () => {
           currentMatchRank={currentMatchRank}
           onNextMatch={() => {
             const nextIndex = findNextMatchIndex(currentFrameIndex, searchMatches);
-            if (nextIndex !== -1) { setCurrentFrameIndex(nextIndex); setIsPlaying(false); }
+            if (nextIndex !== -1) {
+              setCurrentFrameIndex(nextIndex);
+              setIsPlaying(false);
+            }
           }}
           onPrevMatch={() => {
             const prevIndex = findPrevMatchIndex(currentFrameIndex, searchMatches);
-            if (prevIndex !== -1) { setCurrentFrameIndex(prevIndex); setIsPlaying(false); }
+            if (prevIndex !== -1) {
+              setCurrentFrameIndex(prevIndex);
+              setIsPlaying(false);
+            }
           }}
         />
 
@@ -428,7 +519,11 @@ export const SessionPlayerPage: React.FC = () => {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => {
-                  const prevFrame = findPrevVisibleFrame(currentFrameIndex - 1, frames, activeFrameTypes);
+                  const prevFrame = findPrevVisibleFrame(
+                    currentFrameIndex - 1,
+                    frames,
+                    activeFrameTypes
+                  );
                   setCurrentFrameIndex(prevFrame);
                   setIsPlaying(false);
                 }}
@@ -441,18 +536,27 @@ export const SessionPlayerPage: React.FC = () => {
 
               <button
                 onClick={() => setIsPlaying(!isPlaying)}
-                className={`px-8 py-2.5 rounded-2xl font-black uppercase tracking-widest text-sm flex items-center gap-3 transition-all active:scale-95 shadow-lg ${isPlaying
-                  ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-amber-500/20'
-                  : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/20'
-                  }`}
+                className={`px-8 py-2.5 rounded-2xl font-black uppercase tracking-widest text-sm flex items-center gap-3 transition-all active:scale-95 shadow-lg ${
+                  isPlaying
+                    ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-amber-500/20'
+                    : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/20'
+                }`}
               >
-                {isPlaying ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current" />}
+                {isPlaying ? (
+                  <Pause className="w-5 h-5 fill-current" />
+                ) : (
+                  <Play className="w-5 h-5 fill-current" />
+                )}
                 {isPlaying ? 'Pause' : 'Play'}
               </button>
 
               <button
                 onClick={() => {
-                  const nextFrame = findNextVisibleFrame(currentFrameIndex + 1, frames, activeFrameTypes);
+                  const nextFrame = findNextVisibleFrame(
+                    currentFrameIndex + 1,
+                    frames,
+                    activeFrameTypes
+                  );
                   setCurrentFrameIndex(nextFrame);
                   setIsPlaying(false);
                 }}
@@ -468,8 +572,12 @@ export const SessionPlayerPage: React.FC = () => {
 
             <div className="flex items-center gap-6">
               <label className="flex items-center gap-3 cursor-pointer group select-none">
-                <div className={`w-10 h-6 rounded-full p-1 transition-all duration-300 ${showCommentary ? 'bg-blue-600' : 'bg-gray-700'}`}>
-                  <div className={`w-4 h-4 bg-white rounded-full transition-transform duration-300 ${showCommentary ? 'translate-x-4' : ''}`} />
+                <div
+                  className={`w-10 h-6 rounded-full p-1 transition-all duration-300 ${showCommentary ? 'bg-blue-600' : 'bg-gray-700'}`}
+                >
+                  <div
+                    className={`w-4 h-4 bg-white rounded-full transition-transform duration-300 ${showCommentary ? 'translate-x-4' : ''}`}
+                  />
                 </div>
                 <input
                   type="checkbox"
@@ -485,11 +593,16 @@ export const SessionPlayerPage: React.FC = () => {
               <div className="flex items-center gap-2 bg-gray-800/80 rounded-2xl p-1.5 border border-white/5">
                 <button
                   onClick={() => setCompressionEnabled(!compressionEnabled)}
-                  className={`p-2 rounded-xl transition-all ${compressionEnabled
-                    ? 'bg-amber-500/10 text-amber-500'
-                    : 'text-gray-500 hover:text-gray-300'
-                    }`}
-                  title={compressionEnabled ? 'Disable dead air compression' : 'Enable dead air compression'}
+                  className={`p-2 rounded-xl transition-all ${
+                    compressionEnabled
+                      ? 'bg-amber-500/10 text-amber-500'
+                      : 'text-gray-500 hover:text-gray-300'
+                  }`}
+                  title={
+                    compressionEnabled
+                      ? 'Disable dead air compression'
+                      : 'Enable dead air compression'
+                  }
                 >
                   <Zap className={`w-4 h-4 ${compressionEnabled ? 'fill-current' : ''}`} />
                 </button>
@@ -501,10 +614,11 @@ export const SessionPlayerPage: React.FC = () => {
                     <button
                       key={speed}
                       onClick={() => setPlaybackSpeed(speed)}
-                      className={`px-2.5 py-1 text-[10px] font-black rounded-lg transition-all ${playbackSpeed === speed
-                        ? 'bg-blue-600 text-white'
-                        : 'text-gray-500 hover:text-gray-300'
-                        }`}
+                      className={`px-2.5 py-1 text-[10px] font-black rounded-lg transition-all ${
+                        playbackSpeed === speed
+                          ? 'bg-blue-600 text-white'
+                          : 'text-gray-500 hover:text-gray-300'
+                      }`}
                     >
                       {speed}x
                     </button>
@@ -528,7 +642,10 @@ export const SessionPlayerPage: React.FC = () => {
 
       {/* Floating Overlays */}
       {selectedCommentary && (
-        <CommentaryCard commentary={selectedCommentary} onClose={() => setSelectedCommentary(null)} />
+        <CommentaryCard
+          commentary={selectedCommentary}
+          onClose={() => setSelectedCommentary(null)}
+        />
       )}
       {showHelp && <HelpPanel onClose={() => setShowHelp(false)} />}
       {showStats && <StatsPanel stats={stats} onClose={() => setShowStats(false)} />}
@@ -566,61 +683,98 @@ const ToolOutputBlock: React.FC<{
   const shouldHighlight = (toolName: string, content: string) => {
     const codeTools = ['Read', 'Write', 'Edit', 'Grep', 'NotebookEdit'];
     if (codeTools.includes(toolName)) return true;
-    return /^(function|class|const|let|var|import|export|def|public|private)/m.test(content) || /^\s*[{\[]/.test(content.trim());
+    return (
+      /^(function|class|const|let|var|import|export|def|public|private)/m.test(content) ||
+      /^\s*[{\[]/.test(content.trim())
+    );
   };
 
   const detectLanguage = (toolName: string, content: string) => {
-    if (toolName !== 'Bash') return (['Read', 'Write', 'Edit'].includes(toolName)) ? 'javascript' : 'plaintext';
+    if (toolName !== 'Bash')
+      return ['Read', 'Write', 'Edit'].includes(toolName) ? 'javascript' : 'plaintext';
     if (content.includes('.json')) return 'json';
     if (content.includes('.py')) return 'python';
     if (content.includes('.js') || content.includes('.ts')) return 'javascript';
     if (/^\s*[{\[]/.test(content.trim())) {
-      try { JSON.parse(content); return 'json'; } catch { }
+      try {
+        JSON.parse(content);
+        return 'json';
+      } catch {}
     }
     return 'bash';
   };
 
   const language = detectLanguage(tool, output);
   const isJson = language === 'json' || /^\s*[{\[]/.test(output.trim());
-  const beautifyResult = (isJson && isFormatted && !isError) ? tryBeautifyJson(output) : { success: false, formatted: output };
+  const beautifyResult =
+    isJson && isFormatted && !isError
+      ? tryBeautifyJson(output)
+      : { success: false, formatted: output };
   const processedOutput = beautifyResult.success ? beautifyResult.formatted : output;
 
   const SOFT_LIMIT = 50;
   const outputLines = processedOutput.split('\n');
   const needsTruncation = outputLines.length > SOFT_LIMIT && !isExpanded;
-  const displayOutput = needsTruncation ? outputLines.slice(0, SOFT_LIMIT).join('\n') : processedOutput;
+  const displayOutput = needsTruncation
+    ? outputLines.slice(0, SOFT_LIMIT).join('\n')
+    : processedOutput;
 
   return (
     <div>
       <div className="flex justify-end gap-2 mb-2">
         {outputLines.length > SOFT_LIMIT && (
-          <button onClick={() => setIsExpanded(!isExpanded)} className="px-3 py-1 text-xs bg-blue-900/40 hover:bg-blue-800/60 text-blue-300 rounded border border-blue-700/50 transition-colors">
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="px-3 py-1 text-xs bg-blue-900/40 hover:bg-blue-800/60 text-blue-300 rounded border border-blue-700/50 transition-colors"
+          >
             {isExpanded ? 'Collapse' : `Show All (${outputLines.length} lines)`}
           </button>
         )}
         {isJson && !isError && (
-          <button onClick={() => setIsFormatted(!isFormatted)} className="px-3 py-1 text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 rounded border border-gray-700 transition-colors">
+          <button
+            onClick={() => setIsFormatted(!isFormatted)}
+            className="px-3 py-1 text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 rounded border border-gray-700 transition-colors"
+          >
             {isFormatted ? 'Raw' : 'Format'}
           </button>
         )}
       </div>
       {shouldHighlight(tool, output) && !isError ? (
-        <CodeBlock code={displayOutput} language={language} showLineNumbers={true} maxHeight={isExpanded ? "none" : "500px"} />
+        <CodeBlock
+          code={displayOutput}
+          language={language}
+          showLineNumbers={true}
+          maxHeight={isExpanded ? 'none' : '500px'}
+        />
       ) : (
-        <div className={`bg-gray-950 rounded p-4 font-mono text-sm overflow-x-auto border ${isError ? 'border-red-800' : 'border-gray-800'}`} style={{ maxHeight: isExpanded ? 'none' : '500px' }}>
-          <pre className={`whitespace-pre-wrap ${isError ? 'text-red-400' : 'text-gray-300'}`}>{displayOutput}</pre>
+        <div
+          className={`bg-gray-950 rounded p-4 font-mono text-sm overflow-x-auto border ${isError ? 'border-red-800' : 'border-gray-800'}`}
+          style={{ maxHeight: isExpanded ? 'none' : '500px' }}
+        >
+          <pre className={`whitespace-pre-wrap ${isError ? 'text-red-400' : 'text-gray-300'}`}>
+            {displayOutput}
+          </pre>
         </div>
       )}
       {(needsTruncation || truncatedFilePath) && (
         <div className="mt-2 px-3 py-2 bg-gray-900 border border-gray-800 rounded text-xs">
           {truncatedFilePath ? (
             <div className="text-gray-400">
-              <span className="text-yellow-500 font-bold">⚠ Session data truncated by AI safely.</span> Full output at:
+              <span className="text-yellow-500 font-bold">
+                ⚠ Session data truncated by AI safely.
+              </span>{' '}
+              Full output at:
               <code className="ml-2 text-gray-300">{truncatedFilePath}</code>
             </div>
           ) : (
             <div className="text-gray-500 text-center">
-              Showing first {SOFT_LIMIT} lines of {outputLines.length}. <button onClick={() => setIsExpanded(true)} className="text-blue-500 hover:underline font-bold">Expand</button>
+              Showing first {SOFT_LIMIT} lines of {outputLines.length}.{' '}
+              <button
+                onClick={() => setIsExpanded(true)}
+                className="text-blue-500 hover:underline font-bold"
+              >
+                Expand
+              </button>
             </div>
           )}
         </div>
@@ -629,7 +783,10 @@ const ToolOutputBlock: React.FC<{
   );
 };
 
-const FrameRenderer: React.FC<{ frame: PlaybackFrame; searchQuery?: string }> = ({ frame, searchQuery = '' }) => {
+const FrameRenderer: React.FC<{ frame: PlaybackFrame; searchQuery?: string }> = ({
+  frame,
+  searchQuery = '',
+}) => {
   const frameTypeColors = {
     user_message: 'bg-blue-950/40 border-blue-500/20 shadow-[0_0_20px_rgba(59,130,246,0.1)]',
     claude_thinking: 'bg-purple-950/40 border-purple-500/20 shadow-[0_0_20px_rgba(168,85,247,0.1)]',
@@ -654,20 +811,28 @@ const FrameRenderer: React.FC<{ frame: PlaybackFrame; searchQuery?: string }> = 
   };
 
   return (
-    <div className={`border rounded-2xl p-8 mb-6 transition-all duration-500 ${frameTypeColors[frame.type] || 'bg-gray-900 border-white/5'}`}>
+    <div
+      className={`border rounded-2xl p-8 mb-6 transition-all duration-500 ${frameTypeColors[frame.type] || 'bg-gray-900 border-white/5'}`}
+    >
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-white/5 rounded-lg border border-white/10">
             {frameTypeIcons[frame.type]}
           </div>
           <div>
-            <span className="text-xs font-black uppercase tracking-widest text-gray-500 block mb-0.5">Event Type</span>
+            <span className="text-xs font-black uppercase tracking-widest text-gray-500 block mb-0.5">
+              Event Type
+            </span>
             <span className="text-sm font-bold text-white">{frameTypeLabels[frame.type]}</span>
           </div>
         </div>
         <div className="text-right">
-          <span className="text-xs font-black uppercase tracking-widest text-gray-500 block mb-0.5">Timestamp</span>
-          <span className="text-sm font-mono text-gray-400">{new Date(frame.timestamp).toLocaleTimeString()}</span>
+          <span className="text-xs font-black uppercase tracking-widest text-gray-500 block mb-0.5">
+            Timestamp
+          </span>
+          <span className="text-sm font-mono text-gray-400">
+            {new Date(frame.timestamp).toLocaleTimeString()}
+          </span>
         </div>
       </div>
 
@@ -710,14 +875,26 @@ const FrameRenderer: React.FC<{ frame: PlaybackFrame; searchQuery?: string }> = 
 
           {frame.toolExecution.input && (
             <div className="space-y-2">
-              <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">Input Parameters</span>
-              <CodeBlock code={JSON.stringify(frame.toolExecution.input, null, 2)} language="json" showLineNumbers={false} />
+              <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">
+                Input Parameters
+              </span>
+              <CodeBlock
+                code={JSON.stringify(frame.toolExecution.input, null, 2)}
+                language="json"
+                showLineNumbers={false}
+              />
             </div>
           )}
 
           <div className="space-y-2">
-            <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">Output Result</span>
-            <ToolOutputBlock tool={frame.toolExecution.tool} output={frame.toolExecution.output.content} isError={frame.toolExecution.output.isError} />
+            <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">
+              Output Result
+            </span>
+            <ToolOutputBlock
+              tool={frame.toolExecution.tool}
+              output={frame.toolExecution.output.content}
+              isError={frame.toolExecution.output.isError}
+            />
           </div>
         </div>
       )}

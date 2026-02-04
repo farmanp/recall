@@ -89,7 +89,6 @@ async function testApiClient() {
     console.log('  - Get specific event: Working');
     console.log('  - Error handling: Working');
     console.log('\nThe TypeScript API client is ready to use!');
-
   } catch (error) {
     console.error('❌ Test failed:', error.message);
     process.exit(1);

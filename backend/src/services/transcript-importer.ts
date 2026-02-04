@@ -119,9 +119,7 @@ export async function importTranscript(filePath: string, agent?: AgentType): Pro
       project: timeline.project,
       agent: timeline.agent,
       startTime: new Date(timeline.startedAt).toISOString(),
-      endTime: timeline.completedAt
-        ? new Date(timeline.completedAt).toISOString()
-        : undefined,
+      endTime: timeline.completedAt ? new Date(timeline.completedAt).toISOString() : undefined,
       duration: timeline.completedAt
         ? Math.floor((timeline.completedAt - timeline.startedAt) / 1000)
         : undefined,
@@ -202,9 +200,7 @@ export async function importTranscript(filePath: string, agent?: AgentType): Pro
  *
  * console.log(`Imported ${summary.successful} sessions`);
  */
-export async function bulkImportTranscripts(
-  config?: ImportJobConfig
-): Promise<ImportSummary> {
+export async function bulkImportTranscripts(config?: ImportJobConfig): Promise<ImportSummary> {
   const startTime = Date.now();
 
   // Merge with defaults
@@ -292,10 +288,7 @@ export async function bulkImportTranscripts(
  * @param skipExisting - Whether to skip already imported sessions
  * @returns Import result
  */
-async function importSingleFile(
-  filePath: string,
-  skipExisting: boolean
-): Promise<ImportResult> {
+async function importSingleFile(filePath: string, skipExisting: boolean): Promise<ImportResult> {
   const sessionId = path.basename(filePath, '.jsonl');
 
   // Check if already imported

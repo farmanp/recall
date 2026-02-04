@@ -100,14 +100,15 @@ Render Functions
 interface DiffLine {
   type: 'added' | 'removed' | 'unchanged';
   content: string;
-  oldLineNumber?: number;  // Present for old content lines
-  newLineNumber?: number;  // Present for new content lines
+  oldLineNumber?: number; // Present for old content lines
+  newLineNumber?: number; // Present for new content lines
 }
 ```
 
 ### Example DiffLine Objects
 
 **Unchanged Line:**
+
 ```typescript
 {
   type: 'unchanged',
@@ -118,6 +119,7 @@ interface DiffLine {
 ```
 
 **Added Line:**
+
 ```typescript
 {
   type: 'added',
@@ -128,6 +130,7 @@ interface DiffLine {
 ```
 
 **Removed Line:**
+
 ```typescript
 {
   type: 'removed',
@@ -189,24 +192,26 @@ interface DiffLine {
 ## Color System
 
 ### Background Colors
+
 ```typescript
 const bgColors = {
   container: 'bg-gray-900',
   header: 'bg-gray-800',
   codeBlock: 'bg-gray-950',
   unchanged: 'bg-gray-900',
-  added: 'bg-green-900/30',      // 30% opacity
-  removed: 'bg-red-900/30',      // 30% opacity
+  added: 'bg-green-900/30', // 30% opacity
+  removed: 'bg-red-900/30', // 30% opacity
 };
 ```
 
 ### Text Colors
+
 ```typescript
 const textColors = {
-  primary: 'text-gray-200',      // File path
-  secondary: 'text-gray-400',    // Headers
-  code: 'text-gray-300',         // Code content
-  lineNumbers: 'text-gray-500',  // Line numbers
+  primary: 'text-gray-200', // File path
+  secondary: 'text-gray-400', // Headers
+  code: 'text-gray-300', // Code content
+  lineNumbers: 'text-gray-500', // Line numbers
   additionBadge: 'text-green-300',
   deletionBadge: 'text-red-300',
   additionIndicator: 'text-green-400',
@@ -215,6 +220,7 @@ const textColors = {
 ```
 
 ### Border Colors
+
 ```typescript
 const borderColors = {
   outer: 'border-gray-700',
@@ -225,6 +231,7 @@ const borderColors = {
 ## State Management
 
 ### isCollapsed State
+
 ```typescript
 const [isCollapsed, setIsCollapsed] = useState(false);
 
@@ -240,6 +247,7 @@ const [isCollapsed, setIsCollapsed] = useState(false);
 ```
 
 ### viewMode State
+
 ```typescript
 const [viewMode, setViewMode] = useState<'split' | 'unified'>('split');
 
@@ -264,9 +272,9 @@ if (!isEdit || !oldContent) {
     rightLines: newContent.split('\n').map((line, i) => ({
       type: 'added',
       content: line,
-      newLineNumber: i + 1
+      newLineNumber: i + 1,
     })),
-    stats: { additions: lineCount, deletions: 0, unchanged: 0 }
+    stats: { additions: lineCount, deletions: 0, unchanged: 0 },
   };
 }
 
@@ -277,24 +285,24 @@ const changes = Diff.diffLines(oldContent, newContent);
 let oldLineNum = 1;
 let newLineNum = 1;
 
-changes.forEach(change => {
+changes.forEach((change) => {
   const lines = change.value.split('\n');
 
   if (change.added) {
     // Add to right only, empty on left
-    lines.forEach(content => {
+    lines.forEach((content) => {
       leftLines.push({ type: 'unchanged', content: '', oldLineNumber: undefined });
       rightLines.push({ type: 'added', content, newLineNumber: newLineNum++ });
     });
   } else if (change.removed) {
     // Add to left only, empty on right
-    lines.forEach(content => {
+    lines.forEach((content) => {
       leftLines.push({ type: 'removed', content, oldLineNumber: oldLineNum++ });
       rightLines.push({ type: 'unchanged', content: '', newLineNumber: undefined });
     });
   } else {
     // Unchanged: add to both
-    lines.forEach(content => {
+    lines.forEach((content) => {
       leftLines.push({ type: 'unchanged', content, oldLineNumber: oldLineNum++ });
       rightLines.push({ type: 'unchanged', content, newLineNumber: newLineNum++ });
     });
@@ -305,16 +313,19 @@ changes.forEach(change => {
 ## Performance Characteristics
 
 ### Time Complexity
+
 - Diff computation: O(n + m) where n = old lines, m = new lines
 - Rendering: O(max(n, m)) for split view
 - Total: O(n + m)
 
 ### Space Complexity
+
 - O(n + m) for storing line arrays
 - Memoization prevents redundant computation
 - Virtual scrolling limits DOM nodes
 
 ### Optimization Strategies
+
 1. **useMemo**: Recompute only when content changes
 2. **Max Height**: Limit rendered viewport
 3. **Lazy Rendering**: Skip content when collapsed
@@ -327,43 +338,49 @@ const getFileIcon = (path: string): string => {
   const ext = path.split('.').pop()?.toLowerCase();
 
   const iconMap: Record<string, string> = {
-    'ts':   '📘',  // TypeScript
-    'tsx':  '⚛️',  // React TypeScript
-    'js':   '📜',  // JavaScript
-    'jsx':  '⚛️',  // React JavaScript
-    'py':   '🐍',  // Python
-    'json': '📋',  // JSON
-    'md':   '📝',  // Markdown
-    'css':  '🎨',  // CSS
-    'html': '🌐',  // HTML
-    'yml':  '⚙️',  // YAML
-    'yaml': '⚙️',  // YAML
+    ts: '📘', // TypeScript
+    tsx: '⚛️', // React TypeScript
+    js: '📜', // JavaScript
+    jsx: '⚛️', // React JavaScript
+    py: '🐍', // Python
+    json: '📋', // JSON
+    md: '📝', // Markdown
+    css: '🎨', // CSS
+    html: '🌐', // HTML
+    yml: '⚙️', // YAML
+    yaml: '⚙️', // YAML
   };
 
-  return iconMap[ext || ''] || '📄';  // Default
+  return iconMap[ext || ''] || '📄'; // Default
 };
 ```
 
 ## Responsive Design
 
 ### Breakpoints (Tailwind)
+
 ```css
 /* Mobile: stack panels vertically (future enhancement) */
 @media (max-width: 768px) {
-  .diff-split { flex-direction: column; }
+  .diff-split {
+    flex-direction: column;
+  }
 }
 
 /* Desktop: side-by-side */
 @media (min-width: 768px) {
-  .diff-split { flex-direction: row; }
+  .diff-split {
+    flex-direction: row;
+  }
 }
 ```
 
 ### Scroll Behavior
+
 ```css
 max-height: 600px;
 overflow-y: auto;
-overflow-x: auto;  /* For long lines */
+overflow-x: auto; /* For long lines */
 ```
 
 ## Accessibility Features
@@ -377,11 +394,13 @@ overflow-x: auto;  /* For long lines */
 ## Integration API
 
 ### Import
+
 ```typescript
 import { DiffViewer } from '../components/DiffViewer';
 ```
 
 ### Usage (Edit Tool)
+
 ```tsx
 <DiffViewer
   filePath={fileDiff.filePath}
@@ -393,10 +412,11 @@ import { DiffViewer } from '../components/DiffViewer';
 ```
 
 ### Usage (Write Tool)
+
 ```tsx
 <DiffViewer
   filePath={fileDiff.filePath}
-  oldContent={undefined}  // or omit
+  oldContent={undefined} // or omit
   newContent={fileDiff.newContent}
   language={fileDiff.language}
   isEdit={false}
@@ -406,12 +426,14 @@ import { DiffViewer } from '../components/DiffViewer';
 ## Testing Strategy
 
 ### Unit Tests
+
 - Test diff computation with various inputs
 - Test line number assignment
 - Test statistics calculation
 - Test edge cases (empty files, single line, no changes)
 
 ### Integration Tests
+
 - Test with SessionPlayerPage
 - Test Edit tool integration
 - Test Write tool integration
@@ -419,12 +441,14 @@ import { DiffViewer } from '../components/DiffViewer';
 - Test collapse/expand
 
 ### Visual Tests
+
 - Test color scheme
 - Test layout responsiveness
 - Test scrolling behavior
 - Test with large files (100+ lines)
 
 ### Edge Cases
+
 - Empty old content
 - Empty new content
 - No changes (identical files)

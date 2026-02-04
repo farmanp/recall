@@ -75,7 +75,7 @@ export function startWatcher(): void {
       ignoreInitial: false,
       awaitWriteFinish: {
         stabilityThreshold: 500,
-        pollInterval: 100
+        pollInterval: 100,
       },
       depth: 0, // Only watch the projects directory, not subdirectories
     });
@@ -97,7 +97,6 @@ export function startWatcher(): void {
       .on('ready', () => {
         console.log('[FileWatcher] Initial scan complete. Ready for changes.');
       });
-
   } catch (error) {
     console.error('[FileWatcher] Failed to start watcher:', error);
     watcher = null;

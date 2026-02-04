@@ -54,37 +54,23 @@ export const SessionCard: React.FC<SessionCardProps> = ({ session, onClick }) =>
       {/* Header */}
       <div className="flex items-start justify-between mb-2">
         <div className="flex-1">
-          <h3 className="text-lg font-semibold text-gray-900 truncate">
-            {session.project}
-          </h3>
-          <p className="text-sm text-gray-500">
-            {formatTimestamp(session.started_at_epoch)}
-          </p>
+          <h3 className="text-lg font-semibold text-gray-900 truncate">{session.project}</h3>
+          <p className="text-sm text-gray-500">{formatTimestamp(session.started_at_epoch)}</p>
         </div>
         <div className="flex items-center gap-2">
-          <span
-            className={`${statusColor} w-2 h-2 rounded-full`}
-            title={session.status}
-          ></span>
+          <span className={`${statusColor} w-2 h-2 rounded-full`} title={session.status}></span>
         </div>
       </div>
 
       {/* First prompt preview */}
       {session.user_prompt && (
-        <p className="text-sm text-gray-700 mb-3 line-clamp-2">
-          {session.user_prompt}
-        </p>
+        <p className="text-sm text-gray-700 mb-3 line-clamp-2">{session.user_prompt}</p>
       )}
 
       {/* Metadata */}
       <div className="flex items-center gap-4 text-xs text-gray-500">
         <span className="flex items-center gap-1">
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -97,12 +83,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({ session, onClick }) =>
 
         {duration && (
           <span className="flex items-center gap-1">
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"

@@ -6,6 +6,7 @@
 A local-first web application that lets you **replay AI coding sessions** like a video player. Watch how features were built, decisions made, and problems solved across multiple AI coding agents.
 
 **Supported Agents:**
+
 - **Claude Code** - Anthropic's CLI coding assistant
 - **Codex CLI** - OpenAI's command-line coding tool
 - **Gemini CLI** - Google's terminal-based AI assistant
@@ -25,18 +26,22 @@ A local-first web application that lets you **replay AI coding sessions** like a
 ### Installation
 
 **Option 1: npx (Recommended)**
+
 ```bash
 npx recall-player
 ```
+
 This will start Recall and automatically open your browser.
 
 **Option 2: Global Install**
+
 ```bash
 npm install -g recall-player
 recall
 ```
 
 **Option 3: Development Setup**
+
 ```bash
 # Clone the repository
 git clone https://github.com/farmanp/recall.git
@@ -63,12 +68,14 @@ npm start
 ## Features
 
 ### Session Browser
+
 - View all sessions across Claude, Codex, and Gemini
 - Filter by agent type, date range, and duration
 - Search sessions by project name or content
 - See session metadata (duration, event count, first message)
 
 ### Session Player
+
 - **Frame-by-frame playback** of coding sessions
 - **Frame types:** User messages, AI responses, AI thinking, Tool executions
 - **Filter controls** to show/hide specific frame types
@@ -76,6 +83,7 @@ npm start
 - **Search** within sessions to find specific content
 
 ### Multi-Agent Support
+
 - Automatically detects and parses sessions from all supported agents
 - Agent-specific badges and colors in the UI
 - Normalized frame format for consistent playback experience
@@ -116,6 +124,7 @@ recall/
 ## API Reference
 
 ### List Sessions
+
 ```bash
 # Get all sessions
 curl 'http://localhost:3001/api/sessions'
@@ -130,17 +139,20 @@ curl 'http://localhost:3001/api/sessions?limit=10&offset=20'
 ```
 
 ### Get Available Agents
+
 ```bash
 curl 'http://localhost:3001/api/agents'
 # Returns: { "agents": ["claude", "codex", "gemini"], "counts": {...} }
 ```
 
 ### Get Session Details
+
 ```bash
 curl 'http://localhost:3001/api/sessions/{sessionId}'
 ```
 
 ### Get Session Frames
+
 ```bash
 curl 'http://localhost:3001/api/sessions/{sessionId}/frames'
 ```
@@ -149,19 +161,20 @@ curl 'http://localhost:3001/api/sessions/{sessionId}/frames'
 
 ## Keyboard Shortcuts (Session Player)
 
-| Key | Action |
-|-----|--------|
-| `Space` | Play/Pause |
-| `←` / `→` | Previous/Next frame |
-| `Home` / `End` | First/Last frame |
-| `n` / `p` | Next/Previous search match |
-| `?` | Toggle help panel |
+| Key            | Action                     |
+| -------------- | -------------------------- |
+| `Space`        | Play/Pause                 |
+| `←` / `→`      | Previous/Next frame        |
+| `Home` / `End` | First/Last frame           |
+| `n` / `p`      | Next/Previous search match |
+| `?`            | Toggle help panel          |
 
 ---
 
 ## Development
 
 ### Quick Development Setup
+
 ```bash
 git clone https://github.com/farmanp/recall.git
 cd recall
@@ -170,6 +183,7 @@ npm start        # Start the server
 ```
 
 ### Backend Development
+
 ```bash
 cd backend
 npm run dev      # Development with hot reload
@@ -179,6 +193,7 @@ npm test         # Run tests
 ```
 
 ### Frontend Development
+
 ```bash
 cd frontend
 npm run dev      # Development with hot reload (with API proxy)
@@ -188,6 +203,7 @@ npm run preview  # Preview production build
 ```
 
 ### Publishing
+
 ```bash
 npm run build              # Build backend + frontend
 npm publish --access public --otp=CODE  # Publish to npm
@@ -199,27 +215,30 @@ npm publish --access public --otp=CODE  # Publish to npm
 
 Recall automatically scans these directories for sessions:
 
-| Agent | Directory | File Format |
-|-------|-----------|-------------|
-| Claude Code | `~/.claude/projects/{project}/` | `*.jsonl` |
-| Codex CLI | `~/.codex/sessions/` | `*.jsonl` (with date subdirs) |
-| Gemini CLI | `~/.gemini/tmp/{hash}/chats/` | `session-*.json` |
+| Agent       | Directory                       | File Format                   |
+| ----------- | ------------------------------- | ----------------------------- |
+| Claude Code | `~/.claude/projects/{project}/` | `*.jsonl`                     |
+| Codex CLI   | `~/.codex/sessions/`            | `*.jsonl` (with date subdirs) |
+| Gemini CLI  | `~/.gemini/tmp/{hash}/chats/`   | `session-*.json`              |
 
 ---
 
 ## Troubleshooting
 
 ### No sessions showing up?
+
 1. Make sure you have session files in one of the supported directories
 2. Check the backend console for any errors
 3. Try the API directly: `curl http://localhost:3001/api/agents`
 
 ### Backend won't start?
+
 1. Make sure you're in the `backend` directory
 2. Run `npm install` to install dependencies
 3. Check that port 3001 is available
 
 ### Frontend won't start?
+
 1. Make sure you're in the `frontend` directory
 2. Run `npm install` to install dependencies
 3. The frontend will automatically find an available port if 5173 is taken
@@ -243,6 +262,7 @@ MIT
 ## Credits
 
 Built with:
+
 - [Node.js](https://nodejs.org/) + [Express](https://expressjs.com/)
 - [React](https://react.dev/) + [Vite](https://vitejs.dev/)
 - [TypeScript](https://www.typescriptlang.org/)

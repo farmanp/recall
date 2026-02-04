@@ -28,5 +28,11 @@
     "noUncheckedSideEffectImports": false
   },
   "include": ["src"],
-  "exclude": ["**/*.test.ts", "**/*.test.tsx", "**/*.old.tsx", "**/*.example.tsx", "src/components/old/**/*"]
+  "exclude": [
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.old.tsx",
+    "**/*.example.tsx",
+    "src/components/old/**/*"
+  ]
 }

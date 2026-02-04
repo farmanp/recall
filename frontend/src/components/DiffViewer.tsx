@@ -79,7 +79,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
       yml: 'yaml',
       yaml: 'yaml',
       html: 'markup',
-      css: 'css'
+      css: 'css',
     };
     const prismLang = langMap[lang] || lang || 'plaintext';
     const grammar = Prism.languages[prismLang];
@@ -233,10 +233,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
         ref={parentRef}
         className="max-h-[600px] overflow-auto border border-gray-700 rounded-lg bg-gray-950"
       >
-        <div
-          className="relative w-full"
-          style={{ height: `${splitVirtualizer.getTotalSize()}px` }}
-        >
+        <div className="relative w-full" style={{ height: `${splitVirtualizer.getTotalSize()}px` }}>
           {virtualItems.map((virtualRow) => {
             const left = leftLines[virtualRow.index];
             const right = rightLines[virtualRow.index];
@@ -253,30 +250,54 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
               >
                 {/* Left side */}
                 {isEdit && oldContent && (
-                  <div className={`flex-1 flex border-r border-gray-800 ${left?.type === 'removed' ? 'bg-red-900/30' :
-                      left?.type === 'unchanged' && left?.content ? 'bg-gray-900/50' : ''
-                    }`}>
+                  <div
+                    className={`flex-1 flex border-r border-gray-800 ${
+                      left?.type === 'removed'
+                        ? 'bg-red-900/30'
+                        : left?.type === 'unchanged' && left?.content
+                          ? 'bg-gray-900/50'
+                          : ''
+                    }`}
+                  >
                     <div className="w-12 flex-shrink-0 text-right pr-3 py-1 text-[10px] font-mono text-gray-600 select-none border-r border-gray-800 bg-gray-900/20">
                       {left?.oldLineNumber || ''}
                     </div>
                     <div className="flex-1 px-3 py-1 overflow-hidden">
                       <pre className="text-xs font-mono text-gray-300 whitespace-pre">
-                        <code dangerouslySetInnerHTML={{ __html: left?.content ? highlightCode(left.content, language) : '\u00A0' }} />
+                        <code
+                          dangerouslySetInnerHTML={{
+                            __html: left?.content
+                              ? highlightCode(left.content, language)
+                              : '\u00A0',
+                          }}
+                        />
                       </pre>
                     </div>
                   </div>
                 )}
 
                 {/* Right side */}
-                <div className={`flex-1 flex ${right?.type === 'added' ? 'bg-green-900/30' :
-                    right?.type === 'unchanged' && right?.content ? 'bg-gray-900/50' : ''
-                  }`}>
+                <div
+                  className={`flex-1 flex ${
+                    right?.type === 'added'
+                      ? 'bg-green-900/30'
+                      : right?.type === 'unchanged' && right?.content
+                        ? 'bg-gray-900/50'
+                        : ''
+                  }`}
+                >
                   <div className="w-12 flex-shrink-0 text-right pr-3 py-1 text-[10px] font-mono text-gray-600 select-none border-r border-gray-800 bg-gray-900/20">
                     {right?.newLineNumber || ''}
                   </div>
                   <div className="flex-1 px-3 py-1 overflow-hidden">
                     <pre className="text-xs font-mono text-gray-300 whitespace-pre">
-                      <code dangerouslySetInnerHTML={{ __html: right?.content ? highlightCode(right.content, language) : '\u00A0' }} />
+                      <code
+                        dangerouslySetInnerHTML={{
+                          __html: right?.content
+                            ? highlightCode(right.content, language)
+                            : '\u00A0',
+                        }}
+                      />
                     </pre>
                   </div>
                 </div>
@@ -334,9 +355,13 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
               <div
                 key={virtualRow.key}
                 data-index={virtualRow.index}
-                className={`absolute top-0 left-0 w-full flex ${line.type === 'added' ? 'bg-green-900/30' :
-                    line.type === 'removed' ? 'bg-red-900/30' : 'bg-gray-900/50'
-                  }`}
+                className={`absolute top-0 left-0 w-full flex ${
+                  line.type === 'added'
+                    ? 'bg-green-900/30'
+                    : line.type === 'removed'
+                      ? 'bg-red-900/30'
+                      : 'bg-gray-900/50'
+                }`}
                 style={{
                   height: `${virtualRow.size}px`,
                   transform: `translateY(${virtualRow.start}px)`,
@@ -356,7 +381,9 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
                 </div>
                 <div className="flex-1 px-3 py-1 overflow-hidden">
                   <pre className="text-xs font-mono text-gray-300 whitespace-pre">
-                    <code dangerouslySetInnerHTML={{ __html: highlightCode(line.content, language) }} />
+                    <code
+                      dangerouslySetInnerHTML={{ __html: highlightCode(line.content, language) }}
+                    />
                   </pre>
                 </div>
               </div>
@@ -379,11 +406,21 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
           >
             {isCollapsed ? (
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             ) : (
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
               </svg>
             )}
           </button>
@@ -411,19 +448,21 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
           <div className="flex items-center gap-2">
             <button
               onClick={() => setViewMode('split')}
-              className={`px-3 py-1 text-xs rounded transition-colors ${viewMode === 'split'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                }`}
+              className={`px-3 py-1 text-xs rounded transition-colors ${
+                viewMode === 'split'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+              }`}
             >
               Split
             </button>
             <button
               onClick={() => setViewMode('unified')}
-              className={`px-3 py-1 text-xs rounded transition-colors ${viewMode === 'unified'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                }`}
+              className={`px-3 py-1 text-xs rounded transition-colors ${
+                viewMode === 'unified'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+              }`}
             >
               Unified
             </button>

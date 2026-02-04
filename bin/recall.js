@@ -12,7 +12,7 @@ const port = process.env.PORT || 3001;
 const server = spawn('node', [serverPath], {
   stdio: 'inherit',
   cwd: backendDir,
-  env: { ...process.env, NODE_ENV: 'production', PORT: String(port) }
+  env: { ...process.env, NODE_ENV: 'production', PORT: String(port) },
 });
 
 server.on('error', (err) => {

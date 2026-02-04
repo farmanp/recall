@@ -42,9 +42,8 @@ describe('file-watcher', () => {
   });
 
   it('starts and stops the watcher, handling debounced imports', async () => {
-    const { startWatcher, stopWatcher, isWatcherRunning } = await import(
-      '../../services/file-watcher'
-    );
+    const { startWatcher, stopWatcher, isWatcherRunning } =
+      await import('../../services/file-watcher');
     const { importTranscript } = await import('../../services/transcript-importer');
 
     expect(isWatcherRunning()).toBe(false);

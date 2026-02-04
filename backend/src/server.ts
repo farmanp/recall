@@ -4,6 +4,7 @@ import path from 'path';
 import sessionsRouter from './routes/sessions';
 import commentaryRouter from './routes/commentary';
 import importRouter from './routes/import';
+import workUnitsRouter, { getSessionWorkUnit } from './routes/work-units';
 import { getDbInstance } from './db/connection';
 import { getTranscriptDbInstance } from './db/transcript-connection';
 
@@ -57,15 +58,15 @@ export function createServer(): Application {
         timestamp: new Date().toISOString(),
         databases: {
           claude_mem: 'connected',
-          transcripts: 'connected'
-        }
+          transcripts: 'connected',
+        },
       });
     } catch (err) {
       console.error('Health check failed:', err);
       res.status(500).json({
         status: 'error',
         message: err instanceof Error ? err.message : 'Database connection failed',
-        stack: err instanceof Error ? err.stack : undefined
+        stack: err instanceof Error ? err.stack : undefined,
       });
     }
   });
@@ -74,8 +75,11 @@ export function createServer(): Application {
   app.use('/api/sessions', sessionsRouter);
   app.use('/api/sessions', commentaryRouter);
   app.use('/api/import', importRouter);
+  app.use('/api/work-units', workUnitsRouter);
   // Mount sessions router at /api for /api/agents endpoint
   app.use('/api', sessionsRouter);
+  // Add work unit lookup for sessions
+  app.get('/api/sessions/:id/work-unit', getSessionWorkUnit);
 
   // Serve built frontend (for production)
   const publicDir = path.join(__dirname, '..', 'public');
@@ -103,7 +107,7 @@ export function createServer(): Application {
     res.status(500).json({
       error: 'Internal server error',
       message: err.message,
-      stack: err.stack
+      stack: err.stack,
     });
   });
 

@@ -78,13 +78,15 @@ export function createTestDatabase(): Database.Database {
   const nowISO = new Date(now).toISOString();
 
   // Insert sessions
-  db.prepare(`
+  db.prepare(
+    `
     INSERT INTO sdk_sessions (
       claude_session_id, sdk_session_id, project, user_prompt,
       started_at, started_at_epoch, completed_at, completed_at_epoch,
       status, prompt_counter
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(
+  `
+  ).run(
     'session-1',
     'session-1',
     'test-project',
@@ -97,13 +99,15 @@ export function createTestDatabase(): Database.Database {
     2
   );
 
-  db.prepare(`
+  db.prepare(
+    `
     INSERT INTO sdk_sessions (
       claude_session_id, sdk_session_id, project, user_prompt,
       started_at, started_at_epoch, completed_at, completed_at_epoch,
       status, prompt_counter
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(
+  `
+  ).run(
     'session-2',
     'session-2',
     'another-project',
@@ -117,40 +121,34 @@ export function createTestDatabase(): Database.Database {
   );
 
   // Insert prompts
-  db.prepare(`
+  db.prepare(
+    `
     INSERT INTO user_prompts (
       claude_session_id, prompt_number, prompt_text,
       created_at, created_at_epoch
     ) VALUES (?, ?, ?, ?, ?)
-  `).run(
-    'session-1',
-    1,
-    'Create a test suite',
-    new Date(now + 1000).toISOString(),
-    now + 1000
-  );
+  `
+  ).run('session-1', 1, 'Create a test suite', new Date(now + 1000).toISOString(), now + 1000);
 
-  db.prepare(`
+  db.prepare(
+    `
     INSERT INTO user_prompts (
       claude_session_id, prompt_number, prompt_text,
       created_at, created_at_epoch
     ) VALUES (?, ?, ?, ?, ?)
-  `).run(
-    'session-1',
-    2,
-    'Add more tests',
-    new Date(now + 3000).toISOString(),
-    now + 3000
-  );
+  `
+  ).run('session-1', 2, 'Add more tests', new Date(now + 3000).toISOString(), now + 3000);
 
   // Insert observations with JSON fields
-  db.prepare(`
+  db.prepare(
+    `
     INSERT INTO observations (
       sdk_session_id, project, type, title, subtitle, text,
       facts, narrative, concepts, files_read, files_modified,
       prompt_number, created_at, created_at_epoch, discovery_tokens
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(
+  `
+  ).run(
     'session-1',
     'test-project',
     'feature',
@@ -168,13 +166,15 @@ export function createTestDatabase(): Database.Database {
     100
   );
 
-  db.prepare(`
+  db.prepare(
+    `
     INSERT INTO observations (
       sdk_session_id, project, type, title, subtitle, text,
       facts, narrative, concepts, files_read, files_modified,
       prompt_number, created_at, created_at_epoch, discovery_tokens
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(
+  `
+  ).run(
     'session-1',
     'test-project',
     'decision',

@@ -12,9 +12,11 @@ Recall is a local-first web application that visualizes Claude Code sessions lik
 - **Frontend**: ✅ Complete. React + Vite project with **Video Player UI** and **Chat View mode**. Features include timeline scrubber, playback controls, speed adjustment, color-coded event visualization, and conversational chat interface.
 - **Validation**: ✅ Phase 0 Timeline Validation passed all checks.
 - **New**: ✅ **Chat View Mode** - Toggle between Timeline View (technical) and Chat View (conversational messaging interface)
+
 ## 🏗️ Architecture
 
 ### Tech Stack
+
 - **Backend**: Node.js, Express, TypeScript, better-sqlite3, Vitest (Testing), Chokidar (File Watching)
 - **Frontend**: React, Vite, TypeScript, Tailwind CSS v4
   - **State**: Zustand (Global), TanStack Query (Server)
@@ -25,6 +27,7 @@ Recall is a local-first web application that visualizes Claude Code sessions lik
   - `transcript-*.db`: Imported raw transcripts
 
 ### Key Components
+
 - **Backend Services**:
   - `TranscriptImporter`: Handles parsing and importing of raw session transcripts.
   - `FileWatcher`: Monitors file changes during sessions.
@@ -38,6 +41,7 @@ Recall is a local-first web application that visualizes Claude Code sessions lik
 ## 🛠️ Commands
 
 ### Backend
+
 ```bash
 cd backend
 npm install          # Install dependencies
@@ -48,6 +52,7 @@ npm run import       # Import transcripts CLI (using ts-node)
 ```
 
 ### Frontend
+
 ```bash
 cd frontend
 npm install          # Install dependencies
@@ -57,6 +62,7 @@ npm run lint         # Run ESLint
 ```
 
 ### Testing
+
 ```bash
 # Validate Timeline (Phase 0)
 node validate_timeline.js
@@ -75,18 +81,18 @@ curl http://localhost:3001/api/health
 ## 📂 Directory Structure
 
 - `backend/`
-    - `src/db/`: Database connection and queries
-    - `src/routes/`: API routes (`sessions.ts`, `commentary.ts`, `import.ts`)
-    - `src/services/`: Core logic (`transcript-importer.ts`, `file-watcher.ts`)
-    - `src/parser/`: Parsing logic for transcripts
+  - `src/db/`: Database connection and queries
+  - `src/routes/`: API routes (`sessions.ts`, `commentary.ts`, `import.ts`)
+  - `src/services/`: Core logic (`transcript-importer.ts`, `file-watcher.ts`)
+  - `src/parser/`: Parsing logic for transcripts
 - `frontend/`
-    - `src/api/`: API clients
-    - `src/components/`: Reusable UI components
-        - `player/`: Playback controls, timeline, and event cards
-        - `session-list/`: Session cards and listing
-    - `src/pages/`: Application pages / wrappers
-    - `src/stores/`: State management (Zustand)
-    - `src/hooks/`: Custom React hooks
+  - `src/api/`: API clients
+  - `src/components/`: Reusable UI components
+    - `player/`: Playback controls, timeline, and event cards
+    - `session-list/`: Session cards and listing
+  - `src/pages/`: Application pages / wrappers
+  - `src/stores/`: State management (Zustand)
+  - `src/hooks/`: Custom React hooks
 - `docs/`: Project documentation and progress summaries
 - `validate_timeline.js`: Validation script for session data
 

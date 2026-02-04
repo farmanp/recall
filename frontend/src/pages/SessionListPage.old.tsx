@@ -83,9 +83,7 @@ export const SessionListPage: React.FC = () => {
       {/* Header */}
       <div className="bg-white border-b shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-4">
-          <h1 className="text-2xl font-bold text-gray-900">
-            Claude Code Sessions
-          </h1>
+          <h1 className="text-2xl font-bold text-gray-900">Claude Code Sessions</h1>
           <p className="text-sm text-gray-600 mt-1">
             {total} {total === 1 ? 'session' : 'sessions'} recorded
           </p>

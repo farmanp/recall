@@ -7,6 +7,7 @@ A complete, fully-typed API client library has been created for the Recall front
 ## Files Created
 
 ### 1. Shared Types
+
 **File**: `/Users/fpirzada/Documents/recall/shared/types.ts` (2.8 KB)
 
 - Database entity types: `Session`, `Observation`, `UserPrompt`
@@ -17,9 +18,11 @@ A complete, fully-typed API client library has been created for the Recall front
 - Frontend utility types
 
 ### 2. API Client
+
 **File**: `/Users/fpirzada/Documents/recall/frontend/src/api/client.ts` (5.4 KB)
 
 **Features**:
+
 - `ApiClient` class with configurable base URL and timeout
 - `ApiClientError` class for structured error handling
 - Automatic JSON parsing and error handling
@@ -27,6 +30,7 @@ A complete, fully-typed API client library has been created for the Recall front
 - Timeout management (default: 30 seconds)
 
 **Methods**:
+
 ```typescript
 healthCheck(): Promise<HealthCheckResponse>
 listSessions(query?: SessionListQuery): Promise<SessionListResponse>
@@ -36,9 +40,11 @@ getEvent(sessionId, eventType, eventId): Promise<SessionEvent | Observation | Us
 ```
 
 ### 3. React Query Hooks
+
 **File**: `/Users/fpirzada/Documents/recall/frontend/src/hooks/useApi.ts` (5.2 KB)
 
 **Hooks**:
+
 ```typescript
 useHealthCheck(options?)              // Health check with auto-refetch
 useSessions(query?, options?)         // List sessions with filtering
@@ -54,6 +60,7 @@ useLiveSessionEvents(id?, query?, refetchInterval?) // Auto-refetch events
 ```
 
 **Features**:
+
 - Automatic caching with React Query
 - Type-safe query keys for cache management
 - Conditional fetching (enabled when ID exists)
@@ -62,9 +69,11 @@ useLiveSessionEvents(id?, query?, refetchInterval?) // Auto-refetch events
 - Filter support
 
 ### 4. Example React Component
+
 **File**: `/Users/fpirzada/Documents/recall/frontend/src/examples/SessionViewer.example.tsx` (13 KB)
 
 **Components**:
+
 - `HealthStatus` - Real-time API health indicator
 - `SessionList` - Paginated session list with filtering
 - `SessionListItem` - Individual session card with expand/collapse
@@ -74,6 +83,7 @@ useLiveSessionEvents(id?, query?, refetchInterval?) // Auto-refetch events
 - `SessionViewerApp` - Complete example application
 
 **Features**:
+
 - Pagination for sessions and events
 - Project filtering
 - Event type filtering
@@ -85,12 +95,14 @@ useLiveSessionEvents(id?, query?, refetchInterval?) // Auto-refetch events
 ### 5. Test Files
 
 **JavaScript Test**: `/Users/fpirzada/Documents/recall/test-api-client.js` (101 lines)
+
 - Tests all API endpoints
 - Validates responses
 - Error handling verification
 - Can run without TypeScript: `node test-api-client.js`
 
 **TypeScript Test**: `/Users/fpirzada/Documents/recall/frontend/src/api/client.test.ts`
+
 - Type-safe test implementation
 - Integration test examples
 - Reference for writing more tests
@@ -98,6 +110,7 @@ useLiveSessionEvents(id?, query?, refetchInterval?) // Auto-refetch events
 ### 6. Documentation
 
 **API Client README**: `/Users/fpirzada/Documents/recall/frontend/API_CLIENT_README.md`
+
 - Complete API documentation
 - Usage examples for all hooks
 - Error handling guide
@@ -105,6 +118,7 @@ useLiveSessionEvents(id?, query?, refetchInterval?) // Auto-refetch events
 - Next steps
 
 **Setup Guide**: `/Users/fpirzada/Documents/recall/frontend/SETUP.md`
+
 - Step-by-step installation instructions
 - TypeScript configuration
 - Vite/build tool setup
@@ -115,24 +129,29 @@ useLiveSessionEvents(id?, query?, refetchInterval?) // Auto-refetch events
 ## API Endpoints Implemented
 
 ### ✅ GET /api/health
+
 - Returns API status and database connection
 - Auto-refetch capability for real-time monitoring
 
 ### ✅ GET /api/sessions
+
 - List sessions with pagination
 - Filter by: project, date range
 - Query params: offset, limit, project, dateStart, dateEnd
 
 ### ✅ GET /api/sessions/:id
+
 - Get detailed session information
 - Includes event counts (total, prompts, observations)
 
 ### ✅ GET /api/sessions/:id/events
+
 - Get session events with pagination
 - Filter by: event types, timestamp
 - Query params: offset, limit, types, afterTs
 
 ### ✅ GET /api/sessions/:sessionId/events/:eventType/:eventId
+
 - Get specific event details
 - Supports both prompt and observation types
 
@@ -145,18 +164,18 @@ All API calls are fully typed:
 const sessions = await apiClient.listSessions({
   offset: 0,
   limit: 20,
-  invalidParam: 'test' // ❌ TypeScript error
+  invalidParam: 'test', // ❌ TypeScript error
 });
 
 // Response types are inferred
 const health = await apiClient.healthCheck();
-health.status // ✓ Type: 'ok' | 'error'
-health.timestamp // ✓ Type: number
+health.status; // ✓ Type: 'ok' | 'error'
+health.timestamp; // ✓ Type: number
 
 // React Query hooks are typed
 const { data } = useSessions({ offset: 0, limit: 20 });
-data?.sessions // ✓ Type: Session[]
-data?.total // ✓ Type: number
+data?.sessions; // ✓ Type: Session[]
+data?.total; // ✓ Type: number
 ```
 
 ## Testing Results
@@ -164,6 +183,7 @@ data?.total // ✓ Type: number
 **Backend Status**: ✅ Running at http://localhost:3001
 
 **API Endpoints Verified**:
+
 - ✅ Health check: Working
 - ✅ List sessions: Working (returned sessions successfully)
 - ✅ Get session: Ready
@@ -171,6 +191,7 @@ data?.total // ✓ Type: number
 - ✅ Get specific event: Ready
 
 **Test Command**:
+
 ```bash
 cd /Users/fpirzada/Documents/cc_mem_video_player
 node test-api-client.js
@@ -179,6 +200,7 @@ node test-api-client.js
 ## Key Features
 
 ### Error Handling
+
 - Custom `ApiClientError` class
 - Structured error responses
 - HTTP status codes
@@ -186,6 +208,7 @@ node test-api-client.js
 - Network error handling
 
 ### Performance
+
 - Request timeout: 30 seconds (configurable)
 - React Query caching
 - Automatic cache invalidation
@@ -193,6 +216,7 @@ node test-api-client.js
 - Conditional fetching
 
 ### Developer Experience
+
 - Full TypeScript support
 - IntelliSense/autocomplete
 - Compile-time type checking
@@ -201,6 +225,7 @@ node test-api-client.js
 - Working example components
 
 ### Real-time Features
+
 - Auto-refetch for active sessions
 - Configurable refetch intervals
 - Live status updates
@@ -209,12 +234,14 @@ node test-api-client.js
 ## Usage Quick Start
 
 ### 1. Install Dependencies
+
 ```bash
 cd frontend
 npm install @tanstack/react-query
 ```
 
 ### 2. Set Up React Query Provider
+
 ```typescript
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
@@ -230,6 +257,7 @@ function App() {
 ```
 
 ### 3. Use Hooks in Components
+
 ```typescript
 import { useSessions, useSession } from './hooks/useApi';
 
@@ -301,6 +329,7 @@ function MyComponent() {
 ## Support
 
 For issues or questions:
+
 1. Check the API_CLIENT_README.md for usage examples
 2. Check SETUP.md for installation issues
 3. Run `node test-api-client.js` to verify backend connectivity

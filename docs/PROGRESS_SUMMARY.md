@@ -77,13 +77,13 @@ Successfully completed **Phase 0 (Validation)** and **Phase 1 (Backend)** of the
 
 ### Core Endpoints
 
-| Method | Endpoint | Status | Description |
-|--------|----------|--------|-------------|
-| GET | `/api/health` | ✅ | Health check |
-| GET | `/api/sessions` | ✅ | List sessions with pagination |
-| GET | `/api/sessions/:id` | ✅ | Get session metadata |
-| GET | `/api/sessions/:id/events` | ✅ | Get timeline events |
-| GET | `/api/sessions/:sessionId/events/:eventType/:eventId` | ✅ | Get single event |
+| Method | Endpoint                                              | Status | Description                   |
+| ------ | ----------------------------------------------------- | ------ | ----------------------------- |
+| GET    | `/api/health`                                         | ✅     | Health check                  |
+| GET    | `/api/sessions`                                       | ✅     | List sessions with pagination |
+| GET    | `/api/sessions/:id`                                   | ✅     | Get session metadata          |
+| GET    | `/api/sessions/:id/events`                            | ✅     | Get timeline events           |
+| GET    | `/api/sessions/:sessionId/events/:eventType/:eventId` | ✅     | Get single event              |
 
 ### Features
 
@@ -98,12 +98,14 @@ Successfully completed **Phase 0 (Validation)** and **Phase 1 (Backend)** of the
 ## 📁 Files Created
 
 ### Root Level
+
 - `README.md` - Project documentation
 - `package.json` - Root package configuration
 - `validate_timeline.js` - Phase 0 validation script
 - `validation_report.json` - Latest validation results
 
 ### Backend
+
 - `backend/package.json` - Backend dependencies
 - `backend/tsconfig.json` - TypeScript configuration
 - `backend/src/index.ts` - Entry point
@@ -114,6 +116,7 @@ Successfully completed **Phase 0 (Validation)** and **Phase 1 (Backend)** of the
 - `backend/src/routes/sessions.ts` - API routes
 
 ### Documentation
+
 - `docs/PHASE_0_RESULTS.md` - Validation results
 - `docs/PROGRESS_SUMMARY.md` - This document
 
@@ -122,6 +125,7 @@ Successfully completed **Phase 0 (Validation)** and **Phase 1 (Backend)** of the
 ## 🧪 Test Results
 
 ### Phase 0 Validation
+
 ```bash
 $ node validate_timeline.js
 
@@ -141,6 +145,7 @@ $ node validate_timeline.js
 ### Backend API Tests
 
 #### Health Check
+
 ```bash
 $ curl http://localhost:3001/api/health
 {
@@ -151,6 +156,7 @@ $ curl http://localhost:3001/api/health
 ```
 
 #### Sessions List
+
 ```bash
 $ curl 'http://localhost:3001/api/sessions?limit=2'
 {
@@ -162,6 +168,7 @@ $ curl 'http://localhost:3001/api/sessions?limit=2'
 ```
 
 #### Session Timeline
+
 ```bash
 $ curl 'http://localhost:3001/api/sessions/<id>/events?limit=3'
 {
@@ -200,31 +207,37 @@ $ curl 'http://localhost:3001/api/sessions/<id>/events?limit=3'
 ## 💡 Key Technical Decisions
 
 ### 1. TIME-FIRST Ordering
+
 **Decision:** Sort events primarily by timestamp, not prompt_number
 **Rationale:** Provides true chronological playback, essential for understanding session flow
 **Implementation:** 4-level sort: `ts ASC → prompt_number ASC → kind_rank ASC → row_id ASC`
 
 ### 2. Read-Only Database Access
+
 **Decision:** Open SQLite in read-only mode
 **Rationale:** Safety - prevents accidental data corruption
 **Trade-off:** Cannot add annotations to main DB (will use separate annotations.db in Phase 3)
 
 ### 3. Subquery for ORDER BY
+
 **Decision:** Wrap UNION ALL in subquery for ordering
 **Rationale:** SQLite requires ORDER BY columns to exist in result set; subquery enables COALESCE in ORDER BY
 **Alternative Considered:** Positional ordering (less maintainable)
 
 ### 4. Strict TypeScript Configuration
+
 **Decision:** Enable all strict TypeScript checks
 **Rationale:** Catch bugs at compile time, improve maintainability
 **Trade-off:** More upfront work for type safety
 
 ### 5. JSON Field Parsing
+
 **Decision:** Parse JSON fields (facts, concepts, files) in backend
 **Rationale:** Cleaner API contract, type safety
 **Implementation:** Separate `RawSessionEvent` interface for DB results
 
 ### 6. Express 5 Compatibility
+
 **Decision:** Use middleware instead of wildcard `app.get('*')` for SPA fallback
 **Rationale:** Express 5 changed wildcard routing behavior
 **Implementation:** Conditional middleware that checks for frontend build
@@ -234,26 +247,32 @@ $ curl 'http://localhost:3001/api/sessions/<id>/events?limit=3'
 ## 🐛 Issues Resolved
 
 ### 1. Module Resolution Errors
+
 **Issue:** TypeScript couldn't find `.js` imports in CommonJS mode
 **Solution:** Removed `.js` extensions from import statements
 
 ### 2. Unused Parameter Warnings
+
 **Issue:** Strict TypeScript flagged unused Express middleware parameters
 **Solution:** Prefix unused params with `_` (e.g., `_req`, `_res`, `_next`)
 
 ### 3. Query Parameter Type Mismatch
+
 **Issue:** Express query params are `string | ParsedQs | (string | ParsedQs)[] | undefined`
 **Solution:** Created `getStringParam()` helper with `unknown` type acceptance
 
 ### 4. JSON Parsing Type Safety
+
 **Issue:** `tryParseJSON()` returned `unknown`, incompatible with `string[] | undefined`
 **Solution:** Type guard checking `Array.isArray()` before casting
 
 ### 5. Param vs Query Type Differences
+
 **Issue:** `req.params` and `req.query` have different type signatures
 **Solution:** Type assertions for params (`as string`), helper function for query
 
 ### 6. Express 5 Wildcard Routing
+
 **Issue:** `app.get('*')` threw PathError in Express 5
 **Solution:** Used conditional middleware instead of catch-all route
 
@@ -262,6 +281,7 @@ $ curl 'http://localhost:3001/api/sessions/<id>/events?limit=3'
 ## 📈 Database Statistics
 
 **From Validation:**
+
 - **Total Sessions:** 127
 - **Multi-Turn Sessions:** 88 (69%)
 - **Single-Turn Sessions:** 39 (31%)
@@ -270,6 +290,7 @@ $ curl 'http://localhost:3001/api/sessions/<id>/events?limit=3'
 - **Largest Session:** 858 observations (44 prompts)
 
 **Data Quality:**
+
 - **NULL prompt_numbers:** 0 (0.00%)
 - **ID Mismatches:** 0
 - **Timestamp Violations:** 0
@@ -280,6 +301,7 @@ $ curl 'http://localhost:3001/api/sessions/<id>/events?limit=3'
 ## 🚀 Next Steps: Phase 1 Frontend
 
 ### Immediate Tasks
+
 1. Initialize Vite + React + TypeScript frontend
 2. Install dependencies:
    - @tanstack/react-virtual (virtualization)
@@ -290,6 +312,7 @@ $ curl 'http://localhost:3001/api/sessions/<id>/events?limit=3'
 5. Test frontend-backend integration
 
 ### Frontend Architecture
+
 ```
 frontend/
 ├── src/
@@ -310,6 +333,7 @@ frontend/
 ```
 
 ### Success Criteria
+
 - ✅ Session list loads all 127 sessions
 - ✅ Virtualized list handles 500+ events smoothly
 - ✅ Can navigate to individual session timelines
@@ -321,26 +345,31 @@ frontend/
 ## 🎓 Lessons Learned
 
 ### 1. Phase 0 De-Risking Works
+
 **Insight:** The validation script caught potential issues before implementation
 **Impact:** Zero surprises during backend development
 **Recommendation:** Always validate data assumptions before building
 
 ### 2. TypeScript Strict Mode Pays Off
+
 **Insight:** Caught 15+ potential runtime errors at compile time
 **Impact:** More robust API implementation
 **Trade-off:** Required careful type handling (worth it)
 
 ### 3. Express 5 Breaking Changes
+
 **Insight:** Wildcard routing pattern changed from Express 4
 **Impact:** Had to refactor SPA fallback approach
 **Recommendation:** Check migration guides for major version bumps
 
 ### 4. Read-Only SQLite is Fast
+
 **Insight:** Zero latency issues even with large queries (900+ events)
 **Impact:** No need for response caching in Phase 1
 **Note:** May add caching in Phase 5 for frequently accessed sessions
 
 ### 5. JSON Field Handling Requires Care
+
 **Insight:** SQLite stores JSON as text, needs parsing + type validation
 **Impact:** Created `RawSessionEvent` interface for clarity
 **Pattern:** Separate types for DB results vs API responses
@@ -351,15 +380,16 @@ frontend/
 
 ### API Response Times (Local Testing)
 
-| Endpoint | Payload Size | Response Time |
-|----------|--------------|---------------|
-| `/api/health` | 100 bytes | <10ms |
-| `/api/sessions?limit=20` | ~45KB | <50ms |
-| `/api/sessions/:id` | ~2KB | <20ms |
-| `/api/sessions/:id/events?limit=100` | ~150KB | <100ms |
-| Large session (902 events) | ~1.2MB | <200ms |
+| Endpoint                             | Payload Size | Response Time |
+| ------------------------------------ | ------------ | ------------- |
+| `/api/health`                        | 100 bytes    | <10ms         |
+| `/api/sessions?limit=20`             | ~45KB        | <50ms         |
+| `/api/sessions/:id`                  | ~2KB         | <20ms         |
+| `/api/sessions/:id/events?limit=100` | ~150KB       | <100ms        |
+| Large session (902 events)           | ~1.2MB       | <200ms        |
 
 **Notes:**
+
 - All tests on local machine (no network latency)
 - Database: 127 sessions, 4,915 observations
 - No caching enabled
@@ -370,21 +400,25 @@ frontend/
 ## 🔮 Future Considerations
 
 ### Phase 2: Playback
+
 - **Challenge:** Sparse data handling (long gaps between events)
 - **Solution:** Dead air compression + chapter markers
 - **Concern:** Virtualization with dynamic event heights
 
 ### Phase 3: Deep Links
+
 - **Challenge:** URL encoding for complex queries
 - **Solution:** Base64 encode filter state or use query params
 - **Concern:** URL length limits with complex filters
 
 ### Phase 4: File Diffs
+
 - **Challenge:** Git may not be available for all projects
 - **Solution:** Graceful fallback to file touch lists
 - **Future:** Optional file snapshot recording during sessions
 
 ### Phase 5: Production
+
 - **Challenge:** Large sessions (1000+ events) may need optimization
 - **Solution:** Infinite scroll + aggressive virtualization
 - **Monitoring:** Add response time tracking for bottlenecks
@@ -394,6 +428,7 @@ frontend/
 ## 📦 Dependencies
 
 ### Backend
+
 ```json
 {
   "dependencies": {
@@ -415,6 +450,7 @@ frontend/
 ```
 
 ### Root
+
 ```json
 {
   "dependencies": {
@@ -428,6 +464,7 @@ frontend/
 ## 🎯 Success Metrics
 
 ### Phase 0 Success ✅
+
 - [x] Validation script runs successfully
 - [x] All 5 checks pass
 - [x] Tested with small and large sessions
@@ -435,6 +472,7 @@ frontend/
 - [x] No data integrity issues found
 
 ### Phase 1 Backend Success ✅
+
 - [x] All API endpoints functional
 - [x] Timeline ordering validated
 - [x] JSON parsing works correctly
@@ -444,6 +482,7 @@ frontend/
 - [x] Zero runtime errors in testing
 
 ### Phase 1 Frontend Success (Pending)
+
 - [ ] Session list displays all 127 sessions
 - [ ] Virtualization handles large lists smoothly
 - [ ] Event timeline displays correctly

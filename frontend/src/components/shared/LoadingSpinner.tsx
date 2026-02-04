@@ -17,10 +17,7 @@ const sizeClasses = {
   lg: 'h-12 w-12 border-4',
 };
 
-export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
-  size = 'md',
-  className = '',
-}) => {
+export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ size = 'md', className = '' }) => {
   return (
     <div
       className={`animate-spin rounded-full border-blue-600 border-t-transparent ${sizeClasses[size]} ${className}`}

@@ -25,15 +25,16 @@
 Each observation type has a dedicated color for visual differentiation:
 
 ```css
---obs-feature: #8B5CF6;     /* Purple - New features */
---obs-bugfix: #EF4444;      /* Red - Bug fixes */
---obs-decision: #F59E0B;    /* Yellow - Important decisions */
---obs-discovery: #3B82F6;   /* Blue - Discoveries */
---obs-refactor: #6B7280;    /* Gray - Refactoring */
---obs-change: #10B981;      /* Green - General changes */
+--obs-feature: #8b5cf6; /* Purple - New features */
+--obs-bugfix: #ef4444; /* Red - Bug fixes */
+--obs-decision: #f59e0b; /* Yellow - Important decisions */
+--obs-discovery: #3b82f6; /* Blue - Discoveries */
+--obs-refactor: #6b7280; /* Gray - Refactoring */
+--obs-change: #10b981; /* Green - General changes */
 ```
 
 **Usage:**
+
 - Card borders: `border-obs-feature`
 - Background tints: `bg-purple-50` (feature), `bg-red-50` (bugfix), etc.
 - Text colors: `text-purple-700` (feature), `text-red-700` (bugfix), etc.
@@ -41,9 +42,9 @@ Each observation type has a dedicated color for visual differentiation:
 ### UI Colors
 
 ```css
---prompt: #22C55E;          /* Green - User prompts */
---bg-card: #F9FAFB;         /* Light gray - Card backgrounds */
---border-card: #E5E7EB;     /* Border gray - Card borders */
+--prompt: #22c55e; /* Green - User prompts */
+--bg-card: #f9fafb; /* Light gray - Card backgrounds */
+--border-card: #e5e7eb; /* Border gray - Card borders */
 ```
 
 ### Semantic Colors
@@ -73,25 +74,27 @@ Each observation type has a dedicated color for visual differentiation:
 ### Font Stack
 
 ```css
-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 ```
 
 ### Type Scale
 
-| Element | Class | Size | Weight | Line Height |
-|---------|-------|------|--------|-------------|
-| Page Title | `text-2xl font-bold` | 24px | 700 | 1.25 |
-| Section Title | `text-xl font-bold` | 20px | 700 | 1.25 |
-| Card Title | `text-lg font-semibold` | 18px | 600 | 1.5 |
-| Subheading | `text-base font-semibold` | 16px | 600 | 1.5 |
-| Body | `text-base` | 16px | 400 | 1.5 |
-| Small | `text-sm` | 14px | 400 | 1.5 |
-| Extra Small | `text-xs` | 12px | 400 | 1.5 |
+| Element       | Class                     | Size | Weight | Line Height |
+| ------------- | ------------------------- | ---- | ------ | ----------- |
+| Page Title    | `text-2xl font-bold`      | 24px | 700    | 1.25        |
+| Section Title | `text-xl font-bold`       | 20px | 700    | 1.25        |
+| Card Title    | `text-lg font-semibold`   | 18px | 600    | 1.5         |
+| Subheading    | `text-base font-semibold` | 16px | 600    | 1.5         |
+| Body          | `text-base`               | 16px | 400    | 1.5         |
+| Small         | `text-sm`                 | 14px | 400    | 1.5         |
+| Extra Small   | `text-xs`                 | 12px | 400    | 1.5         |
 
 ### Code/Monospace
 
 ```css
-font-family: ui-monospace, SFMono-Regular, "SF Mono", Monaco, "Cascadia Mono", "Segoe UI Mono", "Roboto Mono", Menlo, Consolas, "Liberation Mono", monospace;
+font-family:
+  ui-monospace, SFMono-Regular, 'SF Mono', Monaco, 'Cascadia Mono', 'Segoe UI Mono', 'Roboto Mono',
+  Menlo, Consolas, 'Liberation Mono', monospace;
 ```
 
 **Usage:** File names, code snippets
@@ -103,14 +106,14 @@ font-family: ui-monospace, SFMono-Regular, "SF Mono", Monaco, "Cascadia Mono", "
 
 Tailwind's default spacing scale (0.25rem increments):
 
-| Class | Size | Pixels |
-|-------|------|--------|
-| `p-1` | 0.25rem | 4px |
-| `p-2` | 0.5rem | 8px |
-| `p-3` | 0.75rem | 12px |
-| `p-4` | 1rem | 16px |
-| `p-6` | 1.5rem | 24px |
-| `p-8` | 2rem | 32px |
+| Class | Size    | Pixels |
+| ----- | ------- | ------ |
+| `p-1` | 0.25rem | 4px    |
+| `p-2` | 0.5rem  | 8px    |
+| `p-3` | 0.75rem | 12px   |
+| `p-4` | 1rem    | 16px   |
+| `p-6` | 1.5rem  | 24px   |
+| `p-8` | 2rem    | 32px   |
 
 ### Component Spacing Standards
 
@@ -132,6 +135,7 @@ Tailwind's default spacing scale (0.25rem increments):
 ```
 
 **Variants:**
+
 - **Clickable:** Add `cursor-pointer`
 - **Active:** Add `ring-2 ring-blue-500 ring-offset-2`
 - **Colored Border:** Replace `border-gray-200` with `border-l-4 border-obs-feature`
@@ -139,20 +143,26 @@ Tailwind's default spacing scale (0.25rem increments):
 ### Button Pattern
 
 ```tsx
-{/* Primary */}
+{
+  /* Primary */
+}
 <button className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
   Click Me
-</button>
+</button>;
 
-{/* Secondary */}
+{
+  /* Secondary */
+}
 <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors">
   Cancel
-</button>
+</button>;
 
-{/* Icon Button */}
+{
+  /* Icon Button */
+}
 <button className="p-2 rounded hover:bg-gray-100 transition-colors">
   <svg className="w-5 h-5">...</svg>
-</button>
+</button>;
 ```
 
 ### Badge Pattern
@@ -164,6 +174,7 @@ Tailwind's default spacing scale (0.25rem increments):
 ```
 
 **Type Colors:**
+
 ```tsx
 const typeColors = {
   feature: 'bg-purple-100 text-purple-700',
@@ -254,13 +265,13 @@ Defined in `tailwind.config.js`:
 
 Tailwind breakpoints (mobile-first):
 
-| Breakpoint | Min Width | Usage |
-|------------|-----------|-------|
-| `sm` | 640px | Mobile landscape |
-| `md` | 768px | Tablet |
-| `lg` | 1024px | Desktop |
-| `xl` | 1280px | Wide desktop |
-| `2xl` | 1536px | Ultra-wide |
+| Breakpoint | Min Width | Usage            |
+| ---------- | --------- | ---------------- |
+| `sm`       | 640px     | Mobile landscape |
+| `md`       | 768px     | Tablet           |
+| `lg`       | 1024px    | Desktop          |
+| `xl`       | 1280px    | Wide desktop     |
+| `2xl`      | 1536px    | Ultra-wide       |
 
 ### Responsive Patterns
 
@@ -281,15 +292,18 @@ Tailwind breakpoints (mobile-first):
 ### Component Responsive Behavior
 
 **SessionCard:**
+
 - Mobile: Full width, stacked metadata
 - Desktop: Grid layout, side-by-side metadata
 
 **SessionPlayer:**
+
 - Mobile: Full-width timeline, hide FilePanel
 - Tablet: 70/30 split (timeline/file panel)
 - Desktop: 60/25/15 split (timeline/file panel/metadata)
 
 **EventTimeline:**
+
 - Mobile: Collapsed by default, expand on tap
 - Desktop: Taller event cards, more content visible
 
@@ -300,6 +314,7 @@ Tailwind breakpoints (mobile-first):
 ### Color Contrast
 
 All text meets WCAG AA standards:
+
 - **Body text (gray-700):** 4.5:1 contrast ratio
 - **Headings (gray-900):** 7:1 contrast ratio
 - **Disabled (gray-400):** 3:1 minimum (for large text)
@@ -350,11 +365,13 @@ All interactive elements have visible focus indicators:
 Future enhancement - not in Phase 1.
 
 Planned approach:
+
 - Use Tailwind's `dark:` variant
 - Toggle via `<html class="dark">`
 - Store preference in localStorage
 
 Example:
+
 ```tsx
 <div className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
 ```
@@ -375,15 +392,18 @@ Currently using inline SVG icons from Heroicons.
 ### Common Icons
 
 **Navigation:**
+
 - Back: `<path d="M15 19l-7-7 7-7"/>`
 - Next: `<path d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"/>`
 
 **Actions:**
+
 - Play: Triangle pointing right
 - Pause: Two vertical bars
 - Expand: Chevron down
 
 **Status:**
+
 - Success: Checkmark circle
 - Error: Exclamation circle
 - Loading: Spinning circle
@@ -404,19 +424,13 @@ Currently using inline SVG icons from Heroicons.
 ### Sticky Header
 
 ```tsx
-<div className="sticky top-0 z-10 bg-white shadow-sm">
-  {/* Header content */}
-</div>
+<div className="sticky top-0 z-10 bg-white shadow-sm">{/* Header content */}</div>
 ```
 
 ### Virtualized List Container
 
 ```tsx
-<div
-  ref={parentRef}
-  className="h-screen overflow-auto bg-gray-50 p-4"
-  aria-label="Session list"
->
+<div ref={parentRef} className="h-screen overflow-auto bg-gray-50 p-4" aria-label="Session list">
   {/* Virtualized content */}
 </div>
 ```
@@ -425,12 +439,8 @@ Currently using inline SVG icons from Heroicons.
 
 ```tsx
 <div className="flex h-screen">
-  <div className="flex-1 overflow-auto">
-    {/* Main content */}
-  </div>
-  <div className="w-80 border-l bg-white overflow-auto">
-    {/* Sidebar */}
-  </div>
+  <div className="flex-1 overflow-auto">{/* Main content */}</div>
+  <div className="w-80 border-l bg-white overflow-auto">{/* Sidebar */}</div>
 </div>
 ```
 
@@ -442,9 +452,9 @@ Phase 2+ may introduce CSS variables for dynamic theming:
 
 ```css
 :root {
-  --color-primary: #3B82F6;
-  --color-success: #10B981;
-  --color-error: #EF4444;
+  --color-primary: #3b82f6;
+  --color-success: #10b981;
+  --color-error: #ef4444;
   --spacing-unit: 0.25rem;
   --border-radius: 0.5rem;
 }
@@ -455,16 +465,19 @@ Phase 2+ may introduce CSS variables for dynamic theming:
 ## Browser Support
 
 **Target Browsers:**
+
 - Chrome 90+ (Chromium)
 - Firefox 88+
 - Safari 14+
 - Edge 90+
 
 **Not Supporting:**
+
 - IE 11 (deprecated)
 - Safari < 14
 
 **Graceful Degradation:**
+
 - Animations: Fall back to instant transitions
 - Grid: Fall back to flexbox
 - CSS variables: Use Tailwind fallbacks

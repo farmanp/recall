@@ -27,17 +27,13 @@ import { CodeBlock } from '../components/CodeBlock';
   language="javascript"
   showLineNumbers={true}
   maxHeight="500px"
-/>
+/>;
 ```
 
 ### Code Block with File Name
 
 ```tsx
-<CodeBlock
-  code={fileContent}
-  fileName="src/App.tsx"
-  showLineNumbers={true}
-/>
+<CodeBlock code={fileContent} fileName="src/App.tsx" showLineNumbers={true} />
 ```
 
 ### File Diff View
@@ -50,29 +46,29 @@ import { DiffBlock } from '../components/CodeBlock';
   newContent={modifiedContent}
   fileName="src/utils/helper.ts"
   language="typescript"
-/>
+/>;
 ```
 
 ## Props
 
 ### CodeBlock
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `code` | `string` | required | The code to display |
-| `language` | `string` | `undefined` | Language identifier (js, ts, py, etc.) |
-| `showLineNumbers` | `boolean` | `true` | Show line numbers |
-| `maxHeight` | `string` | `"500px"` | Maximum height before scrolling |
-| `fileName` | `string` | `undefined` | File name (auto-detects language) |
+| Prop              | Type      | Default     | Description                            |
+| ----------------- | --------- | ----------- | -------------------------------------- |
+| `code`            | `string`  | required    | The code to display                    |
+| `language`        | `string`  | `undefined` | Language identifier (js, ts, py, etc.) |
+| `showLineNumbers` | `boolean` | `true`      | Show line numbers                      |
+| `maxHeight`       | `string`  | `"500px"`   | Maximum height before scrolling        |
+| `fileName`        | `string`  | `undefined` | File name (auto-detects language)      |
 
 ### DiffBlock
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `oldContent` | `string` | `undefined` | Original file content |
-| `newContent` | `string` | required | Modified file content |
-| `fileName` | `string` | required | File path/name |
-| `language` | `string` | `undefined` | Override language detection |
+| Prop         | Type     | Default     | Description                 |
+| ------------ | -------- | ----------- | --------------------------- |
+| `oldContent` | `string` | `undefined` | Original file content       |
+| `newContent` | `string` | required    | Modified file content       |
+| `fileName`   | `string` | required    | File path/name              |
+| `language`   | `string` | `undefined` | Override language detection |
 
 ## Language Detection
 
@@ -89,6 +85,7 @@ The component automatically detects languages from file extensions:
 ## Styling
 
 The component uses:
+
 - Prism Tomorrow theme (dark)
 - Tailwind CSS utility classes
 - Custom borders and backgrounds matching the app's dark UI
@@ -104,18 +101,20 @@ The CodeBlock is used in three places:
 ## Example in Context
 
 ```tsx
-{frame.toolExecution.fileDiff ? (
-  <DiffBlock
-    oldContent={frame.toolExecution.fileDiff.oldContent}
-    newContent={frame.toolExecution.fileDiff.newContent}
-    fileName={frame.toolExecution.fileDiff.filePath}
-    language={frame.toolExecution.fileDiff.language}
-  />
-) : (
-  <ToolOutputBlock
-    tool={frame.toolExecution.tool}
-    output={frame.toolExecution.output.content}
-    isError={frame.toolExecution.output.isError}
-  />
-)}
+{
+  frame.toolExecution.fileDiff ? (
+    <DiffBlock
+      oldContent={frame.toolExecution.fileDiff.oldContent}
+      newContent={frame.toolExecution.fileDiff.newContent}
+      fileName={frame.toolExecution.fileDiff.filePath}
+      language={frame.toolExecution.fileDiff.language}
+    />
+  ) : (
+    <ToolOutputBlock
+      tool={frame.toolExecution.tool}
+      output={frame.toolExecution.output.content}
+      isError={frame.toolExecution.output.isError}
+    />
+  );
+}
 ```

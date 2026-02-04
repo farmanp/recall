@@ -108,9 +108,7 @@ export { processData, formatDate, formatTime };`;
 
       {/* Example 4: Python File */}
       <section>
-        <h2 className="text-xl font-semibold text-white mb-4">
-          Example 4: Python File Edit
-        </h2>
+        <h2 className="text-xl font-semibold text-white mb-4">Example 4: Python File Edit</h2>
         <DiffViewer
           filePath="/scripts/process.py"
           oldContent={`def calculate_sum(numbers):

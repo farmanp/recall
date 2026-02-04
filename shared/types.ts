@@ -28,11 +28,11 @@ export interface Observation {
   title: string;
   subtitle: string;
   text: string;
-  facts: string;           // JSON array
+  facts: string; // JSON array
   narrative: string;
-  concepts: string;        // JSON array
-  files_read: string;      // JSON array
-  files_modified: string;  // JSON array
+  concepts: string; // JSON array
+  files_read: string; // JSON array
+  files_modified: string; // JSON array
   prompt_number: number | null;
   created_at: string;
   created_at_epoch: number;
@@ -55,7 +55,7 @@ export interface SessionEvent {
   event_type: 'prompt' | 'observation';
   row_id: number;
   prompt_number: number | null;
-  ts: number;              // created_at_epoch
+  ts: number; // created_at_epoch
   text: string;
   kind_rank: number;
   // If observation, include additional fields:

@@ -3,10 +3,7 @@
  */
 
 import { useQuery, UseQueryOptions, UseQueryResult } from '@tanstack/react-query';
-import {
-  apiClient,
-  ApiClientError,
-} from '../api/client';
+import { apiClient, ApiClientError } from '../api/client';
 import type {
   SessionListResponse,
   SessionDetailsResponse,
@@ -40,10 +37,7 @@ export const queryKeys = {
  * GET /api/health
  */
 export function useHealthCheck(
-  options?: Omit<
-    UseQueryOptions<HealthCheckResponse, ApiClientError>,
-    'queryKey' | 'queryFn'
-  >
+  options?: Omit<UseQueryOptions<HealthCheckResponse, ApiClientError>, 'queryKey' | 'queryFn'>
 ): UseQueryResult<HealthCheckResponse, ApiClientError> {
   return useQuery<HealthCheckResponse, ApiClientError>({
     queryKey: queryKeys.health,
@@ -58,10 +52,7 @@ export function useHealthCheck(
  */
 export function useSessions(
   query?: SessionListQuery,
-  options?: Omit<
-    UseQueryOptions<SessionListResponse, ApiClientError>,
-    'queryKey' | 'queryFn'
-  >
+  options?: Omit<UseQueryOptions<SessionListResponse, ApiClientError>, 'queryKey' | 'queryFn'>
 ): UseQueryResult<SessionListResponse, ApiClientError> {
   return useQuery<SessionListResponse, ApiClientError>({
     queryKey: queryKeys.sessions(query),
@@ -76,10 +67,7 @@ export function useSessions(
  */
 export function useSession(
   id: string | number | undefined,
-  options?: Omit<
-    UseQueryOptions<SessionDetailsResponse, ApiClientError>,
-    'queryKey' | 'queryFn'
-  >
+  options?: Omit<UseQueryOptions<SessionDetailsResponse, ApiClientError>, 'queryKey' | 'queryFn'>
 ): UseQueryResult<SessionDetailsResponse, ApiClientError> {
   return useQuery<SessionDetailsResponse, ApiClientError>({
     queryKey: queryKeys.session(id!),
@@ -96,10 +84,7 @@ export function useSession(
 export function useSessionEvents(
   id: string | number | undefined,
   query?: SessionEventsQuery,
-  options?: Omit<
-    UseQueryOptions<SessionEventsResponse, ApiClientError>,
-    'queryKey' | 'queryFn'
-  >
+  options?: Omit<UseQueryOptions<SessionEventsResponse, ApiClientError>, 'queryKey' | 'queryFn'>
 ): UseQueryResult<SessionEventsResponse, ApiClientError> {
   return useQuery<SessionEventsResponse, ApiClientError>({
     queryKey: queryKeys.sessionEvents(id!, query),
@@ -135,15 +120,9 @@ export function useEvent(
  */
 export function useAllSessions(
   project?: string,
-  options?: Omit<
-    UseQueryOptions<SessionListResponse, ApiClientError>,
-    'queryKey' | 'queryFn'
-  >
+  options?: Omit<UseQueryOptions<SessionListResponse, ApiClientError>, 'queryKey' | 'queryFn'>
 ) {
-  return useSessions(
-    { offset: 0, limit: 100, project },
-    options
-  );
+  return useSessions({ offset: 0, limit: 100, project }, options);
 }
 
 /**
@@ -152,25 +131,15 @@ export function useAllSessions(
 export function useAllSessionEvents(
   id: string | number | undefined,
   types?: string,
-  options?: Omit<
-    UseQueryOptions<SessionEventsResponse, ApiClientError>,
-    'queryKey' | 'queryFn'
-  >
+  options?: Omit<UseQueryOptions<SessionEventsResponse, ApiClientError>, 'queryKey' | 'queryFn'>
 ) {
-  return useSessionEvents(
-    id,
-    { offset: 0, limit: 1000, types },
-    options
-  );
+  return useSessionEvents(id, { offset: 0, limit: 1000, types }, options);
 }
 
 /**
  * Hook for getting session with auto-refetch while active
  */
-export function useLiveSession(
-  id: string | number | undefined,
-  refetchInterval: number = 5000
-) {
+export function useLiveSession(id: string | number | undefined, refetchInterval: number = 5000) {
   return useSession(id, {
     refetchInterval: (query) => {
       // Only refetch if session is active

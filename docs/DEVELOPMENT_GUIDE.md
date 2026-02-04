@@ -83,6 +83,7 @@ npm run dev
 ```
 
 **Expected output:**
+
 ```
 Testing database connection...
 ✅ Database connected: 127 sessions found
@@ -160,6 +161,7 @@ node validate_timeline.js <session_id>
 ```
 
 **Expected output:**
+
 ```
 📊 Validating Session: <session_id>
 
@@ -293,12 +295,14 @@ SELECT * FROM sdk_sessions LIMIT 5;
 #### 1. React DevTools
 
 Install React DevTools browser extension:
+
 - [Chrome](https://chrome.google.com/webstore/detail/react-developer-tools/fmkadmapgofadopljbjfkapdkoienihi)
 - [Firefox](https://addons.mozilla.org/en-US/firefox/addon/react-devtools/)
 
 #### 2. Network Tab
 
 Open browser DevTools (F12) → Network tab to inspect API calls:
+
 - Check request/response payloads
 - Verify status codes
 - Inspect response times
@@ -310,7 +314,7 @@ Add strategic console.log statements:
 ```typescript
 useEffect(() => {
   console.log('Fetching sessions with filters:', filters);
-  fetchSessions(filters).then(data => {
+  fetchSessions(filters).then((data) => {
     console.log('Received sessions:', data.sessions.length);
   });
 }, [filters]);
@@ -323,6 +327,7 @@ useEffect(() => {
 ### Issue 1: Database Not Found
 
 **Error:**
+
 ```
 Error: Database not found at ~/.claude-mem/claude-mem.db
 ```
@@ -330,11 +335,13 @@ Error: Database not found at ~/.claude-mem/claude-mem.db
 **Solution:**
 
 1. Verify claude-mem is installed:
+
    ```bash
    which claude-mem
    ```
 
 2. Check if database file exists:
+
    ```bash
    ls -lh ~/.claude-mem/claude-mem.db
    ```
@@ -350,6 +357,7 @@ Error: Database not found at ~/.claude-mem/claude-mem.db
 ### Issue 2: Port Already in Use
 
 **Error:**
+
 ```
 Error: listen EADDRINUSE: address already in use :::3001
 ```
@@ -357,11 +365,13 @@ Error: listen EADDRINUSE: address already in use :::3001
 **Solution:**
 
 1. Find process using port 3001:
+
    ```bash
    lsof -i :3001
    ```
 
 2. Kill the process:
+
    ```bash
    kill -9 <PID>
    ```
@@ -376,6 +386,7 @@ Error: listen EADDRINUSE: address already in use :::3001
 ### Issue 3: TypeScript Compilation Errors
 
 **Error:**
+
 ```
 error TS2304: Cannot find name 'Request'
 ```
@@ -383,6 +394,7 @@ error TS2304: Cannot find name 'Request'
 **Solution:**
 
 1. Ensure all `@types/*` packages are installed:
+
    ```bash
    cd backend
    npm install --save-dev @types/express @types/node @types/better-sqlite3
@@ -403,6 +415,7 @@ error TS2304: Cannot find name 'Request'
 ### Issue 4: CORS Errors in Browser
 
 **Error:**
+
 ```
 Access to fetch at 'http://localhost:3001/api/sessions' from origin 'http://localhost:5173' has been blocked by CORS policy
 ```
@@ -412,6 +425,7 @@ Access to fetch at 'http://localhost:3001/api/sessions' from origin 'http://loca
 CORS is already enabled in `server.ts`. If you still see errors:
 
 1. Verify CORS middleware is configured:
+
    ```typescript
    // backend/src/server.ts
    import cors from 'cors';
@@ -429,6 +443,7 @@ CORS is already enabled in `server.ts`. If you still see errors:
 ### Issue 5: JSON Parsing Errors
 
 **Error:**
+
 ```
 Unexpected token in JSON at position 0
 ```
@@ -482,6 +497,7 @@ Changes to TypeScript files don't trigger server restart.
 **Solution:**
 
 1. Verify `nodemon` is watching `.ts` files:
+
    ```json
    // backend/package.json
    {
@@ -502,6 +518,7 @@ Changes to TypeScript files don't trigger server restart.
 ### Issue 8: Database Locked Error
 
 **Error:**
+
 ```
 Error: database is locked
 ```
@@ -509,11 +526,13 @@ Error: database is locked
 **Solution:**
 
 1. Ensure no other process is accessing the database:
+
    ```bash
    lsof ~/.claude-mem/claude-mem.db
    ```
 
 2. Close any SQLite CLI sessions:
+
    ```bash
    # In sqlite3 CLI
    .quit
@@ -523,7 +542,7 @@ Error: database is locked
    ```typescript
    // backend/src/db/connection.ts
    const db = new Database(DB_PATH, {
-     readonly: true  // ← Should be true
+     readonly: true, // ← Should be true
    });
    ```
 
@@ -534,6 +553,7 @@ Error: database is locked
 ### Workflow 1: Adding a New API Endpoint
 
 1. **Define types** in `backend/src/db/schema.ts`:
+
    ```typescript
    export interface NewFeatureQuery {
      param1?: string;
@@ -541,6 +561,7 @@ Error: database is locked
    ```
 
 2. **Add query function** in `backend/src/db/queries.ts`:
+
    ```typescript
    export function getNewFeature(query: NewFeatureQuery): Result {
      const db = getDbInstance();
@@ -549,6 +570,7 @@ Error: database is locked
    ```
 
 3. **Add route** in `backend/src/routes/sessions.ts`:
+
    ```typescript
    router.get('/new-feature', (req, res) => {
      const result = getNewFeature({ param1: req.query.param1 });
@@ -557,11 +579,13 @@ Error: database is locked
    ```
 
 4. **Test manually**:
+
    ```bash
    curl http://localhost:3001/api/sessions/new-feature?param1=value
    ```
 
 5. **Write test** (optional):
+
    ```typescript
    // backend/src/__tests__/new-feature.test.ts
    import { test, expect } from 'vitest';
@@ -580,16 +604,19 @@ Error: database is locked
 ### Workflow 2: Debugging Timeline Ordering Issues
 
 1. **Run validation script**:
+
    ```bash
    node validate_timeline.js <session_id>
    ```
 
 2. **Check validation report**:
+
    ```bash
    cat validation_report.json
    ```
 
 3. **Inspect database directly**:
+
    ```bash
    sqlite3 ~/.claude-mem/claude-mem.db
    SELECT * FROM user_prompts WHERE claude_session_id = '<session_id>';
@@ -598,6 +625,7 @@ Error: database is locked
    ```
 
 4. **Test query manually**:
+
    ```sql
    SELECT
      'prompt' as event_type,
@@ -621,16 +649,19 @@ Error: database is locked
 ### Workflow 3: Investigating Performance Issues
 
 1. **Measure API response time**:
+
    ```bash
    curl -w "@curl-format.txt" -o /dev/null -s http://localhost:3001/api/sessions
    ```
 
    **curl-format.txt:**
+
    ```
    time_total:  %{time_total}s\n
    ```
 
 2. **Profile database queries**:
+
    ```typescript
    // Add timing to queries
    const start = Date.now();
@@ -640,6 +671,7 @@ Error: database is locked
    ```
 
 3. **Use SQLite EXPLAIN QUERY PLAN**:
+
    ```bash
    sqlite3 ~/.claude-mem/claude-mem.db
    EXPLAIN QUERY PLAN SELECT * FROM sessions ORDER BY started_at_epoch DESC LIMIT 20;
@@ -660,6 +692,7 @@ Error: database is locked
 
 1. **Use TypeScript strict mode** (already configured)
 2. **Always handle null/undefined**:
+
    ```typescript
    const session = getSessionById(id);
    if (!session) {
@@ -668,6 +701,7 @@ Error: database is locked
    ```
 
 3. **Validate inputs**:
+
    ```typescript
    const limit = parseInt(req.query.limit as string, 10);
    if (isNaN(limit) || limit < 1 || limit > 1000) {
@@ -676,6 +710,7 @@ Error: database is locked
    ```
 
 4. **Use parameterized queries** (prevent SQL injection):
+
    ```typescript
    // Good
    db.prepare('SELECT * FROM sessions WHERE id = ?').get(id);
@@ -699,6 +734,7 @@ Error: database is locked
 ### Error Handling
 
 1. **Always wrap database calls in try/catch**:
+
    ```typescript
    try {
      const result = db.prepare('...').get();
@@ -733,39 +769,46 @@ Error: database is locked
 ### Database Tools
 
 **SQLite CLI:**
+
 ```bash
 sqlite3 ~/.claude-mem/claude-mem.db
 ```
 
 **DB Browser for SQLite** (GUI):
+
 - Download: https://sqlitebrowser.org/
 - Open: `~/.claude-mem/claude-mem.db`
 
 ### HTTP Tools
 
 **curl:**
+
 ```bash
 curl -v http://localhost:3001/api/health
 ```
 
 **HTTPie** (prettier than curl):
+
 ```bash
 brew install httpie
 http GET http://localhost:3001/api/sessions limit==5
 ```
 
 **Postman/Insomnia** (GUI):
+
 - Import API endpoints and test interactively
 
 ### JSON Tools
 
 **jq** (JSON processor):
+
 ```bash
 brew install jq
 curl http://localhost:3001/api/sessions | jq '.sessions[0]'
 ```
 
 **fx** (interactive JSON viewer):
+
 ```bash
 npm install -g fx
 curl http://localhost:3001/api/sessions | fx
@@ -774,16 +817,19 @@ curl http://localhost:3001/api/sessions | fx
 ### Process Management
 
 **Find port usage:**
+
 ```bash
 lsof -i :3001
 ```
 
 **Kill process by port:**
+
 ```bash
 lsof -ti :3001 | xargs kill -9
 ```
 
 **Check backend is running:**
+
 ```bash
 ps aux | grep node
 ```
@@ -818,6 +864,7 @@ echo "✅ All tests passed!"
 ```
 
 Run with:
+
 ```bash
 chmod +x test-api.sh
 ./test-api.sh

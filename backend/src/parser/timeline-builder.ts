@@ -13,9 +13,7 @@ import {
  * Build a playable timeline from parsed transcript
  * Converts raw entries into structured PlaybackFrame objects
  */
-export async function buildTimeline(
-  transcript: ParsedTranscript
-): Promise<SessionTimeline> {
+export async function buildTimeline(transcript: ParsedTranscript): Promise<SessionTimeline> {
   const frames: PlaybackFrame[] = [];
 
   // Track tool results to match with tool calls
@@ -26,10 +24,7 @@ export async function buildTimeline(
     if (entry.message?.content) {
       for (const block of entry.message.content) {
         if (block.type === 'tool_result') {
-          toolResultMap.set(
-            block.tool_use_id,
-            block as ToolResultBlock
-          );
+          toolResultMap.set(block.tool_use_id, block as ToolResultBlock);
         }
       }
     }
@@ -37,10 +32,7 @@ export async function buildTimeline(
 
   // Second pass: build frames
   for (const entry of transcript.entries) {
-    const entryFrames = extractFramesFromEntry(
-      entry,
-      toolResultMap
-    );
+    const entryFrames = extractFramesFromEntry(entry, toolResultMap);
     frames.push(...entryFrames);
   }
 
@@ -189,10 +181,7 @@ function extractFramesFromEntry(
 /**
  * Build ToolExecution object from tool call and result
  */
-function buildToolExecution(
-  toolUse: ToolUseBlock,
-  toolResult: ToolResultBlock
-): ToolExecution {
+function buildToolExecution(toolUse: ToolUseBlock, toolResult: ToolResultBlock): ToolExecution {
   const output = extractToolOutput(toolResult);
   const fileDiff = extractFileDiff(toolUse, toolResult);
 
@@ -256,12 +245,7 @@ function extractFileDiff(
     };
   }
 
-  if (
-    toolUse.name === 'Edit' &&
-    input.file_path &&
-    input.old_string &&
-    input.new_string
-  ) {
+  if (toolUse.name === 'Edit' && input.file_path && input.old_string && input.new_string) {
     return {
       filePath: input.file_path,
       oldContent: input.old_string,
@@ -326,10 +310,7 @@ function extractFileContext(toolUse: ToolUseBlock): {
     context.filesRead = [toolUse.input.file_path];
   }
 
-  if (
-    (toolUse.name === 'Write' || toolUse.name === 'Edit') &&
-    toolUse.input.file_path
-  ) {
+  if ((toolUse.name === 'Write' || toolUse.name === 'Edit') && toolUse.input.file_path) {
     context.filesModified = [toolUse.input.file_path];
   }
 

@@ -73,9 +73,11 @@ await importTranscript('/path/to/session.jsonl');
 Import a single transcript file into the database.
 
 **Parameters:**
+
 - `filePath` - Absolute path to `.jsonl` transcript file
 
 **Behavior:**
+
 1. Parses the `.jsonl` file using `transcript-parser.ts`
 2. Builds a timeline using `timeline-builder.ts`
 3. Inserts session metadata into `session_metadata` table
@@ -84,10 +86,12 @@ Import a single transcript file into the database.
 6. Updates `parsing_status` table for progress tracking
 
 **Error Handling:**
+
 - Updates `parsing_status` with error details
 - Throws error (doesn't swallow exceptions)
 
 **Example:**
+
 ```typescript
 try {
   await importTranscript('/Users/me/.claude/projects/my-project/session-123.jsonl');
@@ -104,19 +108,22 @@ try {
 Bulk import all transcript files from a directory.
 
 **Parameters:**
+
 - `config` (optional) - Import job configuration
 
 **Config Options:**
+
 ```typescript
 interface ImportJobConfig {
-  sourcePath?: string;          // default: ~/.claude/projects/
-  parallel?: number;            // default: 10
-  skipExisting?: boolean;       // default: true
+  sourcePath?: string; // default: ~/.claude/projects/
+  parallel?: number; // default: 10
+  skipExisting?: boolean; // default: true
   onProgress?: (completed: number, total: number) => void;
 }
 ```
 
 **Returns:**
+
 ```typescript
 interface ImportSummary {
   totalFiles: number;
@@ -129,6 +136,7 @@ interface ImportSummary {
 ```
 
 **Behavior:**
+
 1. Scans source directory recursively for `.jsonl` files
 2. Processes files in parallel batches
 3. Skips already-imported sessions (if `skipExisting: true`)
@@ -136,6 +144,7 @@ interface ImportSummary {
 5. Returns comprehensive summary
 
 **Example:**
+
 ```typescript
 const summary = await bulkImportTranscripts({
   sourcePath: '/Users/me/.claude/projects',
@@ -155,8 +164,8 @@ console.log(`Skipped: ${summary.skipped}`);
 // Handle failures
 if (summary.failed > 0) {
   summary.results
-    .filter(r => !r.success)
-    .forEach(r => {
+    .filter((r) => !r.success)
+    .forEach((r) => {
       console.error(`Failed: ${r.filePath}`);
       console.error(`Error: ${r.error}`);
     });
@@ -170,6 +179,7 @@ if (summary.failed > 0) {
 Get current import statistics from the database.
 
 **Returns:**
+
 ```typescript
 interface ImportStats {
   total: number;
@@ -180,6 +190,7 @@ interface ImportStats {
 ```
 
 **Example:**
+
 ```typescript
 const stats = getImportProgress();
 console.log(`Total: ${stats.total}`);
@@ -193,6 +204,7 @@ console.log(`Failed: ${stats.failed}`);
 The importer uses the following tables:
 
 ### `session_metadata`
+
 Stores high-level session information for fast listing.
 
 ```sql
@@ -212,6 +224,7 @@ CREATE TABLE session_metadata (
 ```
 
 ### `playback_frames`
+
 Stores individual frames for session playback.
 
 ```sql
@@ -233,6 +246,7 @@ CREATE TABLE playback_frames (
 ```
 
 ### `tool_executions`
+
 Stores tool call details (Bash, Read, Write, Edit, etc.).
 
 ```sql
@@ -249,6 +263,7 @@ CREATE TABLE tool_executions (
 ```
 
 ### `file_diffs`
+
 Stores file edits from Write/Edit operations.
 
 ```sql
@@ -264,6 +279,7 @@ CREATE TABLE file_diffs (
 ```
 
 ### `parsing_status`
+
 Tracks import progress for each session.
 
 ```sql
@@ -288,7 +304,7 @@ The bulk importer uses a batching strategy to respect concurrency limits:
 ```typescript
 const batches = chunkArray(files, parallel);
 for (const batch of batches) {
-  await Promise.all(batch.map(file => importFile(file)));
+  await Promise.all(batch.map((file) => importFile(file)));
 }
 ```
 
@@ -343,6 +359,7 @@ if (framesInserted % 100 === 0) {
 - **Database Indexes**: Optimized queries on session_id, timestamp, frame_type
 
 Typical performance:
+
 - Single session (~100 frames): ~100-200ms
 - Bulk import (100 sessions): ~10-30 seconds (with 10 parallel workers)
 

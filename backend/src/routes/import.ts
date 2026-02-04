@@ -1,8 +1,5 @@
 import { Router, Request, Response } from 'express';
-import {
-  bulkImportTranscripts,
-  importTranscript,
-} from '../services/transcript-importer';
+import { bulkImportTranscripts, importTranscript } from '../services/transcript-importer';
 import { getImportStats } from '../db/transcript-queries';
 import { detectAgentFromPath } from '../parser/agent-detector';
 import type { AgentType } from '../types/transcript';
@@ -68,11 +65,7 @@ router.post('/start', async (req: Request, res: Response) => {
     }
 
     // Get config from request body
-    const {
-      sourcePath,
-      parallel = 10,
-      skipExisting = true,
-    } = req.body || {};
+    const { sourcePath, parallel = 10, skipExisting = true } = req.body || {};
 
     // Reset job state
     currentImportJob = {
@@ -242,6 +235,5 @@ router.post('/single', async (req: Request, res: Response) => {
     });
   }
 });
-
 
 export default router;

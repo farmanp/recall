@@ -132,12 +132,14 @@ backend/
 #### 1. Server Layer (`index.ts`, `server.ts`)
 
 **Responsibilities:**
+
 - Start HTTP server
 - Handle graceful shutdown (SIGTERM, SIGINT)
 - Initialize database connection
 - Configure middleware (CORS, JSON parsing, logging)
 
 **Key Features:**
+
 - Graceful shutdown closes database connections
 - Request logging for debugging
 - Error handling middleware
@@ -146,6 +148,7 @@ backend/
 #### 2. Route Layer (`routes/sessions.ts`)
 
 **Responsibilities:**
+
 - Parse HTTP requests
 - Validate query parameters
 - Call database query functions
@@ -153,6 +156,7 @@ backend/
 - Handle errors with appropriate HTTP status codes
 
 **Design Pattern:**
+
 - Express Router for modular route handling
 - Type-safe parameter extraction
 - Consistent error response format
@@ -160,6 +164,7 @@ backend/
 #### 3. Database Query Layer (`db/queries.ts`)
 
 **Responsibilities:**
+
 - Execute SQL queries
 - Transform raw database rows into typed objects
 - Parse JSON fields (facts, concepts, files)
@@ -167,6 +172,7 @@ backend/
 - Handle pagination
 
 **Design Pattern:**
+
 - Pure functions (no side effects beyond DB reads)
 - Return typed results
 - Consistent pagination interface
@@ -174,11 +180,13 @@ backend/
 #### 4. Database Connection Layer (`db/connection.ts`)
 
 **Responsibilities:**
+
 - Manage SQLite connection singleton
 - Open database in read-only mode
 - Provide connection instance to query layer
 
 **Design Pattern:**
+
 - Singleton pattern for connection pooling
 - Read-only mode for safety
 - Connection cleanup on shutdown
@@ -186,6 +194,7 @@ backend/
 #### 5. Type Layer (`db/schema.ts`)
 
 **Responsibilities:**
+
 - Define TypeScript interfaces for database rows
 - Define API request/response types
 - Ensure type safety across layers
@@ -230,11 +239,13 @@ frontend/
 #### 1. SessionList Component
 
 **Responsibilities:**
+
 - Display paginated list of sessions
 - Filter by project, date range
 - Navigate to session detail view
 
 **State:**
+
 - `sessions: Session[]`
 - `loading: boolean`
 - `filters: { project?, dateStart?, dateEnd? }`
@@ -242,12 +253,14 @@ frontend/
 #### 2. TimelineViewer Component
 
 **Responsibilities:**
+
 - Display chronological timeline of events
 - Virtualized scrolling for large sessions
 - Event type filtering (prompts, observations)
 - Jump to specific timestamps
 
 **State:**
+
 - `events: SessionEvent[]`
 - `currentEventIndex: number`
 - `filters: { types? }`
@@ -255,12 +268,14 @@ frontend/
 #### 3. PlaybackControls Component
 
 **Responsibilities:**
+
 - Play/pause/speed controls
 - Seek to event
 - Progress bar
 - Dead air compression toggle
 
 **State:**
+
 - `isPlaying: boolean`
 - `playbackSpeed: 1x | 2x | 4x`
 - `currentTime: number`
@@ -350,12 +365,14 @@ User clicks Play → Autoplay timeline with intervals
 **Decision:** Use offset/limit pagination (not cursor-based)
 
 **Rationale:**
+
 - Simple to implement
 - Works well with SQL OFFSET/LIMIT
 - Sufficient for local-only app (no distributed systems concerns)
 - Total count is cheap to compute for small dataset (127 sessions)
 
 **Tradeoff:**
+
 - Offset pagination can be slow for very large offsets
 - Not suitable for real-time data (but our data is static)
 
@@ -364,11 +381,13 @@ User clicks Play → Autoplay timeline with intervals
 **Decision:** Parse JSON fields in backend, not frontend
 
 **Rationale:**
+
 - Centralized error handling
 - Type safety at API boundary
 - Frontend gets clean, typed arrays
 
 **Implementation:**
+
 ```typescript
 // Backend parses:
 facts: '["fact1", "fact2"]' → ["fact1", "fact2"]
@@ -384,11 +403,13 @@ interface SessionEvent {
 **Decision:** Use `claude_session_id` (UUID) as primary identifier, not row `id`
 
 **Rationale:**
+
 - Stable across database migrations
 - Matches claude-mem's design
 - Row IDs are internal to SQLite
 
 **Validation:**
+
 - Phase 0 verified `claude_session_id === sdk_session_id` for all 127 sessions
 
 ### 4. Error Handling
@@ -396,6 +417,7 @@ interface SessionEvent {
 **Decision:** Return structured error responses with HTTP status codes
 
 **Format:**
+
 ```json
 {
   "error": "Human-readable error type",
@@ -404,6 +426,7 @@ interface SessionEvent {
 ```
 
 **Status Codes:**
+
 - `200 OK`: Success
 - `400 Bad Request`: Invalid parameters
 - `404 Not Found`: Resource not found
@@ -414,10 +437,12 @@ interface SessionEvent {
 **Decision:** Enable CORS for all origins (development-friendly)
 
 **Rationale:**
+
 - Frontend runs on different port during development (Vite: 5173, Backend: 3001)
 - No security concern for local-only app
 
 **Production Consideration:**
+
 - Restrict CORS to specific origins if deploying
 
 ---
@@ -427,10 +452,12 @@ interface SessionEvent {
 ### The Problem
 
 Sessions contain two event types:
+
 1. **User prompts** (questions/requests from user)
 2. **Observations** (Claude's work: features, fixes, decisions)
 
 **Requirements:**
+
 1. Events must be chronologically ordered
 2. Prompts must appear before their observations
 3. Order must be stable and deterministic
@@ -439,6 +466,7 @@ Sessions contain two event types:
 ### The Solution: TIME-FIRST Ordering
 
 **SQL Query:**
+
 ```sql
 SELECT * FROM (
   -- Prompts
@@ -499,6 +527,7 @@ ts: 1001
 ```
 
 **Why:**
+
 - Events with same timestamp should be grouped by prompt
 - NULL prompt_numbers sort last (999999)
 
@@ -513,6 +542,7 @@ ts: 1000, prompt_number: 1
 ```
 
 **Why:**
+
 - User must ask before Claude responds
 - Maintains logical narrative flow
 
@@ -521,16 +551,19 @@ ts: 1000, prompt_number: 1
 **Final tiebreaker:** Stable sort for deterministic results
 
 **Why:**
+
 - Ensures same query always returns events in same order
 - Needed for pagination consistency
 
 ### Validation Results
 
 **Phase 0 validation tested this algorithm on:**
+
 - Small session: 11 events ✅
 - Large session: 902 events (44 prompts, 858 observations) ✅
 
 **All checks passed:**
+
 1. ✅ Monotonic timestamps (no decreases)
 2. ✅ Prompts before observations (for same timestamp)
 3. ✅ No duplicate row IDs
@@ -541,6 +574,7 @@ ts: 1000, prompt_number: 1
 ## Database Schema
 
 The application reads from the `claude-mem` SQLite database located at:
+
 ```
 ~/.claude-mem/claude-mem.db
 ```
@@ -552,6 +586,7 @@ The application reads from the `claude-mem` SQLite database located at:
 **Purpose:** Session metadata
 
 **Key Columns:**
+
 ```sql
 CREATE TABLE sdk_sessions (
   id INTEGER PRIMARY KEY,
@@ -569,6 +604,7 @@ CREATE TABLE sdk_sessions (
 ```
 
 **Indexes:**
+
 - Primary key on `id`
 - Index on `claude_session_id` for fast lookups
 
@@ -577,6 +613,7 @@ CREATE TABLE sdk_sessions (
 **Purpose:** User prompts/questions
 
 **Key Columns:**
+
 ```sql
 CREATE TABLE user_prompts (
   id INTEGER PRIMARY KEY,
@@ -593,6 +630,7 @@ CREATE TABLE user_prompts (
 **Purpose:** Claude's work observations
 
 **Key Columns:**
+
 ```sql
 CREATE TABLE observations (
   id INTEGER PRIMARY KEY,
@@ -615,6 +653,7 @@ CREATE TABLE observations (
 ```
 
 **Observation Types:**
+
 - `feature`: New feature implementation
 - `bugfix`: Bug fix
 - `decision`: Architecture/design decision
@@ -625,13 +664,16 @@ CREATE TABLE observations (
 ### Data Integrity Findings (Phase 0)
 
 **ID Mapping:**
+
 - 127/127 sessions have `claude_session_id === sdk_session_id` ✅
 
 **Prompt Numbers:**
+
 - 0% of observations have NULL `prompt_number` ✅
 - All observations are linked to prompts
 
 **Session Distribution:**
+
 - 88 multi-turn sessions (>1 prompt)
 - 39 single-turn sessions (1 prompt)
 - Largest session: 902 events (44 prompts, 858 observations)
@@ -643,14 +685,16 @@ CREATE TABLE observations (
 ### 1. Read-Only Database Access
 
 **Implementation:**
+
 ```typescript
 const db = new Database(DB_PATH, {
-  readonly: true,  // ← Critical for safety
-  fileMustExist: true
+  readonly: true, // ← Critical for safety
+  fileMustExist: true,
 });
 ```
 
 **Rationale:**
+
 - Prevents accidental data modification
 - Protects claude-mem database integrity
 - No risk of corrupting user's session history
@@ -658,11 +702,13 @@ const db = new Database(DB_PATH, {
 ### 2. Local-Only Architecture
 
 **Constraints:**
+
 - No cloud deployment
 - No external API calls
 - All data stays on local machine
 
 **Rationale:**
+
 - Session data may contain sensitive information:
   - API keys in prompts
   - Credentials in code
@@ -673,6 +719,7 @@ const db = new Database(DB_PATH, {
 ### 3. SQL Injection Prevention
 
 **Implementation:**
+
 ```typescript
 // Good: Parameterized query
 db.prepare('SELECT * FROM sessions WHERE id = ?').get(sessionId);
@@ -686,18 +733,20 @@ db.prepare(`SELECT * FROM sessions WHERE id = ${sessionId}`).get();
 ### 4. JSON Parsing Safety
 
 **Implementation:**
+
 ```typescript
 function tryParseJSON(jsonString: string): string[] | undefined {
   try {
     const parsed = JSON.parse(jsonString);
     return Array.isArray(parsed) ? parsed : undefined;
   } catch {
-    return undefined;  // Fail gracefully
+    return undefined; // Fail gracefully
   }
 }
 ```
 
 **Rationale:**
+
 - Malformed JSON in database won't crash the app
 - Type checking after parsing ensures safety
 
@@ -706,19 +755,21 @@ function tryParseJSON(jsonString: string): string[] | undefined {
 **Decision:** Don't expose database paths or internal errors to client
 
 **Implementation:**
+
 ```typescript
 try {
   // ...
 } catch (error) {
-  console.error('Error:', error);  // Server logs
+  console.error('Error:', error); // Server logs
   res.status(500).json({
     error: 'Internal server error',
-    message: error instanceof Error ? error.message : 'Unknown error'
+    message: error instanceof Error ? error.message : 'Unknown error',
   });
 }
 ```
 
 **Rationale:**
+
 - Prevents information disclosure
 - Keeps error details server-side
 
@@ -731,6 +782,7 @@ try {
 **Strategy:** Singleton connection (not connection pool)
 
 **Rationale:**
+
 - SQLite doesn't support concurrent writes
 - Read-only mode is thread-safe
 - Single connection is sufficient for local-only app
@@ -740,11 +792,13 @@ try {
 **Strategy:** OFFSET/LIMIT pagination
 
 **Performance:**
+
 - Sessions: Fast (127 total)
 - Events: Efficient for sessions with <1000 events
 - Timeline query optimized with proper indexes
 
 **Future Optimization:**
+
 - Add indexes on `created_at_epoch` if query slows down
 - Consider cursor-based pagination for very large sessions
 
@@ -753,6 +807,7 @@ try {
 **Strategy:** Parse on-demand (not upfront)
 
 **Implementation:**
+
 - Parse only when events are fetched
 - Return `undefined` for malformed JSON (no retries)
 
@@ -763,30 +818,36 @@ try {
 ### Phase 2: Playback Features
 
 **New Components:**
+
 - Playback engine with intervals
 - Dead air compression algorithm
 - Chapter marker extraction
 
 **Backend Changes:**
+
 - Add endpoint: `GET /api/sessions/:id/chapters`
 - Calculate dead air gaps in timeline
 
 ### Phase 3: Search
 
 **New Features:**
+
 - Full-text search across observations
 - Filter by file, concept, observation type
 
 **Backend Changes:**
+
 - Add SQLite FTS5 virtual table (or use LIKE queries)
 - New endpoint: `GET /api/search?q=...`
 
 ### Phase 4: File Diffs
 
 **New Features:**
+
 - Show file changes when git history available
 
 **Backend Changes:**
+
 - Integrate with git (read-only)
 - New endpoint: `GET /api/sessions/:id/diffs`
 
@@ -811,6 +872,7 @@ Database:          ~/.claude-mem/claude-mem.db
 ```
 
 **Build Process:**
+
 1. Build frontend: `cd frontend && npm run build`
 2. Copy build to `backend/public/`
 3. Start backend: `cd backend && npm start`
@@ -821,26 +883,31 @@ Database:          ~/.claude-mem/claude-mem.db
 ## Technology Choices Rationale
 
 ### Why Express (not Fastify/Hono)?
+
 - Mature ecosystem
 - Excellent TypeScript support
 - Simple for read-only API
 
 ### Why better-sqlite3 (not node-sqlite3)?
+
 - Synchronous API (simpler code)
 - Better performance
 - TypeScript-friendly
 
 ### Why TypeScript strict mode?
+
 - Catches errors at compile time
 - Self-documenting code
 - Better IDE support
 
 ### Why React (not Vue/Svelte)?
+
 - Large ecosystem
 - Excellent TypeScript support
 - Familiar to most developers
 
 ### Why Vite (not Webpack)?
+
 - Faster dev server
 - Simpler configuration
 - Native ES modules

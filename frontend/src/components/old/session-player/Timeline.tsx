@@ -16,11 +16,7 @@ export interface TimelineProps {
 
 const chapterTypes: ObservationType[] = ['feature', 'decision', 'bugfix'];
 
-export const Timeline: React.FC<TimelineProps> = ({
-  events,
-  currentEventIndex,
-  onSeek,
-}) => {
+export const Timeline: React.FC<TimelineProps> = ({ events, currentEventIndex, onSeek }) => {
   const [hoverIndex, setHoverIndex] = React.useState<number | null>(null);
 
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -72,11 +68,12 @@ export const Timeline: React.FC<TimelineProps> = ({
             chapterTypes.includes(event.obs_type)
           ) {
             const position = (index / (events.length - 1)) * 100;
-            const markerColor = {
-              feature: 'bg-purple-500',
-              decision: 'bg-yellow-500',
-              bugfix: 'bg-red-500',
-            }[event.obs_type] || 'bg-gray-500';
+            const markerColor =
+              {
+                feature: 'bg-purple-500',
+                decision: 'bg-yellow-500',
+                bugfix: 'bg-red-500',
+              }[event.obs_type] || 'bg-gray-500';
 
             return (
               <div

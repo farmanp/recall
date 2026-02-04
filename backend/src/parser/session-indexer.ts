@@ -54,10 +54,7 @@ export class SessionIndexer {
   /**
    * Scan a single agent directory for sessions
    */
-  private async scanAgentDirectory(
-    agent: AgentType,
-    agentDir: string
-  ): Promise<SessionMetadata[]> {
+  private async scanAgentDirectory(agent: AgentType, agentDir: string): Promise<SessionMetadata[]> {
     const sessions: SessionMetadata[] = [];
 
     // Check if directory exists
@@ -220,7 +217,10 @@ export class SessionIndexer {
     // Claude format: {uuid}.jsonl → extract "{uuid}"
     const sessionId = path.basename(filePath, '.jsonl');
 
-    const lines = content.trim().split('\n').filter((line) => line.trim());
+    const lines = content
+      .trim()
+      .split('\n')
+      .filter((line) => line.trim());
 
     if (lines.length === 0) {
       throw new Error('Empty session file');
@@ -253,8 +253,7 @@ export class SessionIndexer {
       // Claude: Extract project name from file path
       const pathParts = filePath.split(path.sep);
       const projectsIndex = pathParts.indexOf('projects');
-      const encodedProjectPath =
-        projectsIndex >= 0 ? pathParts[projectsIndex + 1] : undefined;
+      const encodedProjectPath = projectsIndex >= 0 ? pathParts[projectsIndex + 1] : undefined;
       projectName = encodedProjectPath
         ? this.decodeProjectPath(encodedProjectPath)
         : 'Unknown Project';
@@ -312,9 +311,7 @@ export class SessionIndexer {
           firstUserMessage = entry.message.content.substring(0, 200);
           break;
         } else if (Array.isArray(entry.message.content)) {
-          const textBlock = entry.message.content.find(
-            (block: any) => block.type === 'text'
-          );
+          const textBlock = entry.message.content.find((block: any) => block.type === 'text');
           if (textBlock) {
             firstUserMessage = textBlock.text.substring(0, 200);
             break;
@@ -367,14 +364,17 @@ export class SessionIndexer {
     const pathParts = filePath.split(path.sep);
     const tmpIndex = pathParts.indexOf('tmp');
     const projectHash = tmpIndex >= 0 ? pathParts[tmpIndex + 1] : undefined;
-    const projectName = projectHash ? `Gemini Project (${projectHash.substring(0, 8)})` : 'Gemini Session';
+    const projectName = projectHash
+      ? `Gemini Project (${projectHash.substring(0, 8)})`
+      : 'Gemini Session';
 
     // Timestamps
     const startTime = session.startTime;
     const endTime = session.lastUpdated;
-    const duration = startTime && endTime
-      ? (new Date(endTime).getTime() - new Date(startTime).getTime()) / 1000
-      : undefined;
+    const duration =
+      startTime && endTime
+        ? (new Date(endTime).getTime() - new Date(startTime).getTime()) / 1000
+        : undefined;
 
     // Extract first user message
     let firstUserMessage: string | undefined;

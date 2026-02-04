@@ -61,7 +61,9 @@ export const StatsPanel: React.FC<StatsPanelProps> = ({ stats, onClose }) => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Frame Counts */}
           <div>
-            <h4 className="text-xs font-semibold text-gray-500 uppercase mb-2">Frames ({totalFrames})</h4>
+            <h4 className="text-xs font-semibold text-gray-500 uppercase mb-2">
+              Frames ({totalFrames})
+            </h4>
             <div className="space-y-1">
               {Object.entries(stats.frameCounts).map(([type, count]) => {
                 const meta = frameTypeLabels[type];
@@ -87,7 +89,9 @@ export const StatsPanel: React.FC<StatsPanelProps> = ({ stats, onClose }) => {
             <div className="space-y-1 text-sm">
               <div className="flex items-center justify-between">
                 <span className="text-gray-300">Total</span>
-                <span className="text-gray-400 font-mono">{formatDuration(stats.totalDuration)}</span>
+                <span className="text-gray-400 font-mono">
+                  {formatDuration(stats.totalDuration)}
+                </span>
               </div>
               {stats.compressionStats.compressedFrameCount > 0 && (
                 <>

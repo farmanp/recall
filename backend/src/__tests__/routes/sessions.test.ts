@@ -58,9 +58,7 @@ const mockTimeline = {
 
 const indexer = {
   getAllSessions: vi.fn(async () => mockSessions),
-  getSessionMetadata: vi.fn(async (id: string) =>
-    mockSessions.find((s) => s.sessionId === id)
-  ),
+  getSessionMetadata: vi.fn(async (id: string) => mockSessions.find((s) => s.sessionId === id)),
   findSessionFile: vi.fn(async (id: string) =>
     id === 'session-1' ? '/tmp/session-1.jsonl' : undefined
   ),
@@ -100,9 +98,7 @@ describe('Session Routes', () => {
 
   describe('GET /api/sessions', () => {
     it('returns session list with pagination', async () => {
-      const response = await request(app)
-        .get('/api/sessions?limit=1&offset=0')
-        .expect(200);
+      const response = await request(app).get('/api/sessions?limit=1&offset=0').expect(200);
 
       expect(response.body.sessions.length).toBe(1);
       expect(response.body.total).toBe(mockSessions.length);
@@ -110,18 +106,14 @@ describe('Session Routes', () => {
     });
 
     it('filters by project', async () => {
-      const response = await request(app)
-        .get('/api/sessions?project=test-project')
-        .expect(200);
+      const response = await request(app).get('/api/sessions?project=test-project').expect(200);
 
       expect(response.body.sessions.length).toBe(1);
       expect(response.body.sessions[0].project).toBe('test-project');
     });
 
     it('filters by agent', async () => {
-      const response = await request(app)
-        .get('/api/sessions?agent=codex')
-        .expect(200);
+      const response = await request(app).get('/api/sessions?agent=codex').expect(200);
 
       expect(response.body.sessions.length).toBe(1);
       expect(response.body.sessions[0].agent).toBe('codex');
@@ -130,9 +122,7 @@ describe('Session Routes', () => {
 
   describe('GET /api/sessions/:id', () => {
     it('returns timeline metadata without frames', async () => {
-      const response = await request(app)
-        .get('/api/sessions/session-1')
-        .expect(200);
+      const response = await request(app).get('/api/sessions/session-1').expect(200);
 
       expect(response.body.sessionId).toBe('session-1');
       expect(response.body.totalFrames).toBe(2);
@@ -140,17 +130,13 @@ describe('Session Routes', () => {
     });
 
     it('returns 404 for unknown session', async () => {
-      await request(app)
-        .get('/api/sessions/unknown')
-        .expect(404);
+      await request(app).get('/api/sessions/unknown').expect(404);
     });
   });
 
   describe('GET /api/sessions/:id/frames', () => {
     it('returns frames with pagination', async () => {
-      const response = await request(app)
-        .get('/api/sessions/session-1/frames?limit=1')
-        .expect(200);
+      const response = await request(app).get('/api/sessions/session-1/frames?limit=1').expect(200);
 
       expect(response.body.frames.length).toBe(1);
       expect(response.body.total).toBe(2);
@@ -159,26 +145,20 @@ describe('Session Routes', () => {
 
   describe('GET /api/sessions/:id/frames/:frameId', () => {
     it('returns a single frame', async () => {
-      const response = await request(app)
-        .get('/api/sessions/session-1/frames/frame-2')
-        .expect(200);
+      const response = await request(app).get('/api/sessions/session-1/frames/frame-2').expect(200);
 
       expect(response.body.id).toBe('frame-2');
       expect(response.body.type).toBe('claude_response');
     });
 
     it('returns 404 for unknown frame', async () => {
-      await request(app)
-        .get('/api/sessions/session-1/frames/unknown')
-        .expect(404);
+      await request(app).get('/api/sessions/session-1/frames/unknown').expect(404);
     });
   });
 
   describe('GET /api/agents', () => {
     it('returns agent availability', async () => {
-      const response = await request(app)
-        .get('/api/agents')
-        .expect(200);
+      const response = await request(app).get('/api/agents').expect(200);
 
       expect(response.body.agents).toEqual(['claude', 'codex']);
       expect(response.body.counts.claude).toBe(1);

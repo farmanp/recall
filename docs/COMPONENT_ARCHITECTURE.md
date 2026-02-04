@@ -97,9 +97,11 @@ App
 **Props:** None
 
 **State:**
+
 - None (routing handled by React Router)
 
 **Responsibilities:**
+
 - Initialize React Router
 - Provide global error boundary
 - Setup Zustand store provider (if needed)
@@ -119,16 +121,19 @@ interface AppProps {}
 **Props:** None (uses URL query params)
 
 **State:**
+
 - Session list data (from API)
 - Loading state
 - Error state
 - Pagination state
 
 **Data Flow:**
+
 - Fetches from `GET /api/sessions?offset=N&limit=20`
 - Passes session data to SessionList
 
 **Responsibilities:**
+
 - Fetch session list on mount
 - Handle pagination
 - Show loading/error states
@@ -156,17 +161,20 @@ interface SessionListPageState {
 **Props:** None (uses URL params for session ID)
 
 **State:**
+
 - Session metadata
 - Event timeline data
 - Current playback state (Phase 2)
 - Loading/error states
 
 **Data Flow:**
+
 - Fetches from `GET /api/sessions/:id`
 - Fetches from `GET /api/sessions/:id/events?offset=N&limit=100`
 - Manages playback state (Phase 2)
 
 **Responsibilities:**
+
 - Load session and events
 - Handle deep links (e.g., `?t=timestamp` or `?e=eventIndex`)
 - Coordinate playback controls (Phase 2)
@@ -194,6 +202,7 @@ interface SessionPlayerPageState {
 **Purpose:** Virtualized list of sessions
 
 **Props:**
+
 ```typescript
 interface SessionListProps {
   sessions: Session[];
@@ -204,15 +213,18 @@ interface SessionListProps {
 ```
 
 **State:**
+
 - Virtualization state (managed by @tanstack/react-virtual)
 
 **Virtualization:**
+
 - Use `useVirtualizer` hook
 - Estimated row height: 120px
 - Overscan: 5 rows
 - Total count from API
 
 **Responsibilities:**
+
 - Render virtualized session cards
 - Handle scroll-based pagination
 - Show loading indicator at bottom
@@ -224,6 +236,7 @@ interface SessionListProps {
 **Purpose:** Individual session card in list
 
 **Props:**
+
 ```typescript
 interface SessionCardProps {
   session: Session;
@@ -232,15 +245,18 @@ interface SessionCardProps {
 ```
 
 **State:**
+
 - Expanded/collapsed (for details - Phase 1 always collapsed)
 
 **Responsibilities:**
+
 - Display session metadata (project, date, prompt count)
 - Navigate to player on click
 - Show session status (active/completed)
 - Display first user prompt preview
 
 **Styling:**
+
 - Hover effect
 - Click animation
 - Status indicator (green/gray dot)
@@ -254,6 +270,7 @@ interface SessionCardProps {
 **Purpose:** Main player container orchestrating all playback
 
 **Props:**
+
 ```typescript
 interface SessionPlayerProps {
   session: Session;
@@ -264,17 +281,20 @@ interface SessionPlayerProps {
 ```
 
 **State:**
+
 - Current event index (Phase 2)
 - Playback state (playing/paused - Phase 2)
 - Speed multiplier (Phase 2)
 
 **Responsibilities:**
+
 - Manage playback state (Phase 2)
 - Coordinate controls, timeline, and event display
 - Handle keyboard shortcuts (Phase 2)
 - Auto-scroll to current event
 
 **Layout:**
+
 ```
 ┌────────────────────────────────────────┐
 │ PlaybackControls (Phase 2)             │ (sticky top)
@@ -295,6 +315,7 @@ interface SessionPlayerProps {
 **Purpose:** Virtualized list of session events
 
 **Props:**
+
 ```typescript
 interface EventTimelineProps {
   events: SessionEvent[];
@@ -306,9 +327,11 @@ interface EventTimelineProps {
 ```
 
 **State:**
+
 - Virtualization state
 
 **Virtualization:**
+
 - Use `useVirtualizer` hook
 - Dynamic row heights (collapsed vs expanded)
 - Estimated collapsed height: 80px
@@ -316,6 +339,7 @@ interface EventTimelineProps {
 - Overscan: 10 rows
 
 **Responsibilities:**
+
 - Render virtualized event cards
 - Highlight current event (Phase 2)
 - Handle scroll-based pagination
@@ -328,6 +352,7 @@ interface EventTimelineProps {
 **Purpose:** Router component for event type rendering
 
 **Props:**
+
 ```typescript
 interface EventDisplayProps {
   event: SessionEvent;
@@ -339,6 +364,7 @@ interface EventDisplayProps {
 ```
 
 **Responsibilities:**
+
 - Route to PromptCard or ObservationCard based on event_type
 - Pass through props to child components
 - Detect gaps between events (Phase 2)
@@ -350,6 +376,7 @@ interface EventDisplayProps {
 **Purpose:** Display user prompt event
 
 **Props:**
+
 ```typescript
 interface PromptCardProps {
   event: SessionEvent;
@@ -362,9 +389,11 @@ interface PromptCardProps {
 ```
 
 **State:**
+
 - Expanded/collapsed (Phase 1)
 
 **Layout:**
+
 ```
 ┌─────────────────────────────────────────┐
 │ 🟢 User Prompt #5        10:23:45 AM   │
@@ -376,6 +405,7 @@ interface PromptCardProps {
 ```
 
 **Styling:**
+
 - Green accent (user prompt)
 - Rounded border
 - Collapsible with chevron icon
@@ -388,6 +418,7 @@ interface PromptCardProps {
 **Purpose:** Display Claude's observation event
 
 **Props:**
+
 ```typescript
 interface ObservationCardProps {
   event: SessionEvent;
@@ -400,9 +431,11 @@ interface ObservationCardProps {
 ```
 
 **State:**
+
 - Expanded/collapsed (Phase 1)
 
 **Layout:**
+
 ```
 ┌─────────────────────────────────────────┐
 │ 🔵 Feature          pn:5   10:24:12 AM  │
@@ -419,6 +452,7 @@ interface ObservationCardProps {
 ```
 
 **Type Colors:**
+
 - Feature: Purple
 - Bugfix: Red
 - Decision: Yellow
@@ -427,6 +461,7 @@ interface ObservationCardProps {
 - Change: Green
 
 **Narrative Priority:**
+
 1. `title` (always shown)
 2. `subtitle` (always shown)
 3. `narrative` (expanded)
@@ -442,6 +477,7 @@ interface ObservationCardProps {
 **Purpose:** Video-style playback controls
 
 **Props:**
+
 ```typescript
 interface PlaybackControlsProps {
   isPlaying: boolean;
@@ -457,6 +493,7 @@ interface PlaybackControlsProps {
 ```
 
 **Layout:**
+
 ```
 ┌──────────────────────────────────────────────────┐
 │ ⏮ ⏸ ⏭   [====●======]   15/150   1x ⚙️ ⌨️      │
@@ -465,6 +502,7 @@ interface PlaybackControlsProps {
 ```
 
 **Keyboard Shortcuts:**
+
 - Space: Play/pause
 - Left/Right: Previous/next
 - J/L: Jump ±10 events
@@ -478,6 +516,7 @@ interface PlaybackControlsProps {
 **Purpose:** Visual timeline scrubber with event markers
 
 **Props:**
+
 ```typescript
 interface TimelineProps {
   events: SessionEvent[];
@@ -487,6 +526,7 @@ interface TimelineProps {
 ```
 
 **Features:**
+
 - Chapter markers (feature, decision, bugfix)
 - Hover preview
 - Click to jump
@@ -500,6 +540,7 @@ interface TimelineProps {
 **Purpose:** Show files touched during session
 
 **Props:**
+
 ```typescript
 interface FilePanelProps {
   events: SessionEvent[];
@@ -508,6 +549,7 @@ interface FilePanelProps {
 ```
 
 **Layout:**
+
 ```
 ┌─────────────────────────┐
 │ Files Touched (23)      │
@@ -520,6 +562,7 @@ interface FilePanelProps {
 ```
 
 **Features:**
+
 - Virtualized file list
 - Show read vs modified counts
 - Click to filter timeline (Phase 3)
@@ -532,11 +575,13 @@ interface FilePanelProps {
 ### State Organization
 
 **Local Component State (useState):**
+
 - UI state (expanded/collapsed, hover, focus)
 - Form inputs
 - Temporary animations
 
 **Shared State (Zustand):**
+
 - Playback state (Phase 2)
   - Current event index
   - Playing/paused
@@ -547,6 +592,7 @@ interface FilePanelProps {
   - Date range
 
 **Server State (React Query - optional, or raw fetch):**
+
 - Session list
 - Session details
 - Event timeline
@@ -737,11 +783,13 @@ const EventTimeline: React.FC<EventTimelineProps> = ({ events, total }) => {
 #### Mobile (< 768px)
 
 **Session List:**
+
 - Full-width cards
 - Stacked metadata
 - Hide less important info
 
 **Session Player:**
+
 - Full-width layout
 - Hide FilePanel (Phase 2)
 - Sticky PlaybackControls at bottom
@@ -765,6 +813,7 @@ const EventTimeline: React.FC<EventTimelineProps> = ({ events, total }) => {
 #### Tablet (768px - 1024px)
 
 **Session Player:**
+
 - Two-column layout
 - EventTimeline: 70%
 - FilePanel: 30% (Phase 2)
@@ -773,6 +822,7 @@ const EventTimeline: React.FC<EventTimelineProps> = ({ events, total }) => {
 #### Desktop (> 1024px)
 
 **Session Player:**
+
 - Three-section layout
 - EventTimeline: 60%
 - FilePanel: 25% (Phase 2)
@@ -814,15 +864,15 @@ module.exports = {
       colors: {
         // Observation type colors
         'obs-feature': '#8B5CF6', // Purple
-        'obs-bugfix': '#EF4444',  // Red
+        'obs-bugfix': '#EF4444', // Red
         'obs-decision': '#F59E0B', // Yellow
         'obs-discovery': '#3B82F6', // Blue
         'obs-refactor': '#6B7280', // Gray
-        'obs-change': '#10B981',   // Green
+        'obs-change': '#10B981', // Green
 
         // UI colors
-        'prompt': '#22C55E',      // Green
-        'bg-card': '#F9FAFB',     // Light gray
+        prompt: '#22C55E', // Green
+        'bg-card': '#F9FAFB', // Light gray
         'border-card': '#E5E7EB', // Border gray
       },
       animation: {
@@ -843,11 +893,13 @@ module.exports = {
 ### Component Styling Patterns
 
 **Card Pattern:**
+
 ```typescript
-className="bg-bg-card border border-border-card rounded-lg p-4 hover:shadow-md transition-shadow"
+className = 'bg-bg-card border border-border-card rounded-lg p-4 hover:shadow-md transition-shadow';
 ```
 
 **Event Type Badge:**
+
 ```typescript
 const typeColors = {
   feature: 'bg-obs-feature',
@@ -864,6 +916,7 @@ const typeColors = {
 ```
 
 **Loading Skeleton:**
+
 ```typescript
 <div className="animate-pulse">
   <div className="h-4 bg-gray-300 rounded w-3/4 mb-2"></div>
@@ -948,35 +1001,29 @@ function getChapterMarkers(events: SessionEvent[]): ChapterMarker[] {
     .map((event, index) => ({
       index,
       event,
-      isChapter: event.event_type === 'observation' &&
-                 chapterTypes.includes(event.obs_type),
+      isChapter: event.event_type === 'observation' && chapterTypes.includes(event.obs_type),
     }))
-    .filter(marker => marker.isChapter);
+    .filter((marker) => marker.isChapter);
 }
 ```
 
 ### File Touch Aggregation
 
 ```typescript
-function aggregateFilesTouched(
-  events: SessionEvent[],
-  upToIndex?: number
-): FileTouchSummary[] {
-  const eventSubset = upToIndex !== undefined
-    ? events.slice(0, upToIndex + 1)
-    : events;
+function aggregateFilesTouched(events: SessionEvent[], upToIndex?: number): FileTouchSummary[] {
+  const eventSubset = upToIndex !== undefined ? events.slice(0, upToIndex + 1) : events;
 
   const fileMap = new Map<string, { reads: number; modifies: number }>();
 
-  eventSubset.forEach(event => {
+  eventSubset.forEach((event) => {
     if (event.event_type === 'observation') {
-      event.files_read?.forEach(file => {
+      event.files_read?.forEach((file) => {
         const entry = fileMap.get(file) || { reads: 0, modifies: 0 };
         entry.reads++;
         fileMap.set(file, entry);
       });
 
-      event.files_modified?.forEach(file => {
+      event.files_modified?.forEach((file) => {
         const entry = fileMap.get(file) || { reads: 0, modifies: 0 };
         entry.modifies++;
         fileMap.set(file, entry);
@@ -1147,4 +1194,3 @@ import { ObservationCard } from './ObservationCard';
 **Status:** Architecture Complete - Ready for Implementation
 **Next Phase:** Component Implementation (Phase 1)
 **Estimated Effort:** 3-4 days for Phase 1 complete
-

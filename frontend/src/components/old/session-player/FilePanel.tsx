@@ -15,10 +15,7 @@ export interface FilePanelProps {
   currentEventIndex?: number; // Filter files up to this point
 }
 
-export const FilePanel: React.FC<FilePanelProps> = ({
-  events,
-  currentEventIndex,
-}) => {
+export const FilePanel: React.FC<FilePanelProps> = ({ events, currentEventIndex }) => {
   const parentRef = React.useRef<HTMLDivElement>(null);
 
   const fileSummary = React.useMemo(() => {
@@ -40,9 +37,7 @@ export const FilePanel: React.FC<FilePanelProps> = ({
           Files Touched ({fileSummary.length})
         </h3>
         {currentEventIndex !== undefined && (
-          <p className="text-xs text-gray-500 mt-1">
-            Up to event {currentEventIndex + 1}
-          </p>
+          <p className="text-xs text-gray-500 mt-1">Up to event {currentEventIndex + 1}</p>
         )}
       </div>
 
@@ -86,10 +81,7 @@ export const FilePanel: React.FC<FilePanelProps> = ({
                       </span>
                     )}
                     {file.reads > 0 && (
-                      <span
-                        className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded"
-                        title="Read"
-                      >
+                      <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded" title="Read">
                         R {file.reads}
                       </span>
                     )}

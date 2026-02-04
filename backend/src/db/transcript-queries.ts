@@ -175,14 +175,7 @@ export function getTranscriptSessions(query: TranscriptSessionListQuery): {
 } {
   const db = getTranscriptDbInstance();
 
-  const {
-    offset = 0,
-    limit = 20,
-    project,
-    agent,
-    dateStart,
-    dateEnd,
-  } = query;
+  const { offset = 0, limit = 20, project, agent, dateStart, dateEnd } = query;
 
   // Build WHERE clauses
   const whereClauses: string[] = [];
@@ -208,9 +201,7 @@ export function getTranscriptSessions(query: TranscriptSessionListQuery): {
     params.dateEnd = dateEnd;
   }
 
-  const whereClause = whereClauses.length > 0
-    ? 'WHERE ' + whereClauses.join(' AND ')
-    : '';
+  const whereClause = whereClauses.length > 0 ? 'WHERE ' + whereClauses.join(' AND ') : '';
 
   // Get total count
   const countQuery = `SELECT COUNT(*) as total FROM session_metadata ${whereClause}`;
@@ -233,7 +224,7 @@ export function getTranscriptSessions(query: TranscriptSessionListQuery): {
   }) as SessionMetadataRow[];
 
   // Convert rows to SessionMetadata
-  const sessions: SessionMetadata[] = rows.map(row => ({
+  const sessions: SessionMetadata[] = rows.map((row) => ({
     sessionId: row.session_id,
     slug: row.slug,
     project: row.project,
@@ -318,7 +309,7 @@ export function searchGlobalFrames(req: SearchGlobalRequest): SearchGlobalRespon
 
   const rows = db.prepare(resultsQuery).all({ ...params, limit, offset }) as any[];
 
-  const results: SearchResult[] = rows.map(row => {
+  const results: SearchResult[] = rows.map((row) => {
     // Utility to create a snippet
     const createSnippet = (text: string | null): string | null => {
       if (!text) return null;
@@ -365,7 +356,7 @@ export function searchGlobalFrames(req: SearchGlobalRequest): SearchGlobalRespon
       timestamp: row.timestamp,
       snippet,
       matchType,
-      agent: row.agent as any
+      agent: row.agent as any,
     };
   });
 
@@ -374,7 +365,7 @@ export function searchGlobalFrames(req: SearchGlobalRequest): SearchGlobalRespon
     total: countResult.total,
     query,
     limit,
-    offset
+    offset,
   };
 }
 
@@ -393,11 +384,15 @@ export function searchGlobalFrames(req: SearchGlobalRequest): SearchGlobalRespon
 export function getTranscriptSessionById(sessionId: string): SessionMetadata | null {
   const db = getTranscriptDbInstance();
 
-  const row = db.prepare(`
+  const row = db
+    .prepare(
+      `
     SELECT *
     FROM session_metadata
     WHERE session_id = ?
-  `).get(sessionId) as SessionMetadataRow | undefined;
+  `
+    )
+    .get(sessionId) as SessionMetadataRow | undefined;
 
   if (!row) {
     return null;
@@ -434,12 +429,7 @@ export function getTranscriptFrames(
 ): { frames: PlaybackFrame[]; total: number } {
   const db = getTranscriptDbInstance();
 
-  const {
-    offset = 0,
-    limit = 100,
-    afterTimestamp,
-    frameTypes,
-  } = query;
+  const { offset = 0, limit = 100, afterTimestamp, frameTypes } = query;
 
   // Build WHERE clauses
   const whereClauses: string[] = ['session_id = @sessionId'];
@@ -451,7 +441,7 @@ export function getTranscriptFrames(
   }
 
   if (frameTypes) {
-    const types = frameTypes.split(',').map(t => t.trim());
+    const types = frameTypes.split(',').map((t) => t.trim());
     const placeholders = types.map((_, i) => `@type${i}`).join(',');
     whereClauses.push(`frame_type IN (${placeholders})`);
     types.forEach((type, i) => {
@@ -482,7 +472,7 @@ export function getTranscriptFrames(
   }) as PlaybackFrameRow[];
 
   // Convert rows to PlaybackFrame objects
-  const frames: PlaybackFrame[] = rows.map(row => convertRowToFrame(row));
+  const frames: PlaybackFrame[] = rows.map((row) => convertRowToFrame(row));
 
   return { frames, total };
 }
@@ -496,22 +486,30 @@ export function getTranscriptFrames(
 export function getToolExecution(frameId: string): ToolExecution | null {
   const db = getTranscriptDbInstance();
 
-  const row = db.prepare(`
+  const row = db
+    .prepare(
+      `
     SELECT *
     FROM tool_executions
     WHERE frame_id = ?
-  `).get(frameId) as ToolExecutionRow | undefined;
+  `
+    )
+    .get(frameId) as ToolExecutionRow | undefined;
 
   if (!row) {
     return null;
   }
 
   // Get file diff if it exists
-  const diffRow = db.prepare(`
+  const diffRow = db
+    .prepare(
+      `
     SELECT *
     FROM file_diffs
     WHERE tool_execution_id = ?
-  `).get(row.id) as FileDiffRow | undefined;
+  `
+    )
+    .get(row.id) as FileDiffRow | undefined;
 
   return {
     tool: row.tool_name,
@@ -521,12 +519,14 @@ export function getToolExecution(frameId: string): ToolExecution | null {
       isError: row.is_error === 1,
       exitCode: row.exit_code || undefined,
     },
-    fileDiff: diffRow ? {
-      filePath: diffRow.file_path,
-      oldContent: diffRow.old_content || undefined,
-      newContent: diffRow.new_content,
-      language: diffRow.language,
-    } : undefined,
+    fileDiff: diffRow
+      ? {
+          filePath: diffRow.file_path,
+          oldContent: diffRow.old_content || undefined,
+          newContent: diffRow.new_content,
+          language: diffRow.language,
+        }
+      : undefined,
   };
 }
 
@@ -548,7 +548,8 @@ export function getToolExecution(frameId: string): ToolExecution | null {
 export function insertSession(session: SessionMetadata): void {
   const db = getTranscriptDbInstance();
 
-  db.prepare(`
+  db.prepare(
+    `
     INSERT OR REPLACE INTO session_metadata (
       session_id,
       slug,
@@ -576,7 +577,8 @@ export function insertSession(session: SessionMetadata): void {
       @firstUserMessage,
       @parsedAt
     )
-  `).run({
+  `
+  ).run({
     sessionId: session.sessionId,
     slug: session.slug,
     project: session.project,
@@ -604,7 +606,8 @@ export function insertSession(session: SessionMetadata): void {
 export function insertFrame(sessionId: string, frame: PlaybackFrame): void {
   const db = getTranscriptDbInstance();
 
-  db.prepare(`
+  db.prepare(
+    `
     INSERT OR REPLACE INTO playback_frames (
       id,
       session_id,
@@ -634,7 +637,8 @@ export function insertFrame(sessionId: string, frame: PlaybackFrame): void {
       @filesModified,
       @agentType
     )
-  `).run({
+  `
+  ).run({
     id: frame.id,
     sessionId,
     frameType: frame.type,
@@ -665,7 +669,8 @@ export function insertToolExecution(frameId: string, toolExecution: ToolExecutio
 
   const toolId = `${frameId}-tool`;
 
-  db.prepare(`
+  db.prepare(
+    `
     INSERT OR REPLACE INTO tool_executions (
       id,
       frame_id,
@@ -683,7 +688,8 @@ export function insertToolExecution(frameId: string, toolExecution: ToolExecutio
       @isError,
       @exitCode
     )
-  `).run({
+  `
+  ).run({
     id: toolId,
     frameId,
     toolName: toolExecution.tool,
@@ -711,7 +717,8 @@ export function insertToolExecution(frameId: string, toolExecution: ToolExecutio
 export function insertFileDiff(toolExecutionId: string, fileDiff: FileDiff): void {
   const db = getTranscriptDbInstance();
 
-  db.prepare(`
+  db.prepare(
+    `
     INSERT OR REPLACE INTO file_diffs (
       id,
       tool_execution_id,
@@ -727,7 +734,8 @@ export function insertFileDiff(toolExecutionId: string, fileDiff: FileDiff): voi
       @newContent,
       @language
     )
-  `).run({
+  `
+  ).run({
     id: `${toolExecutionId}-diff`,
     toolExecutionId,
     filePath: fileDiff.filePath,
@@ -748,13 +756,15 @@ export function insertFileDiff(toolExecutionId: string, fileDiff: FileDiff): voi
 export function updateSessionFrameCount(sessionId: string): void {
   const db = getTranscriptDbInstance();
 
-  db.prepare(`
+  db.prepare(
+    `
     UPDATE session_metadata
     SET frame_count = (
       SELECT COUNT(*) FROM playback_frames WHERE session_id = @sessionId
     )
     WHERE session_id = @sessionId
-  `).run({ sessionId });
+  `
+  ).run({ sessionId });
 }
 
 /**
@@ -769,16 +779,17 @@ export function updateSessionFrameCount(sessionId: string): void {
  *   completed_at: new Date().toISOString()
  * });
  */
-export function updateParsingStatus(
-  sessionId: string,
-  status: Partial<ParsingStatusRow>
-): void {
+export function updateParsingStatus(sessionId: string, status: Partial<ParsingStatusRow>): void {
   const db = getTranscriptDbInstance();
 
   // Get existing status if any
-  const existing = db.prepare(`
+  const existing = db
+    .prepare(
+      `
     SELECT * FROM parsing_status WHERE session_id = ?
-  `).get(sessionId) as ParsingStatusRow | undefined;
+  `
+    )
+    .get(sessionId) as ParsingStatusRow | undefined;
 
   if (existing) {
     // Update existing
@@ -803,15 +814,18 @@ export function updateParsingStatus(
     }
 
     if (updates.length > 0) {
-      db.prepare(`
+      db.prepare(
+        `
         UPDATE parsing_status
         SET ${updates.join(', ')}
         WHERE session_id = @sessionId
-      `).run(params);
+      `
+      ).run(params);
     }
   } else {
     // Insert new
-    db.prepare(`
+    db.prepare(
+      `
       INSERT INTO parsing_status (
         session_id,
         transcript_file_path,
@@ -831,7 +845,8 @@ export function updateParsingStatus(
         @completed_at,
         @error_message
       )
-    `).run({
+    `
+    ).run({
       sessionId,
       transcript_file_path: status.transcript_file_path || '',
       total_entries: status.total_entries || 0,
@@ -856,13 +871,17 @@ export function updateParsingStatus(
 export function getTranscriptProjects(): string[] {
   const db = getTranscriptDbInstance();
 
-  const results = db.prepare(`
+  const results = db
+    .prepare(
+      `
     SELECT DISTINCT project
     FROM session_metadata
     ORDER BY project ASC
-  `).all() as { project: string }[];
+  `
+    )
+    .all() as { project: string }[];
 
-  return results.map(r => r.project);
+  return results.map((r) => r.project);
 }
 
 /**
@@ -921,14 +940,18 @@ export function getImportStats(): {
 } {
   const db = getTranscriptDbInstance();
 
-  const stats = db.prepare(`
+  const stats = db
+    .prepare(
+      `
     SELECT
       COUNT(*) as total,
       SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
       SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed,
       SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) as failed
     FROM parsing_status
-  `).get() as {
+  `
+    )
+    .get() as {
     total: number;
     pending: number;
     completed: number;

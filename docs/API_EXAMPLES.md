@@ -246,20 +246,9 @@ curl http://localhost:3001/api/sessions/550e8400-e29b-41d4-a716-446655440000/eve
         "Set up basic error handling"
       ],
       "narrative": "I've set up a basic Express server with TypeScript. The server includes CORS support for cross-origin requests, JSON parsing middleware, and a centralized error handler. This foundation will allow us to add user management endpoints.",
-      "concepts": [
-        "express",
-        "typescript",
-        "rest-api",
-        "middleware"
-      ],
-      "files_read": [
-        "package.json",
-        "tsconfig.json"
-      ],
-      "files_modified": [
-        "src/server.ts",
-        "src/index.ts"
-      ]
+      "concepts": ["express", "typescript", "rest-api", "middleware"],
+      "files_read": ["package.json", "tsconfig.json"],
+      "files_modified": ["src/server.ts", "src/index.ts"]
     },
     {
       "event_type": "observation",
@@ -277,15 +266,9 @@ curl http://localhost:3001/api/sessions/550e8400-e29b-41d4-a716-446655440000/eve
         "Configured UUID primary keys"
       ],
       "narrative": "I've created the database schema for user management. The users table includes essential fields (id, email, name, password_hash) with proper indexing for performance.",
-      "concepts": [
-        "database",
-        "postgresql",
-        "schema-design"
-      ],
+      "concepts": ["database", "postgresql", "schema-design"],
       "files_read": [],
-      "files_modified": [
-        "migrations/001_create_users_table.sql"
-      ]
+      "files_modified": ["migrations/001_create_users_table.sql"]
     }
   ],
   "total": 158,
@@ -322,6 +305,7 @@ curl 'http://localhost:3001/api/sessions/550e8400-e29b-41d4-a716-446655440000/ev
 ```
 
 **Available observation types:**
+
 - `feature`: New feature implementations
 - `bugfix`: Bug fixes
 - `decision`: Architecture/design decisions
@@ -361,6 +345,7 @@ curl http://localhost:3001/api/sessions/550e8400-e29b-41d4-a716-446655440000/eve
 ```
 
 **Response:**
+
 ```json
 {
   "event_type": "prompt",
@@ -379,6 +364,7 @@ curl http://localhost:3001/api/sessions/550e8400-e29b-41d4-a716-446655440000/eve
 ```
 
 **Response:**
+
 ```json
 {
   "event_type": "observation",
@@ -390,10 +376,7 @@ curl http://localhost:3001/api/sessions/550e8400-e29b-41d4-a716-446655440000/eve
   "obs_type": "feature",
   "title": "Initial API Setup",
   "subtitle": "Express + TypeScript configuration",
-  "facts": [
-    "Created Express server with TypeScript",
-    "Configured CORS and JSON middleware"
-  ],
+  "facts": ["Created Express server with TypeScript", "Configured CORS and JSON middleware"],
   "narrative": "Full narrative text...",
   "concepts": ["express", "typescript"],
   "files_read": ["package.json"],
@@ -463,22 +446,22 @@ curl http://localhost:3001/api/sessions/meta/projects
 
 ### Pagination Parameters
 
-| Parameter | Type    | Default | Description                          |
-|-----------|---------|---------|--------------------------------------|
-| `offset`  | number  | 0       | Number of items to skip              |
-| `limit`   | number  | 20/100* | Number of items to return            |
+| Parameter | Type   | Default  | Description               |
+| --------- | ------ | -------- | ------------------------- |
+| `offset`  | number | 0        | Number of items to skip   |
+| `limit`   | number | 20/100\* | Number of items to return |
 
-*Default limit is 20 for sessions, 100 for events.
+\*Default limit is 20 for sessions, 100 for events.
 
 ### Filter Parameters
 
-| Endpoint           | Parameter   | Type   | Description                              |
-|--------------------|-------------|--------|------------------------------------------|
-| `/api/sessions`    | `project`   | string | Filter by project name                   |
-| `/api/sessions`    | `dateStart` | string | Filter by start date (ISO 8601)          |
-| `/api/sessions`    | `dateEnd`   | string | Filter by end date (ISO 8601)            |
-| `/api/.../events`  | `types`     | string | Filter by observation types (comma-sep)  |
-| `/api/.../events`  | `afterTs`   | number | Filter events after timestamp (epoch ms) |
+| Endpoint          | Parameter   | Type   | Description                              |
+| ----------------- | ----------- | ------ | ---------------------------------------- |
+| `/api/sessions`   | `project`   | string | Filter by project name                   |
+| `/api/sessions`   | `dateStart` | string | Filter by start date (ISO 8601)          |
+| `/api/sessions`   | `dateEnd`   | string | Filter by end date (ISO 8601)            |
+| `/api/.../events` | `types`     | string | Filter by observation types (comma-sep)  |
+| `/api/.../events` | `afterTs`   | number | Filter events after timestamp (epoch ms) |
 
 ---
 
@@ -497,11 +480,11 @@ All errors follow this structure:
 
 ### Error Status Codes
 
-| Code | Meaning                  | Example Scenario                      |
-|------|--------------------------|---------------------------------------|
-| 400  | Bad Request              | Invalid event type                    |
-| 404  | Not Found                | Session or event doesn't exist        |
-| 500  | Internal Server Error    | Database error                        |
+| Code | Meaning               | Example Scenario               |
+| ---- | --------------------- | ------------------------------ |
+| 400  | Bad Request           | Invalid event type             |
+| 404  | Not Found             | Session or event doesn't exist |
+| 500  | Internal Server Error | Database error                 |
 
 ### Example Error Responses
 
@@ -667,6 +650,7 @@ curl -w "@curl-format.txt" -o /dev/null -s http://localhost:3001/api/sessions
 ```
 
 **curl-format.txt:**
+
 ```
 time_namelookup:  %{time_namelookup}\n
 time_connect:  %{time_connect}\n
@@ -684,43 +668,43 @@ time_total:  %{time_total}\n
 
 ### Session Object
 
-| Field               | Type    | Description                              |
-|---------------------|---------|------------------------------------------|
-| `id`                | number  | SQLite row ID                            |
-| `claude_session_id` | string  | Session UUID (use this for API calls)    |
-| `sdk_session_id`    | string  | Same as `claude_session_id`              |
-| `project`           | string  | Project name                             |
-| `user_prompt`       | string  | First user prompt in session             |
-| `started_at`        | string  | ISO 8601 timestamp                       |
-| `started_at_epoch`  | number  | Unix epoch milliseconds                  |
-| `completed_at`      | string  | ISO 8601 timestamp (null if active)      |
-| `completed_at_epoch`| number  | Unix epoch milliseconds (null if active) |
-| `status`            | string  | "active", "completed", or "failed"       |
-| `prompt_counter`    | number  | Total prompts in session                 |
+| Field                | Type   | Description                              |
+| -------------------- | ------ | ---------------------------------------- |
+| `id`                 | number | SQLite row ID                            |
+| `claude_session_id`  | string | Session UUID (use this for API calls)    |
+| `sdk_session_id`     | string | Same as `claude_session_id`              |
+| `project`            | string | Project name                             |
+| `user_prompt`        | string | First user prompt in session             |
+| `started_at`         | string | ISO 8601 timestamp                       |
+| `started_at_epoch`   | number | Unix epoch milliseconds                  |
+| `completed_at`       | string | ISO 8601 timestamp (null if active)      |
+| `completed_at_epoch` | number | Unix epoch milliseconds (null if active) |
+| `status`             | string | "active", "completed", or "failed"       |
+| `prompt_counter`     | number | Total prompts in session                 |
 
 ### SessionEvent Object
 
-| Field             | Type     | Description                                   |
-|-------------------|----------|-----------------------------------------------|
-| `event_type`      | string   | "prompt" or "observation"                     |
-| `row_id`          | number   | Database row ID                               |
-| `prompt_number`   | number   | Prompt sequence number                        |
-| `ts`              | number   | Timestamp (epoch milliseconds)                |
-| `text`            | string   | Event text (prompt text or observation title) |
-| `kind_rank`       | number   | 0 for prompts, 1 for observations            |
+| Field           | Type   | Description                                   |
+| --------------- | ------ | --------------------------------------------- |
+| `event_type`    | string | "prompt" or "observation"                     |
+| `row_id`        | number | Database row ID                               |
+| `prompt_number` | number | Prompt sequence number                        |
+| `ts`            | number | Timestamp (epoch milliseconds)                |
+| `text`          | string | Event text (prompt text or observation title) |
+| `kind_rank`     | number | 0 for prompts, 1 for observations             |
 
 **Additional fields for observations:**
 
-| Field             | Type       | Description                                |
-|-------------------|------------|--------------------------------------------|
-| `obs_type`        | string     | Observation type (feature, bugfix, etc.)   |
-| `title`           | string     | Observation title                          |
-| `subtitle`        | string     | Observation subtitle                       |
-| `facts`           | string[]   | List of facts (parsed from JSON)           |
-| `narrative`       | string     | Full narrative text                        |
-| `concepts`        | string[]   | Related concepts (parsed from JSON)        |
-| `files_read`      | string[]   | Files read (parsed from JSON)              |
-| `files_modified`  | string[]   | Files modified (parsed from JSON)          |
+| Field            | Type     | Description                              |
+| ---------------- | -------- | ---------------------------------------- |
+| `obs_type`       | string   | Observation type (feature, bugfix, etc.) |
+| `title`          | string   | Observation title                        |
+| `subtitle`       | string   | Observation subtitle                     |
+| `facts`          | string[] | List of facts (parsed from JSON)         |
+| `narrative`      | string   | Full narrative text                      |
+| `concepts`       | string[] | Related concepts (parsed from JSON)      |
+| `files_read`     | string[] | Files read (parsed from JSON)            |
+| `files_modified` | string[] | Files modified (parsed from JSON)        |
 
 ---
 

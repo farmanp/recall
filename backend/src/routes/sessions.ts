@@ -160,7 +160,7 @@ router.get('/', async (req: Request, res: Response) => {
     res.status(500).json({
       error: 'Failed to fetch sessions',
       message: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined
+      stack: error instanceof Error ? error.stack : undefined,
     });
   }
 });
@@ -187,7 +187,7 @@ router.get('/search', async (req: Request, res: Response) => {
       limit: limitStr ? parseInt(limitStr, 10) : 50,
       offset: offsetStr ? parseInt(offsetStr, 10) : 0,
       agent,
-      project
+      project,
     };
 
     const results = searchGlobalFrames(searchReq);
@@ -196,7 +196,7 @@ router.get('/search', async (req: Request, res: Response) => {
     console.error('Error performing global search:', error);
     res.status(500).json({
       error: 'Failed to perform search',
-      message: error instanceof Error ? error.message : 'Unknown error'
+      message: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -441,9 +441,7 @@ router.post('/:id/refresh', async (req: Request, res: Response) => {
  * Uses cache if available, otherwise parses transcript file
  * Automatically detects agent type from file path
  */
-async function getOrBuildTimeline(
-  sessionId: string
-): Promise<SessionTimeline | null> {
+async function getOrBuildTimeline(sessionId: string): Promise<SessionTimeline | null> {
   // Check cache first
   if (timelineCache.has(sessionId)) {
     return timelineCache.get(sessionId)!;

@@ -6,10 +6,7 @@ import os from 'os';
 
 describe('validate_timeline script', () => {
   it('runs successfully against the test database', () => {
-    const reportPath = path.join(
-      os.tmpdir(),
-      `validation-report-${Date.now()}.json`
-    );
+    const reportPath = path.join(os.tmpdir(), `validation-report-${Date.now()}.json`);
     const scriptPath = path.resolve(__dirname, '../../../..', 'validate_timeline.js');
 
     const result = spawnSync('node', [scriptPath], {

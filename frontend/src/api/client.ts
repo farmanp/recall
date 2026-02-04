@@ -58,10 +58,7 @@ export class ApiClient {
   /**
    * Internal fetch wrapper with error handling
    */
-  private async fetch<T>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<T> {
+  private async fetch<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${this.config.baseUrl}${endpoint}`;
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), this.config.timeout);
@@ -89,11 +86,7 @@ export class ApiClient {
           };
         }
 
-        throw new ApiClientError(
-          errorData.message || errorData.error,
-          response.status,
-          errorData
-        );
+        throw new ApiClientError(errorData.message || errorData.error, response.status, errorData);
       }
 
       return await response.json();
@@ -143,9 +136,7 @@ export class ApiClient {
    * List sessions with optional filtering
    * GET /api/sessions?offset=0&limit=20&project=...&dateStart=...&dateEnd=...
    */
-  async listSessions(
-    query: SessionListQuery = {}
-  ): Promise<SessionListResponse> {
+  async listSessions(query: SessionListQuery = {}): Promise<SessionListResponse> {
     const queryString = this.buildQueryString(query);
     return this.fetch<SessionListResponse>(`/api/sessions${queryString}`);
   }
@@ -167,9 +158,7 @@ export class ApiClient {
     query: SessionEventsQuery = {}
   ): Promise<SessionEventsResponse> {
     const queryString = this.buildQueryString(query);
-    return this.fetch<SessionEventsResponse>(
-      `/api/sessions/${id}/events${queryString}`
-    );
+    return this.fetch<SessionEventsResponse>(`/api/sessions/${id}/events${queryString}`);
   }
 
   /**
@@ -209,13 +198,7 @@ export const apiClient = new ApiClient();
 /**
  * Named exports for convenience
  */
-export const {
-  healthCheck,
-  listSessions,
-  getSession,
-  getSessionEvents,
-  getEvent,
-} = {
+export const { healthCheck, listSessions, getSession, getSessionEvents, getEvent } = {
   healthCheck: () => apiClient.healthCheck(),
   listSessions: (query?: SessionListQuery) => apiClient.listSessions(query),
   getSession: (id: string | number) => apiClient.getSession(id),

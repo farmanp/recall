@@ -1,20 +1,14 @@
 import fs from 'fs';
 import readline from 'readline';
 import path from 'path';
-import {
-  TranscriptEntry,
-  ParsedTranscript,
-  TranscriptMetadata,
-} from '../types/transcript';
+import { TranscriptEntry, ParsedTranscript, TranscriptMetadata } from '../types/transcript';
 
 /**
  * Parse a .jsonl transcript file from Claude Code session
  * @param filePath Absolute path to .jsonl file
  * @returns Parsed transcript with all entries and metadata
  */
-export async function parseTranscriptFile(
-  filePath: string
-): Promise<ParsedTranscript> {
+export async function parseTranscriptFile(filePath: string): Promise<ParsedTranscript> {
   const entries: TranscriptEntry[] = [];
 
   // Create read stream for line-by-line processing
@@ -60,10 +54,7 @@ export async function parseTranscriptFile(
 /**
  * Extract metadata from parsed transcript entries
  */
-function extractMetadata(
-  entries: TranscriptEntry[],
-  filePath: string
-): TranscriptMetadata {
+function extractMetadata(entries: TranscriptEntry[], filePath: string): TranscriptMetadata {
   const firstEntry = entries[0];
   const lastEntry = entries[entries.length - 1];
 
@@ -71,13 +62,10 @@ function extractMetadata(
   // Path format: ~/.claude/projects/{encoded-project-path}/{session-uuid}.jsonl
   const pathParts = filePath.split(path.sep);
   const projectsIndex = pathParts.indexOf('projects');
-  const encodedProjectPath =
-    projectsIndex >= 0 ? pathParts[projectsIndex + 1] : undefined;
+  const encodedProjectPath = projectsIndex >= 0 ? pathParts[projectsIndex + 1] : undefined;
 
   // Decode project path (e.g., "-Users-fpirzada-Documents-cc-mem-video-player")
-  const projectName = encodedProjectPath
-    ? decodeProjectPath(encodedProjectPath)
-    : undefined;
+  const projectName = encodedProjectPath ? decodeProjectPath(encodedProjectPath) : undefined;
 
   // Extract slug from first entry if available
   const slug = extractSlug(entries);
@@ -121,9 +109,7 @@ function extractSlug(entries: TranscriptEntry[]): string | undefined {
  * Build dependency graph from parentUuid relationships
  * @returns Map of uuid -> list of child uuids
  */
-export function buildDependencyGraph(
-  entries: TranscriptEntry[]
-): Map<string, string[]> {
+export function buildDependencyGraph(entries: TranscriptEntry[]): Map<string, string[]> {
   const graph = new Map<string, string[]>();
 
   for (const entry of entries) {
@@ -140,10 +126,7 @@ export function buildDependencyGraph(
 /**
  * Get all entries of a specific type
  */
-export function getEntriesByType(
-  entries: TranscriptEntry[],
-  type: string
-): TranscriptEntry[] {
+export function getEntriesByType(entries: TranscriptEntry[], type: string): TranscriptEntry[] {
   return entries.filter((entry) => entry.type === type);
 }
 
@@ -160,9 +143,6 @@ export function findEntryByUuid(
 /**
  * Get child entries for a given UUID
  */
-export function getChildEntries(
-  entries: TranscriptEntry[],
-  parentUuid: string
-): TranscriptEntry[] {
+export function getChildEntries(entries: TranscriptEntry[], parentUuid: string): TranscriptEntry[] {
   return entries.filter((entry) => entry.parentUuid === parentUuid);
 }

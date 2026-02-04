@@ -20,7 +20,7 @@ export const TimelineVisualization: React.FC<TimelineVisualizationProps> = ({
   events,
   currentIndex,
   onSeek,
-  className = ''
+  className = '',
 }) => {
   const timelineRef = useRef<HTMLDivElement>(null);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
@@ -36,15 +36,17 @@ export const TimelineVisualization: React.FC<TimelineVisualizationProps> = ({
       decision: colors.observation.decision.primary,
       discovery: colors.observation.discovery.primary,
       refactor: colors.observation.refactor.primary,
-      change: colors.observation.change.primary
+      change: colors.observation.change.primary,
     };
 
     return typeColors[event.obs_type || 'change'] || colors.ui.text.tertiary;
   };
 
   const isChapterMarker = (event: SessionEvent): boolean => {
-    return event.event_type === 'observation' &&
-           (event.obs_type === 'feature' || event.obs_type === 'decision' || event.obs_type === 'bugfix');
+    return (
+      event.event_type === 'observation' &&
+      (event.obs_type === 'feature' || event.obs_type === 'decision' || event.obs_type === 'bugfix')
+    );
   };
 
   const formatTime = (timestamp: number): string => {
@@ -52,7 +54,7 @@ export const TimelineVisualization: React.FC<TimelineVisualizationProps> = ({
     return date.toLocaleTimeString('en-US', {
       hour: '2-digit',
       minute: '2-digit',
-      second: '2-digit'
+      second: '2-digit',
     });
   };
 
@@ -64,9 +66,7 @@ export const TimelineVisualization: React.FC<TimelineVisualizationProps> = ({
           Event {currentIndex + 1} of {events.length}
         </span>
         {hoveredIndex !== null && events[hoveredIndex] && (
-          <span className="text-xs text-gray-600">
-            {formatTime(events[hoveredIndex].ts)}
-          </span>
+          <span className="text-xs text-gray-600">{formatTime(events[hoveredIndex].ts)}</span>
         )}
       </div>
 
@@ -115,7 +115,7 @@ export const TimelineVisualization: React.FC<TimelineVisualizationProps> = ({
                 style={{
                   left: `${position}%`,
                   backgroundColor: color,
-                  width: isChapter ? '2px' : '1px'
+                  width: isChapter ? '2px' : '1px',
                 }}
                 title={event.text?.substring(0, 50)}
               />
@@ -154,9 +154,7 @@ export const TimelineVisualization: React.FC<TimelineVisualizationProps> = ({
               style={{ left: `${position}%` }}
             >
               <span className="inline-block w-0.5 h-2 bg-gray-400 mb-1" />
-              <div className="text-[10px] font-medium">
-                {event.obs_type}
-              </div>
+              <div className="text-[10px] font-medium">{event.obs_type}</div>
             </div>
           );
         })}

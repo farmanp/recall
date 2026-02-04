@@ -12,7 +12,14 @@ describe('agent-detector', () => {
   it('detects agent from file path', () => {
     const claudePath = path.join('/Users/test', '.claude', 'projects', 'proj', 'session.jsonl');
     const codexPath = path.join('/Users/test', '.codex', 'sessions', '2025-01-01', 'session.jsonl');
-    const geminiPath = path.join('/Users/test', '.gemini', 'tmp', 'hash', 'chats', 'session-1.json');
+    const geminiPath = path.join(
+      '/Users/test',
+      '.gemini',
+      'tmp',
+      'hash',
+      'chats',
+      'session-1.json'
+    );
 
     expect(detectAgentFromPath(claudePath)).toBe('claude');
     expect(detectAgentFromPath(codexPath)).toBe('codex');

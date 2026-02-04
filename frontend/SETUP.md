@@ -212,16 +212,15 @@ Create `src/index.css`:
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell',
+    'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
 }
 
 .line-clamp-2 {
@@ -283,15 +282,18 @@ If you encounter CORS errors, make sure the backend has CORS enabled:
 
 ```typescript
 // In backend server
-app.use(cors({
-  origin: 'http://localhost:3000',
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: 'http://localhost:3000',
+    credentials: true,
+  })
+);
 ```
 
 ### Type Import Errors
 
 If you get errors importing shared types, make sure:
+
 1. TypeScript paths are configured correctly in `tsconfig.json`
 2. The `../shared/types.ts` file exists
 3. Your build tool supports TypeScript path aliases

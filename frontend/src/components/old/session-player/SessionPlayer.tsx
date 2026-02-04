@@ -44,10 +44,7 @@ export const SessionPlayer: React.FC<SessionPlayerProps> = ({
     const [lastItem] = [...virtualizer.getVirtualItems()].reverse();
     if (!lastItem) return;
 
-    if (
-      lastItem.index >= events.length - 1 &&
-      events.length < totalEvents
-    ) {
+    if (lastItem.index >= events.length - 1 && events.length < totalEvents) {
       onLoadMoreEvents();
     }
   }, [virtualizer.getVirtualItems(), events.length, totalEvents, onLoadMoreEvents]);
@@ -195,11 +192,7 @@ export const SessionPlayer: React.FC<SessionPlayerProps> = ({
                 }}
                 className="mb-3"
               >
-                <EventCard
-                  event={event}
-                  isActive={isActive}
-                  number={virtualRow.index + 1}
-                />
+                <EventCard event={event} isActive={isActive} number={virtualRow.index + 1} />
               </div>
             );
           })}

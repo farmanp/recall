@@ -70,7 +70,6 @@ interface CodexContentPart {
   image_url?: { url: string };
 }
 
-
 /**
  * Parser for OpenAI Codex CLI sessions
  *
@@ -311,8 +310,11 @@ export class CodexParser extends AgentParser {
    * Generate a UUID for entries without one
    */
   private generateUuid(): string {
-    return 'codex-' + Math.random().toString(36).substring(2, 15) +
-      Math.random().toString(36).substring(2, 15);
+    return (
+      'codex-' +
+      Math.random().toString(36).substring(2, 15) +
+      Math.random().toString(36).substring(2, 15)
+    );
   }
 
   /**
@@ -353,10 +355,12 @@ export class CodexParser extends AgentParser {
   /**
    * Build normalized message from raw Codex entry
    */
-  private buildMessage(raw: RawCodexEntry): {
-    role: 'user' | 'assistant' | 'system';
-    content: any[];
-  } | undefined {
+  private buildMessage(raw: RawCodexEntry):
+    | {
+        role: 'user' | 'assistant' | 'system';
+        content: any[];
+      }
+    | undefined {
     if (!raw.role) {
       return undefined;
     }
@@ -444,11 +448,12 @@ export class CodexParser extends AgentParser {
     if (Array.isArray(content)) {
       // Extract text from content parts (handle input_text, output_text, text)
       const textParts = content
-        .filter((part): part is CodexContentPart & { text: string } =>
-          (part.type === 'text' || part.type === 'input_text' || part.type === 'output_text') &&
-          typeof part.text === 'string'
+        .filter(
+          (part): part is CodexContentPart & { text: string } =>
+            (part.type === 'text' || part.type === 'input_text' || part.type === 'output_text') &&
+            typeof part.text === 'string'
         )
-        .map(part => part.text);
+        .map((part) => part.text);
       return textParts.join('\n');
     }
 
@@ -466,10 +471,12 @@ export class CodexParser extends AgentParser {
     const lowerContent = content.toLowerCase();
 
     // Check for common error indicators
-    if (lowerContent.includes('error:') ||
-        lowerContent.includes('exception:') ||
-        lowerContent.includes('failed:') ||
-        lowerContent.includes('traceback')) {
+    if (
+      lowerContent.includes('error:') ||
+      lowerContent.includes('exception:') ||
+      lowerContent.includes('failed:') ||
+      lowerContent.includes('traceback')
+    ) {
       return true;
     }
 

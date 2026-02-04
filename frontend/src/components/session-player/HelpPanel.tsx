@@ -96,10 +96,7 @@ export const HelpPanel: React.FC<HelpPanelProps> = ({ onClose }) => {
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-700">
           <h2 className="text-xl font-bold text-white">Keyboard Shortcuts</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-white text-2xl font-bold"
-          >
+          <button onClick={onClose} className="text-gray-400 hover:text-white text-2xl font-bold">
             ×
           </button>
         </div>
@@ -114,10 +111,7 @@ export const HelpPanel: React.FC<HelpPanelProps> = ({ onClose }) => {
                 </h3>
                 <div className="space-y-2">
                   {group.shortcuts.map((shortcut) => (
-                    <div
-                      key={shortcut.key}
-                      className="flex items-center justify-between text-sm"
-                    >
+                    <div key={shortcut.key} className="flex items-center justify-between text-sm">
                       <span className="text-gray-300">{shortcut.description}</span>
                       <kbd className="px-2 py-1 bg-gray-700 border border-gray-600 rounded text-xs font-mono text-gray-200">
                         {shortcut.key}

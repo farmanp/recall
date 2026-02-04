@@ -25,9 +25,7 @@ describe('Server', () => {
   });
 
   it('responds to /api/health', async () => {
-    const response = await request(app)
-      .get('/api/health')
-      .expect(200);
+    const response = await request(app).get('/api/health').expect(200);
 
     expect(response.body.status).toBe('ok');
     expect(response.body).toHaveProperty('timestamp');
@@ -35,40 +33,30 @@ describe('Server', () => {
   });
 
   it('includes CORS headers', async () => {
-    const response = await request(app)
-      .get('/api/health')
-      .expect(200);
+    const response = await request(app).get('/api/health').expect(200);
 
     expect(response.headers['access-control-allow-origin']).toBeDefined();
   });
 
   it('serves sessions list (even if empty)', async () => {
-    const response = await request(app)
-      .get('/api/sessions')
-      .expect(200);
+    const response = await request(app).get('/api/sessions').expect(200);
 
     expect(Array.isArray(response.body.sessions)).toBe(true);
     expect(typeof response.body.total).toBe('number');
   });
 
   it('serves agent availability', async () => {
-    const response = await request(app)
-      .get('/api/agents')
-      .expect(200);
+    const response = await request(app).get('/api/agents').expect(200);
 
     expect(response.body).toHaveProperty('agents');
     expect(response.body).toHaveProperty('counts');
   });
 
   it('returns 404 for unknown session IDs', async () => {
-    await request(app)
-      .get('/api/sessions/unknown')
-      .expect(404);
+    await request(app).get('/api/sessions/unknown').expect(404);
   });
 
   it('returns 404 for unknown frames', async () => {
-    await request(app)
-      .get('/api/sessions/unknown/frames')
-      .expect(404);
+    await request(app).get('/api/sessions/unknown/frames').expect(404);
   });
 });

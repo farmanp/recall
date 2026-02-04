@@ -175,26 +175,29 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({
   // Highlight cache
   const highlightCache = useRef<Record<string, string>>({});
 
-  const highlightLine = useCallback((lineText: string): string => {
-    if (!lineText || lineText.trim() === '') return '\u00A0';
+  const highlightLine = useCallback(
+    (lineText: string): string => {
+      if (!lineText || lineText.trim() === '') return '\u00A0';
 
-    const cacheKey = `${prismLanguage}:${lineText}`;
-    if (highlightCache.current[cacheKey]) return highlightCache.current[cacheKey];
+      const cacheKey = `${prismLanguage}:${lineText}`;
+      if (highlightCache.current[cacheKey]) return highlightCache.current[cacheKey];
 
-    let result: string;
-    if (!grammar) {
-      result = escapeHtml(lineText);
-    } else {
-      try {
-        result = Prism.highlight(lineText, grammar, prismLanguage);
-      } catch (e) {
+      let result: string;
+      if (!grammar) {
         result = escapeHtml(lineText);
+      } else {
+        try {
+          result = Prism.highlight(lineText, grammar, prismLanguage);
+        } catch (e) {
+          result = escapeHtml(lineText);
+        }
       }
-    }
 
-    highlightCache.current[cacheKey] = result;
-    return result;
-  }, [grammar, prismLanguage]);
+      highlightCache.current[cacheKey] = result;
+      return result;
+    },
+    [grammar, prismLanguage]
+  );
 
   const lines = useMemo(() => code.split('\n'), [code]);
   const parentRef = useRef<HTMLDivElement>(null);
@@ -220,10 +223,7 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({
         className="overflow-auto bg-gray-950 font-mono text-sm leading-relaxed"
         style={{ maxHeight }}
       >
-        <div
-          className="relative w-full"
-          style={{ height: `${virtualizer.getTotalSize()}px` }}
-        >
+        <div className="relative w-full" style={{ height: `${virtualizer.getTotalSize()}px` }}>
           {virtualizer.getVirtualItems().map((virtualRow) => (
             <div
               key={virtualRow.key}

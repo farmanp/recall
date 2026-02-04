@@ -31,7 +31,7 @@ export function getTranscriptDatabase(): Database.Database {
   const db = new Database(TRANSCRIPT_DB_PATH, {
     // Read-write mode - we need to insert/update transcript data
     readonly: false,
-    fileMustExist: false  // Create file if it doesn't exist
+    fileMustExist: false, // Create file if it doesn't exist
   });
 
   // Enable WAL mode for better concurrency
@@ -42,8 +42,8 @@ export function getTranscriptDatabase(): Database.Database {
   db.pragma('foreign_keys = ON');
 
   // Optimize performance
-  db.pragma('synchronous = NORMAL');  // Faster than FULL, still safe with WAL
-  db.pragma('cache_size = -64000');   // Use 64MB cache
+  db.pragma('synchronous = NORMAL'); // Faster than FULL, still safe with WAL
+  db.pragma('cache_size = -64000'); // Use 64MB cache
 
   return db;
 }

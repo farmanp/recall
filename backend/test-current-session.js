@@ -26,7 +26,7 @@ async function test() {
 
   // Show frame type distribution
   const frameTypes = {};
-  timeline.frames.forEach(frame => {
+  timeline.frames.forEach((frame) => {
     frameTypes[frame.type] = (frameTypes[frame.type] || 0) + 1;
   });
 

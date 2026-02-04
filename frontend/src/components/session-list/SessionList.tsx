@@ -32,20 +32,18 @@ export const SessionList: React.FC<SessionListProps> = ({
     overscan: 5, // Render 5 extra rows above/below viewport
   });
 
+  const virtualItems = React.useMemo(() => virtualizer.getVirtualItems(), [virtualizer]);
+
   // Handle load more when scrolling near bottom
   React.useEffect(() => {
-    const [lastItem] = [...virtualizer.getVirtualItems()].reverse();
+    const [lastItem] = [...virtualItems].reverse();
 
     if (!lastItem) return;
 
-    if (
-      lastItem.index >= sessions.length - 1 &&
-      sessions.length < total &&
-      !loading
-    ) {
+    if (lastItem.index >= sessions.length - 1 && sessions.length < total && !loading) {
       onLoadMore();
     }
-  }, [virtualizer.getVirtualItems(), sessions.length, total, loading, onLoadMore]);
+  }, [virtualItems, sessions.length, total, loading, onLoadMore]);
 
   return (
     <div
@@ -60,7 +58,7 @@ export const SessionList: React.FC<SessionListProps> = ({
           position: 'relative',
         }}
       >
-        {virtualizer.getVirtualItems().map((virtualRow) => {
+        {virtualItems.map((virtualRow) => {
           const session = sessions[virtualRow.index];
 
           if (!session) {

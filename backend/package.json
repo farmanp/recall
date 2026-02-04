@@ -18,11 +18,13 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@types/uuid": "^10.0.0",
     "better-sqlite3": "^12.6.2",
     "chokidar": "^4.0.3",
     "cors": "^2.8.6",
     "dotenv": "^17.2.3",
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",

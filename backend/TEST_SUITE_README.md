@@ -39,6 +39,7 @@ Tests all database query functions with focus on:
 - **Error Handling**: Graceful handling of missing data
 
 **Key Validation:**
+
 - TIME-FIRST ordering (ts ASC, then prompt_number ASC, then kind_rank ASC)
 - JSON field parsing for observation fields
 - Correct pagination and filtering
@@ -55,6 +56,7 @@ Tests all REST API endpoints using supertest:
 - **GET /api/sessions/meta/projects**: Get project list
 
 **Key Validation:**
+
 - HTTP status codes (200, 404, 400, 500)
 - Response structure and data types
 - Query parameter handling
@@ -78,31 +80,37 @@ Tests Express server creation and middleware:
 ## Running Tests
 
 ### Run All Tests
+
 ```bash
 npm test
 ```
 
 ### Run Tests with UI
+
 ```bash
 npm run test:ui
 ```
 
 ### Run Tests with Coverage
+
 ```bash
 npm run test:coverage
 ```
 
 ### Run Tests in Watch Mode
+
 ```bash
 npm test -- --watch
 ```
 
 ### Run Specific Test File
+
 ```bash
 npm test -- queries.test.ts
 ```
 
 ### Run Tests Matching Pattern
+
 ```bash
 npm test -- --grep "TIME-FIRST"
 ```
@@ -119,14 +127,17 @@ The test suite uses a dedicated test database created in `src/__tests__/.claude-
 ### Test Data Structure
 
 **Sessions:**
+
 - `session-1`: Active session with 2 prompts and 2 observations
 - `session-2`: Completed session from 1 hour ago
 
 **Prompts:**
+
 - Prompt 1: "Create a test suite" (ts: now + 1000)
 - Prompt 2: "Add more tests" (ts: now + 3000)
 
 **Observations:**
+
 - Feature observation with JSON fields (ts: now + 2000)
 - Decision observation without JSON fields (ts: now + 4000)
 
@@ -140,6 +151,7 @@ The test suite enforces minimum coverage thresholds:
 - **Statements**: 80%
 
 Coverage reports are generated in:
+
 - `coverage/` - HTML report (open `coverage/index.html` in browser)
 - Console output with summary
 
@@ -158,6 +170,7 @@ ORDER BY
 ```
 
 Tests verify:
+
 1. Events are ordered by timestamp first
 2. Within same timestamp, prompt_number orders events
 3. Within same timestamp+prompt_number, prompts come before observations
@@ -173,6 +186,7 @@ Tests validate that JSON string fields are properly parsed to arrays:
 - `files_modified`: JSON array → string[]
 
 Tests verify:
+
 - Valid JSON is parsed correctly
 - Null values remain undefined
 - Invalid JSON returns undefined (graceful handling)
@@ -201,6 +215,7 @@ Tests verify:
 ### Tests Fail with "Database not found"
 
 Ensure the setup file is running correctly:
+
 ```bash
 # Check if setup.ts is in setupFiles
 cat vitest.config.ts | grep setupFiles
@@ -209,6 +224,7 @@ cat vitest.config.ts | grep setupFiles
 ### Coverage Below 80%
 
 Run coverage report to see uncovered lines:
+
 ```bash
 npm run test:coverage
 open coverage/index.html
@@ -217,15 +233,17 @@ open coverage/index.html
 ### Tests Timeout
 
 Increase timeout in vitest.config.ts:
+
 ```typescript
 test: {
-  testTimeout: 10000  // 10 seconds
+  testTimeout: 10000; // 10 seconds
 }
 ```
 
 ### Database Lock Errors
 
 Ensure database connections are properly closed:
+
 ```typescript
 afterEach(() => {
   closeDatabase();
@@ -253,6 +271,7 @@ When adding new features, follow this pattern:
 6. **Run coverage**: Ensure new code is covered
 
 Example:
+
 ```typescript
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { myNewFunction } from '../myModule';

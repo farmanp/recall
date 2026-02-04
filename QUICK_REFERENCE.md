@@ -23,7 +23,7 @@ const health = await apiClient.healthCheck();
 const sessions = await apiClient.listSessions({
   offset: 0,
   limit: 20,
-  project: 'my-project'
+  project: 'my-project',
 });
 
 // Get session
@@ -33,7 +33,7 @@ const session = await apiClient.getSession(123);
 const events = await apiClient.getSessionEvents(123, {
   offset: 0,
   limit: 100,
-  types: 'decision,bugfix'
+  types: 'decision,bugfix',
 });
 
 // Get specific event
@@ -240,13 +240,13 @@ node test-api-client.js
 
 ## File Locations
 
-| What | Where |
-|------|-------|
-| Types | `/shared/types.ts` |
-| API Client | `/frontend/src/api/client.ts` |
-| Hooks | `/frontend/src/hooks/useApi.ts` |
-| Examples | `/frontend/src/examples/SessionViewer.example.tsx` |
-| Tests | `/test-api-client.js` |
+| What       | Where                                              |
+| ---------- | -------------------------------------------------- |
+| Types      | `/shared/types.ts`                                 |
+| API Client | `/frontend/src/api/client.ts`                      |
+| Hooks      | `/frontend/src/hooks/useApi.ts`                    |
+| Examples   | `/frontend/src/examples/SessionViewer.example.tsx` |
+| Tests      | `/test-api-client.js`                              |
 
 ## Quick Commands
 
@@ -293,13 +293,13 @@ const obsTypeColors = {
 
 ## Troubleshooting
 
-| Issue | Solution |
-|-------|----------|
-| CORS errors | Enable CORS in backend |
-| Type import errors | Check tsconfig.json paths |
-| Timeout errors | Increase timeout or check backend |
-| 404 errors | Verify backend is running |
-| Cache issues | Invalidate query cache |
+| Issue              | Solution                          |
+| ------------------ | --------------------------------- |
+| CORS errors        | Enable CORS in backend            |
+| Type import errors | Check tsconfig.json paths         |
+| Timeout errors     | Increase timeout or check backend |
+| 404 errors         | Verify backend is running         |
+| Cache issues       | Invalidate query cache            |
 
 ## Resources
 

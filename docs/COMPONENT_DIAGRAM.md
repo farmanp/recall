@@ -453,9 +453,9 @@ Virtualizer dynamically adjusts scroll height based on expansion state.
 ---
 
 **Legend:**
+
 - `│` - Vertical divider
 - `├─`, `└─` - Component boundary
 - `●` - Expand/collapse indicator
 - `◄───` - Annotation arrow
 - `[...]` - Placeholder content
-

@@ -140,12 +140,7 @@ export const SessionPlayerPage: React.FC = () => {
               className="p-2 rounded hover:bg-gray-100"
               aria-label="Back to sessions"
             >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -155,9 +150,7 @@ export const SessionPlayerPage: React.FC = () => {
               </svg>
             </button>
             <div>
-              <h1 className="text-xl font-bold text-gray-900">
-                {session.project}
-              </h1>
+              <h1 className="text-xl font-bold text-gray-900">{session.project}</h1>
               <p className="text-sm text-gray-600">
                 {totalEvents} events • {session.prompt_counter} prompts
               </p>

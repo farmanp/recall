@@ -5,7 +5,7 @@ import {
   getSessionStats,
   getSessionEvents,
   getEventById,
-  getProjects
+  getProjects,
 } from '../../db/queries';
 import { getDbInstance, closeDatabase } from '../../db/connection';
 
@@ -33,7 +33,7 @@ describe('Database Queries', () => {
       const result = getSessions({ project: 'test-project' });
 
       expect(result.sessions.length).toBeGreaterThan(0);
-      result.sessions.forEach(session => {
+      result.sessions.forEach((session) => {
         expect(session.project).toBe('test-project');
       });
     });
@@ -50,7 +50,7 @@ describe('Database Queries', () => {
 
       const result = getSessions({
         dateStart: yesterday.toISOString(),
-        dateEnd: now.toISOString()
+        dateEnd: now.toISOString(),
       });
 
       expect(result.sessions).toBeInstanceOf(Array);
@@ -122,9 +122,7 @@ describe('Database Queries', () => {
       const stats = getSessionStats('session-1');
 
       expect(stats).toBeDefined();
-      expect(stats?.eventCount).toBe(
-        (stats?.promptCount || 0) + (stats?.observationCount || 0)
-      );
+      expect(stats?.eventCount).toBe((stats?.promptCount || 0) + (stats?.observationCount || 0));
     });
 
     it('should return null for non-existent session', () => {
@@ -167,8 +165,8 @@ describe('Database Queries', () => {
     it('should return both prompts and observations', () => {
       const result = getSessionEvents('session-1', {});
 
-      const prompts = result.events.filter(e => e.event_type === 'prompt');
-      const observations = result.events.filter(e => e.event_type === 'observation');
+      const prompts = result.events.filter((e) => e.event_type === 'prompt');
+      const observations = result.events.filter((e) => e.event_type === 'observation');
 
       expect(prompts.length).toBeGreaterThan(0);
       expect(observations.length).toBeGreaterThan(0);
@@ -177,9 +175,7 @@ describe('Database Queries', () => {
     it('should parse JSON fields for observations', () => {
       const result = getSessionEvents('session-1', {});
 
-      const obsWithFacts = result.events.find(e =>
-        e.event_type === 'observation' && e.facts
-      );
+      const obsWithFacts = result.events.find((e) => e.event_type === 'observation' && e.facts);
 
       if (obsWithFacts) {
         expect(Array.isArray(obsWithFacts.facts)).toBe(true);
@@ -190,22 +186,22 @@ describe('Database Queries', () => {
 
     it('should filter by observation types', () => {
       const result = getSessionEvents('session-1', {
-        types: 'feature'
+        types: 'feature',
       });
 
-      const observations = result.events.filter(e => e.event_type === 'observation');
-      observations.forEach(obs => {
+      const observations = result.events.filter((e) => e.event_type === 'observation');
+      observations.forEach((obs) => {
         expect(obs.obs_type).toBe('feature');
       });
     });
 
     it('should filter by multiple observation types', () => {
       const result = getSessionEvents('session-1', {
-        types: 'feature,decision'
+        types: 'feature,decision',
       });
 
-      const observations = result.events.filter(e => e.event_type === 'observation');
-      observations.forEach(obs => {
+      const observations = result.events.filter((e) => e.event_type === 'observation');
+      observations.forEach((obs) => {
         expect(['feature', 'decision']).toContain(obs.obs_type);
       });
     });
@@ -222,10 +218,10 @@ describe('Database Queries', () => {
 
       if (firstEvent) {
         const result = getSessionEvents('session-1', {
-          afterTs: firstEvent.ts + 1
+          afterTs: firstEvent.ts + 1,
         });
 
-        result.events.forEach(event => {
+        result.events.forEach((event) => {
           expect(event.ts).toBeGreaterThan(firstEvent.ts);
         });
       }
@@ -255,14 +251,14 @@ describe('Database Queries', () => {
 
       // Group events by timestamp
       const eventsByTs = new Map<number, typeof result.events>();
-      result.events.forEach(event => {
+      result.events.forEach((event) => {
         const existing = eventsByTs.get(event.ts) || [];
         existing.push(event);
         eventsByTs.set(event.ts, existing);
       });
 
       // For each timestamp with multiple events, verify prompt_number ordering
-      eventsByTs.forEach(events => {
+      eventsByTs.forEach((events) => {
         if (events.length > 1) {
           for (let i = 0; i < events.length - 1; i++) {
             const current = events[i];
@@ -280,7 +276,7 @@ describe('Database Queries', () => {
 
       // Group by timestamp and prompt_number
       const groups = new Map<string, typeof result.events>();
-      result.events.forEach(event => {
+      result.events.forEach((event) => {
         const key = `${event.ts}-${event.prompt_number ?? 999999}`;
         const existing = groups.get(key) || [];
         existing.push(event);
@@ -288,7 +284,7 @@ describe('Database Queries', () => {
       });
 
       // Within each group, prompts (kind_rank=0) should come before observations (kind_rank=1)
-      groups.forEach(events => {
+      groups.forEach((events) => {
         if (events.length > 1) {
           for (let i = 0; i < events.length - 1; i++) {
             expect(events[i]?.kind_rank).toBeLessThanOrEqual(events[i + 1]?.kind_rank || 0);
@@ -301,7 +297,8 @@ describe('Database Queries', () => {
   describe('getEventById', () => {
     it('should return prompt by ID', () => {
       const db = getDbInstance();
-      const promptRow = db.prepare('SELECT id FROM user_prompts WHERE claude_session_id = ? LIMIT 1')
+      const promptRow = db
+        .prepare('SELECT id FROM user_prompts WHERE claude_session_id = ? LIMIT 1')
         .get('session-1') as { id: number } | undefined;
 
       if (promptRow) {
@@ -315,7 +312,8 @@ describe('Database Queries', () => {
 
     it('should return observation by ID with parsed JSON', () => {
       const db = getDbInstance();
-      const obsRow = db.prepare('SELECT id FROM observations WHERE sdk_session_id = ? LIMIT 1')
+      const obsRow = db
+        .prepare('SELECT id FROM observations WHERE sdk_session_id = ? LIMIT 1')
         .get('session-1') as { id: number } | undefined;
 
       if (obsRow) {
@@ -381,8 +379,9 @@ describe('Database Queries', () => {
 
       // Try to insert should fail if readonly is enforced
       expect(() => {
-        db.prepare('INSERT INTO sdk_sessions (claude_session_id, sdk_session_id, project, started_at, started_at_epoch, status, prompt_counter) VALUES (?, ?, ?, ?, ?, ?, ?)')
-          .run('test', 'test', 'test', '2024-01-01', 0, 'active', 0);
+        db.prepare(
+          'INSERT INTO sdk_sessions (claude_session_id, sdk_session_id, project, started_at, started_at_epoch, status, prompt_counter) VALUES (?, ?, ?, ?, ?, ?, ?)'
+        ).run('test', 'test', 'test', '2024-01-01', 0, 'active', 0);
       }).toThrow();
     });
 
@@ -398,9 +397,8 @@ describe('Database Queries', () => {
     it('should parse valid JSON arrays', () => {
       const result = getSessionEvents('session-1', {});
 
-      const obsWithJson = result.events.find(e =>
-        e.event_type === 'observation' &&
-        e.obs_type === 'feature'
+      const obsWithJson = result.events.find(
+        (e) => e.event_type === 'observation' && e.obs_type === 'feature'
       );
 
       if (obsWithJson) {
@@ -414,9 +412,8 @@ describe('Database Queries', () => {
     it('should handle null JSON fields', () => {
       const result = getSessionEvents('session-1', {});
 
-      const obsWithoutJson = result.events.find(e =>
-        e.event_type === 'observation' &&
-        e.obs_type === 'decision'
+      const obsWithoutJson = result.events.find(
+        (e) => e.event_type === 'observation' && e.obs_type === 'decision'
       );
 
       if (obsWithoutJson) {
@@ -432,7 +429,7 @@ describe('Database Queries', () => {
       // For now, verify the parsing behavior through valid data
       const result = getSessionEvents('session-1', {});
 
-      result.events.forEach(event => {
+      result.events.forEach((event) => {
         if (event.event_type === 'observation') {
           if (event.facts !== undefined) {
             expect(Array.isArray(event.facts)).toBe(true);
@@ -448,7 +445,7 @@ describe('Database Queries', () => {
   describe('Error Handling', () => {
     it('should handle empty result sets gracefully', () => {
       const result = getSessions({
-        project: 'non-existent-project'
+        project: 'non-existent-project',
       });
 
       expect(result.sessions).toEqual([]);
@@ -457,7 +454,7 @@ describe('Database Queries', () => {
 
     it('should handle invalid date ranges', () => {
       const result = getSessions({
-        dateStart: 'invalid-date'
+        dateStart: 'invalid-date',
       });
 
       // Should handle gracefully (NaN converts to 0 in epoch)

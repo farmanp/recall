@@ -48,6 +48,7 @@ src/
 ## API Proxy
 
 The Vite dev server is configured to proxy API requests to the backend:
+
 - Frontend: `http://localhost:5173`
 - Backend API: `http://localhost:3001`
 - Requests to `/api/*` are automatically proxied to the backend

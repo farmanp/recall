@@ -42,11 +42,7 @@ export interface Message {
 /**
  * Content blocks within messages
  */
-export type ContentBlock =
-  | TextBlock
-  | ThinkingBlock
-  | ToolUseBlock
-  | ToolResultBlock;
+export type ContentBlock = TextBlock | ThinkingBlock | ToolUseBlock | ToolResultBlock;
 
 export interface TextBlock {
   type: 'text';
@@ -132,11 +128,7 @@ export interface PlaybackFrame {
   context: FrameContext;
 }
 
-export type FrameType =
-  | 'user_message'
-  | 'claude_thinking'
-  | 'claude_response'
-  | 'tool_execution';
+export type FrameType = 'user_message' | 'claude_thinking' | 'claude_response' | 'tool_execution';
 
 export interface ToolExecution {
   tool: string; // "Bash", "Read", "Write", "Edit", etc.

@@ -50,24 +50,18 @@ export class ParserFactory {
 
     // Handle 'unknown' agent type by falling back to Claude parser
     if (agentType === 'unknown') {
-      console.warn(
-        'Unknown agent type detected, falling back to Claude parser'
-      );
+      console.warn('Unknown agent type detected, falling back to Claude parser');
       const claudeParser = ParserFactory.parsers!.get('claude');
       if (claudeParser) {
         return claudeParser;
       }
-      throw new Error(
-        'No fallback parser available: Claude parser not found'
-      );
+      throw new Error('No fallback parser available: Claude parser not found');
     }
 
     const parser = ParserFactory.parsers!.get(agentType);
 
     if (!parser) {
-      const availableTypes = Array.from(ParserFactory.parsers!.keys()).join(
-        ', '
-      );
+      const availableTypes = Array.from(ParserFactory.parsers!.keys()).join(', ');
       throw new Error(
         `No parser available for agent type '${agentType}'. ` +
           `Available parsers: ${availableTypes}`
@@ -121,20 +115,14 @@ export class ParserFactory {
    * @param transcript - Parsed transcript to analyze
    * @returns Detected agent type
    */
-  private static detectAgentFromTranscript(
-    transcript: ParsedTranscript
-  ): AgentType {
+  private static detectAgentFromTranscript(transcript: ParsedTranscript): AgentType {
     // Check if any entry has agent-specific markers
     for (const entry of transcript.entries.slice(0, 5)) {
       // Check for Claude markers
       if (entry.message?.content && Array.isArray(entry.message.content)) {
         for (const block of entry.message.content) {
           // Claude has thinking blocks with signatures
-          if (
-            block.type === 'thinking' &&
-            'signature' in block &&
-            block.signature
-          ) {
+          if (block.type === 'thinking' && 'signature' in block && block.signature) {
             return 'claude';
           }
           // Claude tool_use format

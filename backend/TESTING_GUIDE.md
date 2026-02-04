@@ -3,28 +3,32 @@
 ## Quick Start
 
 ### Run All Tests
+
 ```bash
 cd /Users/fpirzada/Documents/recall/backend
 npm test -- --run
 ```
 
 ### Run Tests with Coverage Report
+
 ```bash
 npm run test:coverage
 ```
 
 ### Run Tests with Interactive UI
+
 ```bash
 npm run test:ui
 ```
 
-Then open the URL shown in the terminal (usually http://localhost:51204/__vitest__/)
+Then open the URL shown in the terminal (usually http://localhost:51204/**vitest**/)
 
 ## What Was Created
 
 ### 1. Configuration Files
 
 **vitest.config.ts**
+
 - Test runner configuration
 - Coverage thresholds (80% minimum)
 - Test file patterns
@@ -32,26 +36,30 @@ Then open the URL shown in the terminal (usually http://localhost:51204/__vitest
 
 ### 2. Test Files
 
-**src/__tests__/setup.ts**
+**src/**tests**/setup.ts**
+
 - Global test setup and teardown
 - Creates test database with sample data
 - Runs before all tests
 - Cleans up after tests complete
 
-**src/__tests__/db/queries.test.ts** (50+ tests)
+**src/**tests**/db/queries.test.ts** (50+ tests)
+
 - Tests all database query functions
 - Validates TIME-FIRST ordering
 - Tests JSON parsing for observation fields
 - Tests filtering, pagination, and error handling
 
-**src/__tests__/routes/sessions.test.ts** (40+ tests)
+**src/**tests**/routes/sessions.test.ts** (40+ tests)
+
 - Tests all API endpoints using supertest
 - Validates HTTP responses (200, 404, 400, 500)
 - Tests query parameter handling
 - Validates response structures
 - Tests CORS and headers
 
-**src/__tests__/server.test.ts** (20+ tests)
+**src/**tests**/server.test.ts** (20+ tests)
+
 - Tests Express server creation
 - Tests middleware (CORS, JSON, logging)
 - Tests health check endpoint
@@ -61,6 +69,7 @@ Then open the URL shown in the terminal (usually http://localhost:51204/__vitest
 ### 3. Package Scripts
 
 Added to package.json:
+
 - `npm test` - Run tests in watch mode
 - `npm run test:ui` - Run tests with interactive UI
 - `npm run test:coverage` - Run tests with coverage report
@@ -70,6 +79,7 @@ Added to package.json:
 The test suite covers:
 
 ### Database Queries (db/queries.ts)
+
 - ✅ getSessions() - All filtering, pagination, ordering
 - ✅ getSessionById() - Valid/invalid IDs
 - ✅ getSessionStats() - Event count calculations
@@ -78,6 +88,7 @@ The test suite covers:
 - ✅ getProjects() - Project listing
 
 ### API Routes (routes/sessions.ts)
+
 - ✅ GET /api/sessions - List with filters
 - ✅ GET /api/sessions/:id - Session details
 - ✅ GET /api/sessions/:id/events - Timeline events
@@ -85,6 +96,7 @@ The test suite covers:
 - ✅ GET /api/sessions/meta/projects - Project list
 
 ### Server (server.ts)
+
 - ✅ Express app creation
 - ✅ Middleware configuration
 - ✅ CORS setup
@@ -94,6 +106,7 @@ The test suite covers:
 - ✅ Error handling
 
 ### Database Connection (db/connection.ts)
+
 - ✅ Database initialization
 - ✅ Read-only mode
 - ✅ Singleton pattern
@@ -115,6 +128,7 @@ ORDER BY
 ```
 
 Tests verify:
+
 - Events are chronologically ordered
 - Within same timestamp, prompt_number provides secondary ordering
 - Within same timestamp+prompt_number, prompts (rank 0) come before observations (rank 1)
@@ -123,12 +137,14 @@ Tests verify:
 ### 2. JSON Parsing
 
 Tests validate proper parsing of JSON string fields to arrays:
+
 - `facts: string` → `facts: string[]`
 - `concepts: string` → `concepts: string[]`
 - `files_read: string` → `files_read: string[]`
 - `files_modified: string` → `files_modified: string[]`
 
 With proper handling of:
+
 - Valid JSON arrays
 - Null values (return undefined)
 - Invalid JSON (return undefined, don't crash)
@@ -136,6 +152,7 @@ With proper handling of:
 ### 3. Error Handling
 
 Tests validate proper error responses:
+
 - 404 for non-existent sessions
 - 400 for invalid parameters
 - 500 for server errors
@@ -155,6 +172,7 @@ Tests  110+ passed (110+)
 ```
 
 And coverage report showing:
+
 ```
 File                | % Stmts | % Branch | % Funcs | % Lines
 --------------------|---------|----------|---------|--------
@@ -197,7 +215,7 @@ open coverage/index.html  # Opens in browser
 
 ```typescript
 test: {
-  testTimeout: 10000  // 10 seconds
+  testTimeout: 10000; // 10 seconds
 }
 ```
 
@@ -210,6 +228,7 @@ test: {
 The test database is created fresh for each test run with:
 
 ### Sessions Table
+
 ```sql
 - session-1 (active, test-project)
   - Started: now
@@ -224,6 +243,7 @@ The test database is created fresh for each test run with:
 ```
 
 ### Events Timeline (session-1)
+
 ```
 now + 1000ms: Prompt 1 "Create a test suite"
 now + 2000ms: Observation (feature) "Test Feature" with JSON fields
@@ -232,6 +252,7 @@ now + 4000ms: Observation (decision) "Test Decision" without JSON fields
 ```
 
 This creates a perfect test scenario for:
+
 - TIME-FIRST ordering validation
 - JSON parsing (some events have JSON, some don't)
 - Event type mixing (prompts and observations interleaved)
@@ -240,21 +261,25 @@ This creates a perfect test scenario for:
 ## Running Specific Tests
 
 ### Run single test file
+
 ```bash
 npm test -- queries.test.ts
 ```
 
 ### Run tests matching pattern
+
 ```bash
 npm test -- --grep "TIME-FIRST"
 ```
 
 ### Run in watch mode (auto-rerun on changes)
+
 ```bash
 npm test
 ```
 
 ### Run with verbose output
+
 ```bash
 npm test -- --run --reporter=verbose
 ```
@@ -262,17 +287,20 @@ npm test -- --run --reporter=verbose
 ## Next Steps
 
 1. **Run the tests**:
+
    ```bash
    npm test -- --run
    ```
 
 2. **Check coverage**:
+
    ```bash
    npm run test:coverage
    open coverage/index.html
    ```
 
 3. **Explore with UI**:
+
    ```bash
    npm run test:ui
    ```
@@ -315,6 +343,7 @@ backend/
 ## Documentation
 
 For more detailed information:
+
 - See `TEST_SUITE_README.md` for comprehensive documentation
 - See inline comments in test files for specific test explanations
 - See `vitest.config.ts` for configuration details
@@ -328,6 +357,7 @@ npm test -- --run --coverage --reporter=json --outputFile=test-results.json
 ```
 
 This will:
+
 - Run all tests once (no watch mode)
 - Generate coverage report
 - Output results in JSON format for CI tools

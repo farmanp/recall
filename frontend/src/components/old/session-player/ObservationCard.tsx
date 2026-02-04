@@ -53,7 +53,8 @@ export const ObservationCard: React.FC<ObservationCardProps> = ({
   const subtitle = event.subtitle || null;
   const narrative = event.narrative || null;
   const facts = event.facts || [];
-  const hasDetails = narrative || facts.length > 0 || event.files_modified?.length || event.concepts?.length;
+  const hasDetails =
+    narrative || facts.length > 0 || event.files_modified?.length || event.concepts?.length;
 
   const handleClick = () => {
     if (onClick) {
@@ -79,15 +80,11 @@ export const ObservationCard: React.FC<ObservationCardProps> = ({
             {icon} {obsType.charAt(0).toUpperCase() + obsType.slice(1)}
           </span>
           {event.prompt_number !== null && (
-            <span className="text-xs text-gray-500">
-              pn:{event.prompt_number}
-            </span>
+            <span className="text-xs text-gray-500">pn:{event.prompt_number}</span>
           )}
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-500">
-            {formatTimestamp(event.ts)}
-          </span>
+          <span className="text-xs text-gray-500">{formatTimestamp(event.ts)}</span>
           {hasDetails && onToggleExpand && (
             <button
               onClick={(e) => {
@@ -116,16 +113,10 @@ export const ObservationCard: React.FC<ObservationCardProps> = ({
       </div>
 
       {/* Title - Always visible */}
-      <h4 className="text-base font-semibold text-gray-900 mb-1">
-        {title}
-      </h4>
+      <h4 className="text-base font-semibold text-gray-900 mb-1">{title}</h4>
 
       {/* Subtitle - Always visible if present */}
-      {subtitle && (
-        <p className="text-sm text-gray-700 mb-2">
-          {subtitle}
-        </p>
-      )}
+      {subtitle && <p className="text-sm text-gray-700 mb-2">{subtitle}</p>}
 
       {/* Expanded Details */}
       {expanded && (
@@ -134,9 +125,7 @@ export const ObservationCard: React.FC<ObservationCardProps> = ({
           {narrative && (
             <div>
               <h5 className="text-xs font-semibold text-gray-600 mb-1">Narrative</h5>
-              <p className="text-sm text-gray-700 whitespace-pre-wrap">
-                {narrative}
-              </p>
+              <p className="text-sm text-gray-700 whitespace-pre-wrap">{narrative}</p>
             </div>
           )}
 
@@ -196,10 +185,7 @@ export const ObservationCard: React.FC<ObservationCardProps> = ({
               <h5 className="text-xs font-semibold text-gray-600 mb-1">Concepts</h5>
               <div className="flex flex-wrap gap-1">
                 {event.concepts.map((concept, i) => (
-                  <span
-                    key={i}
-                    className={`text-xs ${colors.bg} ${colors.text} px-2 py-1 rounded`}
-                  >
+                  <span key={i} className={`text-xs ${colors.bg} ${colors.text} px-2 py-1 rounded`}>
                     {concept}
                   </span>
                 ))}
@@ -209,9 +195,7 @@ export const ObservationCard: React.FC<ObservationCardProps> = ({
 
           {/* Fallback if no content */}
           {!narrative && facts.length === 0 && (
-            <p className="text-sm text-gray-500 italic">
-              No narrative recorded
-            </p>
+            <p className="text-sm text-gray-500 italic">No narrative recorded</p>
           )}
         </div>
       )}

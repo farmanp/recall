@@ -13,7 +13,10 @@ const CHAPTER_TYPES: ObservationType[] = ['feature', 'decision', 'bugfix'];
 /**
  * Detect gap between two events (Phase 2)
  */
-export function detectGap(prevEvent: SessionEvent | undefined, currentEvent: SessionEvent): Gap | null {
+export function detectGap(
+  prevEvent: SessionEvent | undefined,
+  currentEvent: SessionEvent
+): Gap | null {
   if (!prevEvent) return null;
 
   const timeDiff = currentEvent.ts - prevEvent.ts;
