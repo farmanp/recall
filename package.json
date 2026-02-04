@@ -1,19 +1,54 @@
 {
   "name": "recall",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "directories": {
-    "doc": "docs"
+  "description": "Replay AI coding sessions like a video player - supports Claude Code, Codex CLI, and Gemini CLI",
+  "bin": {
+    "recall": "./bin/recall.js"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "npm run build:backend && npm run build:frontend && npm run copy:frontend",
+    "build:backend": "cd backend && npm install && npm run build",
+    "build:frontend": "cd frontend && npm install && npm run build",
+    "copy:frontend": "mkdir -p backend/public && cp -r frontend/dist/* backend/public/",
+    "prepublishOnly": "npm run build",
+    "start": "node bin/recall.js"
   },
-  "keywords": [],
+  "files": [
+    "bin/",
+    "backend/dist/",
+    "backend/public/",
+    "backend/package.json"
+  ],
+  "keywords": [
+    "claude",
+    "codex",
+    "gemini",
+    "ai",
+    "coding",
+    "replay",
+    "session",
+    "video-player"
+  ],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/farmanp/recall.git"
+  },
+  "homepage": "https://github.com/farmanp/recall#readme",
+  "bugs": {
+    "url": "https://github.com/farmanp/recall/issues"
+  },
   "type": "commonjs",
   "dependencies": {
-    "better-sqlite3": "^12.6.2"
+    "better-sqlite3": "^12.6.2",
+    "chokidar": "^4.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "open": "^10.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
