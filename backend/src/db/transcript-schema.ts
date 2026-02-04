@@ -9,8 +9,6 @@
 import type {
   SessionMetadata,
   PlaybackFrame,
-  ToolExecution,
-  FileDiff,
 } from '../types/transcript';
 
 /**
@@ -21,6 +19,7 @@ export interface SessionMetadataRow {
   session_id: string;
   slug: string;
   project: string;
+  agent_type: string;           // 'claude', 'codex', 'gemini', 'unknown'
   start_time: string;           // ISO 8601 timestamp
   end_time: string | null;      // ISO 8601 timestamp
   duration_seconds: number | null;
@@ -48,6 +47,7 @@ export interface PlaybackFrameRow {
   cwd: string;
   files_read: string | null;    // JSON array
   files_modified: string | null; // JSON array
+  agent_type: string;           // 'claude', 'codex', 'gemini', 'unknown'
 }
 
 /**
@@ -137,6 +137,7 @@ export interface TranscriptSessionListQuery {
   offset?: number;
   limit?: number;
   project?: string;
+  agent?: 'claude' | 'codex' | 'gemini' | 'unknown';
   dateStart?: string;   // ISO 8601
   dateEnd?: string;     // ISO 8601
 }

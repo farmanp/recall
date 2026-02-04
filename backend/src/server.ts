@@ -44,14 +44,38 @@ export function createServer(): Application {
   app.use('/api/sessions', sessionsRouter);
   app.use('/api/sessions', commentaryRouter);
   app.use('/api/import', importRouter);
+  // Mount sessions router at /api for /api/agents endpoint
+  app.use('/api', sessionsRouter);
 
-  // Health check
+  // Health check with DB status
   app.get('/api/health', (_req: Request, res: Response) => {
-    res.json({
-      status: 'ok',
-      timestamp: new Date().toISOString(),
-      database: 'connected'
-    });
+    try {
+      const { getDbInstance } = require('./db/connection');
+      const { getTranscriptDbInstance } = require('./db/transcript-connection');
+
+      const db = getDbInstance();
+      const transcriptDb = getTranscriptDbInstance();
+
+      // Test queries to ensure actual connectivity
+      db.prepare('SELECT 1').get();
+      transcriptDb.prepare('SELECT 1').get();
+
+      res.json({
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        databases: {
+          claude_mem: 'connected',
+          transcripts: 'connected'
+        }
+      });
+    } catch (err) {
+      console.error('Health check failed:', err);
+      res.status(500).json({
+        status: 'error',
+        message: err instanceof Error ? err.message : 'Database connection failed',
+        stack: err instanceof Error ? err.stack : undefined
+      });
+    }
   });
 
   // Serve built frontend (for production)
@@ -79,7 +103,8 @@ export function createServer(): Application {
     console.error('Unhandled error:', err);
     res.status(500).json({
       error: 'Internal server error',
-      message: err.message
+      message: err.message,
+      stack: err.stack
     });
   });
 

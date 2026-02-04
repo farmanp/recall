@@ -10,9 +10,14 @@ import { useSessionDetails, useSessionFrames, useSessionCommentary } from '../ho
 import type { PlaybackFrame, CommentaryData } from '../types/transcript';
 import { CodeBlock } from '../components/CodeBlock';
 import { DiffViewer } from '../components/DiffViewer';
+import { AgentBadge } from '../components/AgentBadge';
 import { CommentaryTimeline, CommentaryCard } from '../components/CommentaryBubble';
 import { TimelineScrubber } from '../components/session-player/TimelineScrubber';
 import { FrameTypeFilters, findNextVisibleFrame, findPrevVisibleFrame } from '../components/session-player/FrameTypeFilters';
+import { HelpPanel } from '../components/session-player/HelpPanel';
+import { StatsPanel } from '../components/session-player/StatsPanel';
+import { useSessionStats } from '../hooks/useSessionStats';
+import { findMatchingFrameIndices, findNextMatchIndex, findPrevMatchIndex, highlightText } from '../lib/frameSearch';
 
 type FrameType = 'user_message' | 'claude_thinking' | 'claude_response' | 'tool_execution';
 
@@ -28,6 +33,10 @@ export const SessionPlayerPage: React.FC = () => {
   const [activeFrameTypes, setActiveFrameTypes] = useState<Set<FrameType>>(
     new Set(['user_message', 'claude_response', 'tool_execution', 'claude_thinking'])
   );
+  const [compressionEnabled, setCompressionEnabled] = useState(true);
+  const [showHelp, setShowHelp] = useState(false);
+  const [showStats, setShowStats] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
 
   // Fetch session details and all frames
@@ -43,13 +52,26 @@ export const SessionPlayerPage: React.FC = () => {
   const frames = framesData?.frames || [];
   const currentFrame = frames[currentFrameIndex];
 
-  // Auto-advance logic with frame filtering
+  // Session statistics
+  const stats = useSessionStats(frames);
+
+  // Search matches
+  const searchMatches = React.useMemo(
+    () => findMatchingFrameIndices(frames, searchQuery),
+    [frames, searchQuery]
+  );
+
+  // Auto-advance logic with frame filtering and dead air compression
   useEffect(() => {
     if (!isPlaying || !currentFrame || currentFrameIndex >= frames.length - 1) {
       return;
     }
 
-    const duration = (currentFrame.duration || 2000) / playbackSpeed;
+    // Use compressed duration if compression is enabled, otherwise use original
+    const baseDuration = compressionEnabled
+      ? (currentFrame.duration || 2000)
+      : (currentFrame.originalDuration || currentFrame.duration || 2000);
+    const duration = baseDuration / playbackSpeed;
 
     timeoutRef.current = setTimeout(() => {
       const nextFrame = findNextVisibleFrame(currentFrameIndex + 1, frames, activeFrameTypes);
@@ -61,11 +83,19 @@ export const SessionPlayerPage: React.FC = () => {
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [isPlaying, currentFrameIndex, currentFrame, playbackSpeed, frames.length, frames, activeFrameTypes]);
+  }, [isPlaying, currentFrameIndex, currentFrame, playbackSpeed, frames.length, frames, activeFrameTypes, compressionEnabled]);
 
   // Keyboard shortcuts with frame filtering
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
+      // Ignore if typing in an input field
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
+      // Playback speed values for 1-5 keys
+      const speedValues = [0.25, 0.5, 1, 2, 5];
+
       switch (e.key) {
         case ' ':
           e.preventDefault();
@@ -91,12 +121,61 @@ export const SessionPlayerPage: React.FC = () => {
           setCurrentFrameIndex(findPrevVisibleFrame(frames.length - 1, frames, activeFrameTypes));
           setIsPlaying(false);
           break;
+        case '?':
+          e.preventDefault();
+          setShowHelp((prev) => !prev);
+          break;
+        case 'c':
+        case 'C':
+          e.preventDefault();
+          setCompressionEnabled((prev) => !prev);
+          break;
+        case 's':
+        case 'S':
+          e.preventDefault();
+          setShowStats((prev) => !prev);
+          break;
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+          e.preventDefault();
+          setPlaybackSpeed(speedValues[parseInt(e.key) - 1]);
+          break;
+        case 'Escape':
+          e.preventDefault();
+          setShowHelp(false);
+          setShowStats(false);
+          break;
+        case 'n':
+          // Next search match
+          if (searchMatches.length > 0) {
+            e.preventDefault();
+            const nextIndex = findNextMatchIndex(currentFrameIndex, searchMatches);
+            if (nextIndex !== -1) {
+              setCurrentFrameIndex(nextIndex);
+              setIsPlaying(false);
+            }
+          }
+          break;
+        case 'p':
+          // Previous search match
+          if (searchMatches.length > 0) {
+            e.preventDefault();
+            const prevIndex = findPrevMatchIndex(currentFrameIndex, searchMatches);
+            if (prevIndex !== -1) {
+              setCurrentFrameIndex(prevIndex);
+              setIsPlaying(false);
+            }
+          }
+          break;
       }
     };
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [frames.length, frames, currentFrameIndex, activeFrameTypes]);
+  }, [frames.length, frames, currentFrameIndex, activeFrameTypes, searchMatches]);
 
   if (loadingDetails || loadingFrames) {
     return (
@@ -139,20 +218,54 @@ export const SessionPlayerPage: React.FC = () => {
             ← Back
           </button>
           <div>
-            <h1 className="text-xl font-bold">{sessionDetails.slug}</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-bold">{sessionDetails.slug}</h1>
+              <AgentBadge agent={sessionDetails.agent} />
+            </div>
             <p className="text-sm text-gray-400">{sessionDetails.project}</p>
           </div>
         </div>
-        <div className="text-sm text-gray-400">
-          {framesData.total} frames
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => setShowStats(!showStats)}
+            className={`px-3 py-1 rounded text-sm transition-colors ${
+              showStats
+                ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+            }`}
+            title="Toggle statistics panel (s)"
+          >
+            Stats
+          </button>
+          <span className="text-sm text-gray-400">
+            {framesData.total} frames
+          </span>
         </div>
       </div>
+
+      {/* Statistics Panel */}
+      {showStats && (
+        <StatsPanel stats={stats} onClose={() => setShowStats(false)} />
+      )}
 
       {/* Main Content Area */}
       <div className="flex-1 overflow-y-auto px-6 py-8">
         <div className="max-w-4xl mx-auto">
+          {/* Dead air compression indicator */}
+          {currentFrame?.isCompressed && compressionEnabled && (
+            <div className="mb-4 px-4 py-2 bg-amber-900/50 border border-amber-700 rounded-lg flex items-center gap-2 text-amber-300 text-sm">
+              <span>Compressed</span>
+              <span className="text-amber-400 font-mono">
+                {Math.round((currentFrame.originalDuration || 0) / 1000)}s
+              </span>
+              <span className="text-amber-500">→</span>
+              <span className="text-amber-400 font-mono">
+                {Math.round((currentFrame.duration || 0) / 1000)}s
+              </span>
+            </div>
+          )}
           {currentFrame && activeFrameTypes.has(currentFrame.type) && (
-            <FrameRenderer frame={currentFrame} />
+            <FrameRenderer frame={currentFrame} searchQuery={searchQuery} />
           )}
           {currentFrame && !activeFrameTypes.has(currentFrame.type) && (
             <div className="text-center py-12 text-gray-400">
@@ -183,6 +296,23 @@ export const SessionPlayerPage: React.FC = () => {
             setActiveFrameTypes(new Set(['user_message', 'claude_response', 'tool_execution', 'claude_thinking']));
           } else {
             setActiveFrameTypes(new Set());
+          }
+        }}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        searchMatchCount={searchMatches.length}
+        onNextMatch={() => {
+          const nextIndex = findNextMatchIndex(currentFrameIndex, searchMatches);
+          if (nextIndex !== -1) {
+            setCurrentFrameIndex(nextIndex);
+            setIsPlaying(false);
+          }
+        }}
+        onPrevMatch={() => {
+          const prevIndex = findPrevMatchIndex(currentFrameIndex, searchMatches);
+          if (prevIndex !== -1) {
+            setCurrentFrameIndex(prevIndex);
+            setIsPlaying(false);
           }
         }}
       />
@@ -247,6 +377,18 @@ export const SessionPlayerPage: React.FC = () => {
               )}
             </label>
 
+            <button
+              onClick={() => setCompressionEnabled(!compressionEnabled)}
+              className={`px-3 py-2 rounded text-sm transition-colors ${
+                compressionEnabled
+                  ? 'bg-amber-600 hover:bg-amber-700 text-white'
+                  : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+              }`}
+              title={compressionEnabled ? 'Disable dead air compression' : 'Enable dead air compression'}
+            >
+              {compressionEnabled ? 'Skip Gaps' : 'Skip Gaps Off'}
+            </button>
+
             <select
               value={playbackSpeed}
               onChange={(e) => setPlaybackSpeed(Number(e.target.value))}
@@ -258,6 +400,14 @@ export const SessionPlayerPage: React.FC = () => {
               <option value={2}>2x</option>
               <option value={5}>5x</option>
             </select>
+
+            <button
+              onClick={() => setShowHelp(true)}
+              className="px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded text-sm"
+              title="Keyboard shortcuts (?)"
+            >
+              ?
+            </button>
           </div>
         </div>
       </div>
@@ -268,6 +418,11 @@ export const SessionPlayerPage: React.FC = () => {
           commentary={selectedCommentary}
           onClose={() => setSelectedCommentary(null)}
         />
+      )}
+
+      {/* Help Panel Modal */}
+      {showHelp && (
+        <HelpPanel onClose={() => setShowHelp(false)} />
       )}
     </div>
   );
@@ -438,7 +593,7 @@ const ToolOutputBlock: React.FC<{
 /**
  * Frame Renderer Component
  */
-const FrameRenderer: React.FC<{ frame: PlaybackFrame }> = ({ frame }) => {
+const FrameRenderer: React.FC<{ frame: PlaybackFrame; searchQuery?: string }> = ({ frame, searchQuery = '' }) => {
   const frameTypeColors = {
     user_message: 'bg-blue-900 border-blue-700',
     claude_thinking: 'bg-purple-900 border-purple-700',
@@ -446,10 +601,15 @@ const FrameRenderer: React.FC<{ frame: PlaybackFrame }> = ({ frame }) => {
     tool_execution: 'bg-orange-900 border-orange-700',
   };
 
+  // Get agent display name (capitalize first letter)
+  const agentName = frame.agent
+    ? frame.agent.charAt(0).toUpperCase() + frame.agent.slice(1)
+    : 'AI';
+
   const frameTypeLabels = {
     user_message: '👤 User',
-    claude_thinking: '🧠 Claude Thinking',
-    claude_response: '🤖 Claude',
+    claude_thinking: `🧠 ${agentName} Thinking`,
+    claude_response: `🤖 ${agentName}`,
     tool_execution: '🛠️ Tool Execution',
   };
 
@@ -466,19 +626,25 @@ const FrameRenderer: React.FC<{ frame: PlaybackFrame }> = ({ frame }) => {
 
       {frame.userMessage && (
         <div className="prose prose-invert max-w-none">
-          <p className="whitespace-pre-wrap">{frame.userMessage.text}</p>
+          <p className="whitespace-pre-wrap">
+            {highlightText(frame.userMessage.text, searchQuery)}
+          </p>
         </div>
       )}
 
       {frame.thinking && (
         <div className="prose prose-invert max-w-none">
-          <p className="whitespace-pre-wrap text-gray-300 italic">{frame.thinking.text}</p>
+          <p className="whitespace-pre-wrap text-gray-300 italic">
+            {highlightText(frame.thinking.text, searchQuery)}
+          </p>
         </div>
       )}
 
       {frame.claudeResponse && (
         <div className="prose prose-invert max-w-none">
-          <p className="whitespace-pre-wrap">{frame.claudeResponse.text}</p>
+          <p className="whitespace-pre-wrap">
+            {highlightText(frame.claudeResponse.text, searchQuery)}
+          </p>
         </div>
       )}
 

@@ -17,8 +17,8 @@
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
-import { parseTranscriptFile } from '../parser/transcript-parser';
-import { buildTimeline } from '../parser/timeline-builder';
+import { ParserFactory } from '../parser/parser-factory';
+import { detectAgentFromPath, AgentType } from '../parser/agent-detector';
 import {
   initializeTranscriptSchema,
   insertSession,
@@ -72,20 +72,28 @@ interface ImportSummary {
  * into the database. Updates parsing_status table for progress tracking.
  *
  * @param filePath - Absolute path to .jsonl transcript file
+ * @param agent - Optional agent type override. If not specified, auto-detected from path.
  * @returns Promise that resolves when import is complete
  * @throws Error if parsing or database insertion fails
  *
  * @example
  * await importTranscript('/Users/me/.claude/projects/my-project/session-123.jsonl');
+ *
+ * @example
+ * await importTranscript('/custom/path/session.jsonl', 'codex');
  */
-export async function importTranscript(filePath: string): Promise<void> {
+export async function importTranscript(filePath: string, agent?: AgentType): Promise<void> {
   console.log(`[Import] Starting import: ${filePath}`);
 
   let sessionId: string | undefined;
 
   try {
-    // Parse transcript file
-    const parsed = await parseTranscriptFile(filePath);
+    // Use provided agent type or auto-detect from file path
+    const agentType: AgentType = agent || detectAgentFromPath(filePath);
+    console.log(`[Import] Agent type: ${agentType}${agent ? ' (specified)' : ' (auto-detected)'}`);
+
+    // Parse transcript file using ParserFactory
+    const parsed = await ParserFactory.parseFile(filePath);
     sessionId = parsed.sessionId;
 
     console.log(`[Import] Parsed session: ${sessionId} (${parsed.entries.length} entries)`);
@@ -99,8 +107,8 @@ export async function importTranscript(filePath: string): Promise<void> {
       started_at: new Date().toISOString(),
     });
 
-    // Build timeline from parsed transcript
-    const timeline = await buildTimeline(parsed);
+    // Build timeline from parsed transcript using ParserFactory
+    const timeline = await ParserFactory.buildTimeline(parsed, agentType);
 
     console.log(`[Import] Built timeline: ${timeline.frames.length} frames`);
 
@@ -109,6 +117,7 @@ export async function importTranscript(filePath: string): Promise<void> {
       sessionId: timeline.sessionId,
       slug: timeline.slug,
       project: timeline.project,
+      agent: timeline.agent,
       startTime: new Date(timeline.startedAt).toISOString(),
       endTime: timeline.completedAt
         ? new Date(timeline.completedAt).toISOString()

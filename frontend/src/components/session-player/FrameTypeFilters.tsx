@@ -14,6 +14,11 @@ interface FrameTypeFiltersProps {
   activeFrameTypes: Set<FrameType>;
   onToggleFrameType: (type: FrameType) => void;
   onToggleAll: (showAll: boolean) => void;
+  searchQuery?: string;
+  onSearchChange?: (query: string) => void;
+  searchMatchCount?: number;
+  onNextMatch?: () => void;
+  onPrevMatch?: () => void;
 }
 
 export const FrameTypeFilters: React.FC<FrameTypeFiltersProps> = ({
@@ -21,6 +26,11 @@ export const FrameTypeFilters: React.FC<FrameTypeFiltersProps> = ({
   activeFrameTypes,
   onToggleFrameType,
   onToggleAll,
+  searchQuery = '',
+  onSearchChange,
+  searchMatchCount = 0,
+  onNextMatch,
+  onPrevMatch,
 }) => {
   // Calculate frame type counts
   const frameTypeCounts = useMemo(() => {
@@ -44,7 +54,7 @@ export const FrameTypeFilters: React.FC<FrameTypeFiltersProps> = ({
   // Check if all types are active
   const allActive = activeFrameTypes.size === 4;
 
-  // Frame type metadata
+  // Frame type metadata (agent-agnostic labels)
   const frameTypeMetadata: Record<
     FrameType,
     { label: string; icon: string; color: string }
@@ -55,7 +65,7 @@ export const FrameTypeFilters: React.FC<FrameTypeFiltersProps> = ({
       color: 'text-blue-400',
     },
     claude_response: {
-      label: 'Claude Responses',
+      label: 'AI Responses',
       icon: '🤖',
       color: 'text-green-400',
     },
@@ -74,6 +84,57 @@ export const FrameTypeFilters: React.FC<FrameTypeFiltersProps> = ({
   return (
     <div className="bg-gray-800 border-b border-gray-700 px-6 py-3">
       <div className="max-w-4xl mx-auto">
+        {/* Search Input */}
+        {onSearchChange && (
+          <div className="mb-3">
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => onSearchChange(e.target.value)}
+                  placeholder="Search frames... (n/p to navigate)"
+                  className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => onSearchChange('')}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white"
+                    title="Clear search"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+              {searchQuery && (
+                <>
+                  <span className="text-sm text-gray-400 whitespace-nowrap">
+                    {searchMatchCount} {searchMatchCount === 1 ? 'match' : 'matches'}
+                  </span>
+                  {searchMatchCount > 0 && (
+                    <>
+                      <button
+                        onClick={onPrevMatch}
+                        className="px-2 py-1 bg-gray-700 hover:bg-gray-600 rounded text-sm"
+                        title="Previous match (p)"
+                      >
+                        ↑
+                      </button>
+                      <button
+                        onClick={onNextMatch}
+                        className="px-2 py-1 bg-gray-700 hover:bg-gray-600 rounded text-sm"
+                        title="Next match (n)"
+                      >
+                        ↓
+                      </button>
+                    </>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Header with All Toggle */}
         <div className="flex items-center justify-between mb-3">
           <span className="text-sm font-semibold text-gray-300">FRAME TYPES</span>

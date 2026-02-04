@@ -3,6 +3,8 @@
  * Matches backend/src/types/transcript.ts
  */
 
+export type AgentType = 'claude' | 'codex' | 'gemini' | 'unknown';
+
 /**
  * Playback frame - the basic unit for video player
  */
@@ -11,6 +13,9 @@ export interface PlaybackFrame {
   type: FrameType;
   timestamp: number; // epoch ms
   duration?: number; // ms to next frame (for auto-advance)
+  originalDuration?: number; // uncompressed duration (for UI indicator)
+  isCompressed?: boolean; // flag for visual indicator when dead air is compressed
+  agent?: AgentType;
 
   // User message
   userMessage?: {
@@ -21,6 +26,7 @@ export interface PlaybackFrame {
   thinking?: {
     text: string;
     signature?: string;
+    tokenCount?: number; // Codex o1 reasoning token count
   };
 
   // Claude response
@@ -73,12 +79,14 @@ export interface SessionTimeline {
   sessionId: string;
   slug: string;
   project: string;
+  agent?: AgentType;
   startedAt: number; // epoch ms
   completedAt?: number; // epoch ms
   frames: PlaybackFrame[];
   totalFrames: number;
   metadata: {
     claudeVersion?: string;
+    agentVersion?: string;
     gitBranch?: string;
     cwd: string;
   };
@@ -91,6 +99,7 @@ export interface SessionMetadata {
   sessionId: string;
   slug: string;
   project: string;
+  agent?: AgentType;
   startTime: string;
   endTime?: string;
   duration?: number; // seconds
@@ -113,11 +122,13 @@ export interface SessionDetailsResponse {
   sessionId: string;
   slug: string;
   project: string;
+  agent?: AgentType;
   startedAt: number;
   completedAt?: number;
   totalFrames: number;
   metadata: {
     claudeVersion?: string;
+    agentVersion?: string;
     gitBranch?: string;
     cwd: string;
   };
@@ -137,6 +148,7 @@ export interface SessionListQuery {
   offset?: number;
   limit?: number;
   project?: string;
+  agent?: AgentType;
 }
 
 export interface SessionFramesQuery {

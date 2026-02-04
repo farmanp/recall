@@ -82,7 +82,7 @@ async function main() {
         break;
 
       case '--parallel':
-        options.parallel = parseInt(args[++i], 10);
+        options.parallel = parseInt(args[++i] || '10', 10);
         break;
 
       case '--skip-existing':

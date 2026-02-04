@@ -8,7 +8,8 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSessions } from '../hooks/useTranscriptApi';
-import type { SessionMetadata } from '../types/transcript';
+import type { SessionMetadata, AgentType } from '../types/transcript';
+import { AgentBadge } from '../components/AgentBadge';
 
 type DateRange = 'all' | 'today' | 'week' | 'month';
 
@@ -22,10 +23,12 @@ export const SessionListPage: React.FC = () => {
   const [dateRange, setDateRange] = useState<DateRange>('all');
   const [minDuration, setMinDuration] = useState<number>(0);
   const [minEventCount, setMinEventCount] = useState<number>(0);
+  const [selectedAgent, setSelectedAgent] = useState<AgentType | 'all'>('all');
 
   const { data, isLoading, error, refetch } = useSessions({
     offset,
     limit: LIMIT,
+    ...(selectedAgent !== 'all' && { agent: selectedAgent }),
   });
 
   // Extract data early to use in hooks (must be before any early returns)
@@ -164,6 +167,34 @@ export const SessionListPage: React.FC = () => {
             />
           </div>
 
+          {/* Agent Filter Tabs */}
+          <div className="flex gap-2 mb-4">
+            <button
+              className={`px-3 py-1 rounded text-sm ${selectedAgent === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+              onClick={() => setSelectedAgent('all')}
+            >
+              All
+            </button>
+            <button
+              className={`px-3 py-1 rounded text-sm ${selectedAgent === 'claude' ? 'bg-orange-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+              onClick={() => setSelectedAgent('claude')}
+            >
+              Claude
+            </button>
+            <button
+              className={`px-3 py-1 rounded text-sm ${selectedAgent === 'codex' ? 'bg-green-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+              onClick={() => setSelectedAgent('codex')}
+            >
+              Codex
+            </button>
+            <button
+              className={`px-3 py-1 rounded text-sm ${selectedAgent === 'gemini' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+              onClick={() => setSelectedAgent('gemini')}
+            >
+              Gemini
+            </button>
+          </div>
+
           {/* Filter Controls */}
           <div className="flex flex-wrap gap-4">
             {/* Date Range Filter */}
@@ -227,13 +258,14 @@ export const SessionListPage: React.FC = () => {
             </div>
 
             {/* Clear Filters Button */}
-            {(searchQuery || dateRange !== 'all' || minDuration > 0 || minEventCount > 0) && (
+            {(searchQuery || dateRange !== 'all' || minDuration > 0 || minEventCount > 0 || selectedAgent !== 'all') && (
               <button
                 onClick={() => {
                   setSearchQuery('');
                   setDateRange('all');
                   setMinDuration(0);
                   setMinEventCount(0);
+                  setSelectedAgent('all');
                 }}
                 className="ml-auto px-3 py-1 text-sm text-gray-600 hover:text-gray-800 underline"
               >
@@ -249,13 +281,14 @@ export const SessionListPage: React.FC = () => {
         {filteredSessions.length === 0 ? (
           <div className="bg-white rounded-lg shadow-sm p-8 text-center">
             <p className="text-gray-600">No sessions found matching your criteria.</p>
-            {(searchQuery || dateRange !== 'all' || minDuration > 0 || minEventCount > 0) && (
+            {(searchQuery || dateRange !== 'all' || minDuration > 0 || minEventCount > 0 || selectedAgent !== 'all') && (
               <button
                 onClick={() => {
                   setSearchQuery('');
                   setDateRange('all');
                   setMinDuration(0);
                   setMinEventCount(0);
+                  setSelectedAgent('all');
                 }}
                 className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
               >
@@ -277,6 +310,7 @@ export const SessionListPage: React.FC = () => {
                     <h2 className="text-lg font-semibold text-gray-900">
                       {session.slug !== 'unknown-session' ? session.slug : `Session ${session.sessionId.slice(0, 8)}`}
                     </h2>
+                    <AgentBadge agent={session.agent} />
                     <span className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded">
                       {session.eventCount} events
                     </span>

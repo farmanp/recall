@@ -4,6 +4,8 @@ import {
   importTranscript,
 } from '../services/transcript-importer';
 import { getImportStats } from '../db/transcript-queries';
+import { detectAgentFromPath } from '../parser/agent-detector';
+import type { AgentType } from '../types/transcript';
 
 const router = Router();
 
@@ -182,11 +184,13 @@ router.get('/stats', (_req: Request, res: Response) => {
  *
  * Request Body:
  * - filePath (string, required): Path to .jsonl file
+ * - agent (string, optional): Agent type ('claude', 'codex', 'gemini', 'unknown')
+ *                            If not specified, auto-detected from file path
  *
  * Response:
  * - success: boolean
  * - message: string
- * - sessionId?: string
+ * - agent: string (detected or specified agent type)
  *
  * Status Codes:
  * - 200: Import successful
@@ -198,10 +202,17 @@ router.get('/stats', (_req: Request, res: Response) => {
  * {
  *   "filePath": "/Users/fpirzada/.claude/projects/my-project/session.jsonl"
  * }
+ *
+ * @example
+ * POST /api/import/single
+ * {
+ *   "filePath": "/custom/path/session.jsonl",
+ *   "agent": "codex"
+ * }
  */
 router.post('/single', async (req: Request, res: Response) => {
   try {
-    const { filePath } = req.body || {};
+    const { filePath, agent: specifiedAgent } = req.body || {};
 
     if (!filePath || typeof filePath !== 'string') {
       res.status(400).json({
@@ -211,12 +222,16 @@ router.post('/single', async (req: Request, res: Response) => {
       return;
     }
 
+    // Determine agent type: use specified agent or auto-detect from path
+    const agent: AgentType = specifiedAgent || detectAgentFromPath(filePath);
+
     // Import the file
-    await importTranscript(filePath);
+    await importTranscript(filePath, agent);
 
     res.json({
       success: true,
       message: 'Transcript imported successfully',
+      agent,
     });
   } catch (error) {
     console.error('Error importing transcript:', error);

@@ -46,3 +46,7 @@ coverage/
 
 # Claude
 .claude/
+
+# Auto-generated claude-mem context files
+**/CLAUDE.md
+!CLAUDE.md

@@ -11,7 +11,7 @@ import { initializeTranscriptSchema } from '../db/transcript-queries';
 /**
  * Example 1: Import a single transcript file
  */
-async function exampleSingleImport() {
+async function _exampleSingleImport() {
   console.log('=== Example 1: Single Import ===\n');
 
   // Initialize database schema first
@@ -29,7 +29,7 @@ async function exampleSingleImport() {
 /**
  * Example 2: Bulk import all transcripts with progress tracking
  */
-async function exampleBulkImport() {
+async function _exampleBulkImport() {
   console.log('\n=== Example 2: Bulk Import ===\n');
 
   const summary = await bulkImportTranscripts({
@@ -64,7 +64,7 @@ async function exampleBulkImport() {
 /**
  * Example 3: Check import progress
  */
-function exampleCheckProgress() {
+function _exampleCheckProgress() {
   console.log('\n=== Example 3: Check Progress ===\n');
 
   const stats = getImportProgress();
@@ -97,3 +97,10 @@ async function main() {
 if (require.main === module) {
   main();
 }
+
+// Export examples for documentation purposes
+export {
+  _exampleSingleImport as exampleSingleImport,
+  _exampleBulkImport as exampleBulkImport,
+  _exampleCheckProgress as exampleCheckProgress,
+};

@@ -57,6 +57,7 @@ export async function buildTimeline(
     sessionId: transcript.sessionId,
     slug: transcript.metadata.slug || 'unknown-session',
     project: transcript.metadata.projectName || 'Unknown Project',
+    agent: 'claude' as const, // Legacy builder defaults to Claude
     startedAt,
     completedAt,
     frames,
@@ -335,8 +336,13 @@ function extractFileContext(toolUse: ToolUseBlock): {
   return context;
 }
 
+// Dead air compression constants
+const DEAD_AIR_THRESHOLD = 5000; // 5 seconds - compress gaps longer than this
+const COMPRESSED_DURATION = 1500; // Compress long gaps to 1.5 seconds
+
 /**
  * Calculate duration for each frame based on content and timing
+ * Applies dead air compression for gaps > DEAD_AIR_THRESHOLD
  */
 function calculateFrameDurations(frames: PlaybackFrame[]): void {
   for (let i = 0; i < frames.length; i++) {
@@ -349,12 +355,19 @@ function calculateFrameDurations(frames: PlaybackFrame[]): void {
       // Actual time to next frame
       const actualDuration = nextFrame.timestamp - frame.timestamp;
 
-      // Use actual duration if reasonable (< 30 seconds)
-      if (actualDuration < 30000) {
+      if (actualDuration > DEAD_AIR_THRESHOLD) {
+        // Dead air detected - compress it
+        frame.originalDuration = actualDuration;
+        frame.duration = COMPRESSED_DURATION;
+        frame.isCompressed = true;
+      } else if (actualDuration < 30000) {
+        // Normal duration - use as-is
         frame.duration = actualDuration;
       } else {
-        // Long gap - use default duration
+        // Very long gap (> 30s) - use default duration but mark as compressed
+        frame.originalDuration = actualDuration;
         frame.duration = getDefaultDuration(frame);
+        frame.isCompressed = true;
       }
     } else {
       // Last frame - use default duration

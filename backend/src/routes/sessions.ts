@@ -1,8 +1,8 @@
 import { Router, Request, Response } from 'express';
 import { getSessionIndexer } from '../parser/session-indexer';
-import { parseTranscriptFile } from '../parser/transcript-parser';
-import { buildTimeline } from '../parser/timeline-builder';
-import { SessionTimeline } from '../types/transcript';
+import { ParserFactory } from '../parser/parser-factory';
+import { detectAgentFromPath } from '../parser/agent-detector';
+import { SessionTimeline, AgentType } from '../types/transcript';
 import {
   getTranscriptSessions,
   getTranscriptFrames,
@@ -41,6 +41,35 @@ function getStringParam(value: unknown): string | undefined {
 }
 
 /**
+ * GET /api/agents
+ * List available agents and their session counts
+ *
+ * Response:
+ * - agents: Array of available agent types
+ * - counts: Object mapping agent type to session count
+ *
+ * @example
+ * GET /api/agents
+ * {
+ *   "agents": ["claude", "codex"],
+ *   "counts": { "claude": 150, "codex": 25 }
+ * }
+ */
+router.get('/agents', async (_req: Request, res: Response) => {
+  try {
+    const indexer = getSessionIndexer();
+    const available = await indexer.getAvailableAgents();
+    res.json(available);
+  } catch (error) {
+    console.error('Error fetching agents:', error);
+    res.status(500).json({
+      error: 'Failed to fetch agents',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+/**
  * GET /api/sessions
  * List all available sessions
  *
@@ -49,6 +78,7 @@ function getStringParam(value: unknown): string | undefined {
  * - offset (number): Skip N sessions (default: 0)
  * - limit (number): Return N sessions (default: 20)
  * - project (string): Filter by project name
+ * - agent (string): Filter by agent type ('claude', 'codex', 'gemini', 'unknown')
  *
  * Response:
  * - sessions: Array of session metadata
@@ -56,11 +86,13 @@ function getStringParam(value: unknown): string | undefined {
  * - offset: Current offset
  * - limit: Current limit
  * - source: Data source used
+ * - agent: Agent filter if applied
  *
  * @example
  * GET /api/sessions?limit=10&offset=0
  * GET /api/sessions?source=db&limit=10
  * GET /api/sessions?project=/Users/fpirzada/Documents/cc_mem_video_player
+ * GET /api/sessions?agent=claude
  */
 router.get('/', async (req: Request, res: Response) => {
   try {
@@ -70,6 +102,7 @@ router.get('/', async (req: Request, res: Response) => {
     const offset = offsetStr ? parseInt(offsetStr, 10) : 0;
     const limit = limitStr ? parseInt(limitStr, 10) : 20;
     const projectFilter = getStringParam(req.query.project);
+    const agent = getStringParam(req.query.agent) as AgentType | undefined;
 
     if (source === 'db') {
       // Use database
@@ -77,6 +110,7 @@ router.get('/', async (req: Request, res: Response) => {
         offset,
         limit,
         project: projectFilter,
+        agent,
       });
 
       res.json({
@@ -85,6 +119,7 @@ router.get('/', async (req: Request, res: Response) => {
         offset,
         limit,
         source: 'db',
+        agent,
       });
     } else {
       // Use filesystem (existing implementation)
@@ -94,6 +129,11 @@ router.get('/', async (req: Request, res: Response) => {
       // Filter by project if specified
       if (projectFilter) {
         sessions = sessions.filter((s) => s.project.includes(projectFilter));
+      }
+
+      // Filter by agent if specified
+      if (agent) {
+        sessions = sessions.filter((s) => s.agent === agent);
       }
 
       // Sort by start time (most recent first)
@@ -110,6 +150,7 @@ router.get('/', async (req: Request, res: Response) => {
         offset,
         limit,
         source: 'filesystem',
+        agent,
       });
     }
   } catch (error) {
@@ -117,6 +158,7 @@ router.get('/', async (req: Request, res: Response) => {
     res.status(500).json({
       error: 'Failed to fetch sessions',
       message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined
     });
   }
 });
@@ -359,6 +401,7 @@ router.post('/:id/refresh', async (req: Request, res: Response) => {
 /**
  * Helper: Get or build timeline for a session
  * Uses cache if available, otherwise parses transcript file
+ * Automatically detects agent type from file path
  */
 async function getOrBuildTimeline(
   sessionId: string
@@ -376,9 +419,12 @@ async function getOrBuildTimeline(
     return null;
   }
 
-  // Parse transcript and build timeline
-  const transcript = await parseTranscriptFile(filePath);
-  const timeline = await buildTimeline(transcript);
+  // Detect agent type from file path
+  const agentType = detectAgentFromPath(filePath);
+
+  // Parse transcript and build timeline using ParserFactory
+  const transcript = await ParserFactory.parseFile(filePath);
+  const timeline = await ParserFactory.buildTimeline(transcript, agentType);
 
   // Cache for future requests
   timelineCache.set(sessionId, timeline);

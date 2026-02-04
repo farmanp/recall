@@ -25,6 +25,7 @@ export async function fetchSessions(
   if (query.offset !== undefined) params.append('offset', query.offset.toString());
   if (query.limit !== undefined) params.append('limit', query.limit.toString());
   if (query.project) params.append('project', query.project);
+  if (query.agent) params.append('agent', query.agent);
 
   const url = `${API_BASE_URL}/sessions?${params.toString()}`;
   const response = await fetch(url);

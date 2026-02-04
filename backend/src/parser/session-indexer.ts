@@ -1,40 +1,106 @@
 import fs from 'fs/promises';
 import path from 'path';
 import os from 'os';
-import { SessionMetadata } from '../types/transcript';
+import { SessionMetadata, AgentType } from '../types/transcript';
 
 /**
- * Session indexer - scans ~/.claude/projects/ for all available sessions
+ * Session indexer - scans agent session directories for all available sessions
+ * Supports multiple agents: Claude (~/.claude/projects/), Codex (~/.codex/sessions/)
  */
 export class SessionIndexer {
-  private claudeProjectsDir: string;
   private sessionIndex: Map<string, SessionMetadata> = new Map();
+  private sessionFilePaths: Map<string, string> = new Map(); // sessionId -> filePath cache
+  private agentDirs: Map<AgentType, string>;
 
   constructor(claudeProjectsDir?: string) {
-    // Default to ~/.claude/projects/
-    this.claudeProjectsDir =
-      claudeProjectsDir || path.join(os.homedir(), '.claude', 'projects');
+    // Initialize agent directories
+    // If a custom Claude projects dir is provided, use it; otherwise use default
+    const claudeDir = claudeProjectsDir || path.join(os.homedir(), '.claude', 'projects');
+
+    this.agentDirs = new Map<AgentType, string>([
+      ['claude', claudeDir],
+      ['codex', path.join(os.homedir(), '.codex', 'sessions')],
+      ['gemini', path.join(os.homedir(), '.gemini', 'tmp')],
+    ]);
   }
 
   /**
-   * Scan Claude projects directory and build index of all sessions
+   * Scan all agent directories and build index of all sessions
    */
   async buildIndex(): Promise<SessionMetadata[]> {
     this.sessionIndex.clear();
+    this.sessionFilePaths.clear();
+    return this.scanAllAgents();
+  }
 
-    try {
-      // Check if directory exists
-      const dirExists = await this.directoryExists(this.claudeProjectsDir);
-      if (!dirExists) {
-        console.warn(`Claude projects directory not found: ${this.claudeProjectsDir}`);
-        return [];
+  /**
+   * Scan all agent directories for sessions
+   */
+  async scanAllAgents(): Promise<SessionMetadata[]> {
+    const allSessions: SessionMetadata[] = [];
+
+    for (const [agentType, agentDir] of this.agentDirs) {
+      try {
+        const sessions = await this.scanAgentDirectory(agentType, agentDir);
+        allSessions.push(...sessions);
+      } catch (error) {
+        console.warn(`Failed to scan ${agentType} directory ${agentDir}:`, error);
       }
+    }
 
-      // Read all project directories
-      const projectDirs = await fs.readdir(this.claudeProjectsDir);
+    return allSessions;
+  }
+
+  /**
+   * Scan a single agent directory for sessions
+   */
+  private async scanAgentDirectory(
+    agent: AgentType,
+    agentDir: string
+  ): Promise<SessionMetadata[]> {
+    const sessions: SessionMetadata[] = [];
+
+    // Check if directory exists
+    const dirExists = await this.directoryExists(agentDir);
+    if (!dirExists) {
+      console.warn(`${agent} directory not found: ${agentDir}`);
+      return sessions;
+    }
+
+    if (agent === 'codex') {
+      // Codex: Mixed structure - *.jsonl files in sessions/ and nested date dirs (2026/01/18/)
+      const jsonlFiles = await this.findJsonlFilesRecursively(agentDir);
+
+      for (const sessionPath of jsonlFiles) {
+        try {
+          const metadata = await this.extractSessionMetadata(sessionPath, agent);
+          this.sessionIndex.set(metadata.sessionId, metadata);
+          this.sessionFilePaths.set(metadata.sessionId, sessionPath);
+          sessions.push(metadata);
+        } catch (error) {
+          console.warn(`Failed to index session ${sessionPath}:`, error);
+        }
+      }
+    } else if (agent === 'gemini') {
+      // Gemini: Structure - tmp/{projectHash}/chats/session-*.json
+      const jsonFiles = await this.findGeminiSessionFiles(agentDir);
+
+      for (const sessionPath of jsonFiles) {
+        try {
+          const metadata = await this.extractSessionMetadata(sessionPath, agent);
+          this.sessionIndex.set(metadata.sessionId, metadata);
+          this.sessionFilePaths.set(metadata.sessionId, sessionPath);
+          sessions.push(metadata);
+        } catch (error) {
+          console.warn(`Failed to index Gemini session ${sessionPath}:`, error);
+        }
+      }
+    } else {
+      // Claude (and others): Nested structure - projects/{project}/*.jsonl
+      const projectDirs = await fs.readdir(agentDir);
 
       for (const projectDir of projectDirs) {
-        const projectPath = path.join(this.claudeProjectsDir, projectDir);
+        const projectPath = path.join(agentDir, projectDir);
 
         // Check if it's a directory
         const stats = await fs.stat(projectPath);
@@ -50,19 +116,87 @@ export class SessionIndexer {
         for (const jsonlFile of jsonlFiles) {
           const sessionPath = path.join(projectPath, jsonlFile);
           try {
-            const metadata = await this.extractSessionMetadata(sessionPath);
+            const metadata = await this.extractSessionMetadata(sessionPath, agent);
             this.sessionIndex.set(metadata.sessionId, metadata);
+            this.sessionFilePaths.set(metadata.sessionId, sessionPath);
+            sessions.push(metadata);
           } catch (error) {
             console.warn(`Failed to index session ${sessionPath}:`, error);
           }
         }
       }
-
-      return Array.from(this.sessionIndex.values());
-    } catch (error) {
-      console.error('Failed to build session index:', error);
-      return [];
     }
+
+    return sessions;
+  }
+
+  /**
+   * Get available agents and their session counts
+   */
+  async getAvailableAgents(): Promise<{
+    agents: AgentType[];
+    counts: Record<AgentType, number>;
+  }> {
+    const agents: AgentType[] = [];
+    const counts: Record<AgentType, number> = {
+      claude: 0,
+      codex: 0,
+      gemini: 0,
+      unknown: 0,
+    };
+
+    for (const [agentType, agentDir] of this.agentDirs) {
+      const dirExists = await this.directoryExists(agentDir);
+      if (!dirExists) {
+        continue;
+      }
+
+      let sessionCount = 0;
+
+      if (agentType === 'codex') {
+        // Codex: Count .jsonl files in directory and nested date subdirectories
+        try {
+          const allFiles = await this.findJsonlFilesRecursively(agentDir);
+          sessionCount = allFiles.length;
+        } catch {
+          sessionCount = 0;
+        }
+      } else if (agentType === 'gemini') {
+        // Gemini: Count session-*.json files in tmp/{hash}/chats/ subdirectories
+        try {
+          const allFiles = await this.findGeminiSessionFiles(agentDir);
+          sessionCount = allFiles.length;
+        } catch {
+          sessionCount = 0;
+        }
+      } else {
+        // Claude: Count .jsonl files across all project subdirectories
+        try {
+          const projectDirs = await fs.readdir(agentDir);
+          for (const projectDir of projectDirs) {
+            const projectPath = path.join(agentDir, projectDir);
+            try {
+              const stats = await fs.stat(projectPath);
+              if (stats.isDirectory()) {
+                const files = await fs.readdir(projectPath);
+                sessionCount += files.filter((f) => f.endsWith('.jsonl')).length;
+              }
+            } catch {
+              // Skip this project directory
+            }
+          }
+        } catch {
+          sessionCount = 0;
+        }
+      }
+
+      if (sessionCount > 0) {
+        agents.push(agentType);
+        counts[agentType] = sessionCount;
+      }
+    }
+
+    return { agents, counts };
   }
 
   /**
@@ -70,12 +204,22 @@ export class SessionIndexer {
    * For performance, only reads first and last few entries
    */
   private async extractSessionMetadata(
-    filePath: string
+    filePath: string,
+    agent?: AgentType
   ): Promise<SessionMetadata> {
-    const sessionId = path.basename(filePath, '.jsonl');
-
     // Read the file content
     const content = await fs.readFile(filePath, 'utf-8');
+
+    // Handle Gemini's single JSON format differently
+    if (agent === 'gemini') {
+      return this.extractGeminiMetadata(filePath, content);
+    }
+
+    // Extract session ID from filename
+    // Codex format: session-{id}.jsonl → extract "session-{id}"
+    // Claude format: {uuid}.jsonl → extract "{uuid}"
+    const sessionId = path.basename(filePath, '.jsonl');
+
     const lines = content.trim().split('\n').filter((line) => line.trim());
 
     if (lines.length === 0) {
@@ -92,24 +236,59 @@ export class SessionIndexer {
     const lastLine = lines.length > 1 ? lines[lines.length - 1] : firstLine;
     const lastEntry = lastLine ? JSON.parse(lastLine) : firstEntry;
 
-    // Extract project name from file path
-    const pathParts = filePath.split(path.sep);
-    const projectsIndex = pathParts.indexOf('projects');
-    const encodedProjectPath =
-      projectsIndex >= 0 ? pathParts[projectsIndex + 1] : undefined;
-    const projectName = encodedProjectPath
-      ? this.decodeProjectPath(encodedProjectPath)
-      : 'Unknown Project';
+    // Extract project name based on agent type
+    let projectName: string;
+    if (agent === 'codex') {
+      // Codex: Extract project name from session_meta payload's cwd field
+      // Format: { type: "session_meta", payload: { cwd: "/path/to/project", ... } }
+      const codexCwd = firstEntry.payload?.cwd || firstEntry.cwd;
+      if (codexCwd) {
+        // Extract last directory component from cwd as project name
+        const cwdParts = codexCwd.split(path.sep).filter(Boolean);
+        projectName = cwdParts[cwdParts.length - 1] || 'Codex Session';
+      } else {
+        projectName = 'Codex Session';
+      }
+    } else {
+      // Claude: Extract project name from file path
+      const pathParts = filePath.split(path.sep);
+      const projectsIndex = pathParts.indexOf('projects');
+      const encodedProjectPath =
+        projectsIndex >= 0 ? pathParts[projectsIndex + 1] : undefined;
+      projectName = encodedProjectPath
+        ? this.decodeProjectPath(encodedProjectPath)
+        : 'Unknown Project';
+    }
 
     // Extract slug - look through first few entries
-    let slug = 'unknown-session';
-    for (let i = 0; i < Math.min(10, lines.length); i++) {
-      const line = lines[i];
-      if (!line) continue;
-      const entry = JSON.parse(line);
-      if (entry.slug) {
-        slug = entry.slug;
-        break;
+    let slug: string;
+    if (agent === 'codex') {
+      // Codex: Check for slug in entry metadata, or default to 'codex-session'
+      slug = 'codex-session';
+      for (let i = 0; i < Math.min(10, lines.length); i++) {
+        const line = lines[i];
+        if (!line) continue;
+        const entry = JSON.parse(line);
+        if (entry.slug) {
+          slug = entry.slug;
+          break;
+        }
+        if (entry.metadata?.slug) {
+          slug = entry.metadata.slug;
+          break;
+        }
+      }
+    } else {
+      // Claude: Look for slug in entries
+      slug = 'unknown-session';
+      for (let i = 0; i < Math.min(10, lines.length); i++) {
+        const line = lines[i];
+        if (!line) continue;
+        const entry = JSON.parse(line);
+        if (entry.slug) {
+          slug = entry.slug;
+          break;
+        }
       }
     }
 
@@ -126,8 +305,9 @@ export class SessionIndexer {
       const line = lines[i];
       if (!line) continue;
       const entry = JSON.parse(line);
+
+      // Claude format: { message: { role: "user", content: ... } }
       if (entry.message?.role === 'user' && entry.message?.content) {
-        // Content can be either a string or an array
         if (typeof entry.message.content === 'string') {
           firstUserMessage = entry.message.content.substring(0, 200);
           break;
@@ -141,17 +321,80 @@ export class SessionIndexer {
           }
         }
       }
+
+      // Codex format: { type: "response_item", payload: { role: "user", content: [...] } }
+      if (entry.type === 'response_item' && entry.payload?.role === 'user') {
+        const content = entry.payload.content;
+        if (Array.isArray(content)) {
+          const textBlock = content.find(
+            (block: any) => block.type === 'input_text' || block.type === 'text'
+          );
+          if (textBlock?.text) {
+            firstUserMessage = textBlock.text.substring(0, 200);
+            break;
+          }
+        }
+      }
     }
+
+    // Get cwd from appropriate field (handle both Claude and Codex formats)
+    const extractedCwd = firstEntry.payload?.cwd || firstEntry.cwd || '';
 
     return {
       sessionId,
       slug,
       project: projectName,
+      agent,
       startTime,
       endTime,
       duration,
       eventCount: lines.length,
-      cwd: firstEntry.cwd || '',
+      cwd: extractedCwd,
+      firstUserMessage,
+    };
+  }
+
+  /**
+   * Extract metadata from Gemini session file (single JSON format)
+   */
+  private extractGeminiMetadata(filePath: string, content: string): SessionMetadata {
+    const session = JSON.parse(content);
+
+    // Gemini stores sessionId in the file
+    const sessionId = session.sessionId || path.basename(filePath, '.json');
+
+    // Extract project name from projectHash directory or file path
+    const pathParts = filePath.split(path.sep);
+    const tmpIndex = pathParts.indexOf('tmp');
+    const projectHash = tmpIndex >= 0 ? pathParts[tmpIndex + 1] : undefined;
+    const projectName = projectHash ? `Gemini Project (${projectHash.substring(0, 8)})` : 'Gemini Session';
+
+    // Timestamps
+    const startTime = session.startTime;
+    const endTime = session.lastUpdated;
+    const duration = startTime && endTime
+      ? (new Date(endTime).getTime() - new Date(startTime).getTime()) / 1000
+      : undefined;
+
+    // Extract first user message
+    let firstUserMessage: string | undefined;
+    if (session.messages?.length) {
+      const userMsg = session.messages.find((m: any) => m.type === 'user');
+      if (userMsg?.content) {
+        firstUserMessage = userMsg.content.substring(0, 200);
+      }
+    }
+
+    return {
+      sessionId,
+      slug: 'gemini-session',
+      project: projectName,
+      agent: 'gemini',
+      startTime,
+      endTime,
+      duration,
+      eventCount: session.messages?.length || 0,
+      cwd: '',
       firstUserMessage,
     };
   }
@@ -178,24 +421,79 @@ export class SessionIndexer {
 
   /**
    * Find session file path by ID
+   * Uses cached paths first, falls back to filesystem search
    */
   async findSessionFile(sessionId: string): Promise<string | undefined> {
+    // Check cache first (populated during buildIndex)
+    if (this.sessionFilePaths.has(sessionId)) {
+      return this.sessionFilePaths.get(sessionId);
+    }
+
+    // If index is empty, build it first
+    if (this.sessionIndex.size === 0) {
+      await this.buildIndex();
+      // Check cache again after building
+      if (this.sessionFilePaths.has(sessionId)) {
+        return this.sessionFilePaths.get(sessionId);
+      }
+    }
+
+    // Fall back to filesystem search
     try {
-      const projectDirs = await fs.readdir(this.claudeProjectsDir);
-
-      for (const projectDir of projectDirs) {
-        const projectPath = path.join(this.claudeProjectsDir, projectDir);
-        const stats = await fs.stat(projectPath);
-
-        if (!stats.isDirectory()) {
+      for (const [agentType, agentDir] of this.agentDirs) {
+        const dirExists = await this.directoryExists(agentDir);
+        if (!dirExists) {
           continue;
         }
 
-        const sessionPath = path.join(projectPath, `${sessionId}.jsonl`);
-        const exists = await this.fileExists(sessionPath);
+        if (agentType === 'codex') {
+          // Codex: Mixed structure - check both flat and nested date directories
+          // First check flat structure
+          const flatPath = path.join(agentDir, `${sessionId}.jsonl`);
+          if (await this.fileExists(flatPath)) {
+            return flatPath;
+          }
+          // Then search recursively in date directories
+          const allJsonlFiles = await this.findJsonlFilesRecursively(agentDir);
+          const match = allJsonlFiles.find((f) => f.endsWith(`${sessionId}.jsonl`));
+          if (match) {
+            return match;
+          }
+        } else if (agentType === 'gemini') {
+          // Gemini: Search in tmp/{hash}/chats/session-*.json
+          const allGeminiFiles = await this.findGeminiSessionFiles(agentDir);
+          // Match by session ID (which is in the filename or file content)
+          const match = allGeminiFiles.find((f) => {
+            const filename = path.basename(f);
+            // Check if filename contains the sessionId
+            if (filename.includes(sessionId)) {
+              return true;
+            }
+            // Also check if it's a UUID that might be in the file
+            return filename.includes(sessionId.split('-').pop() || '');
+          });
+          if (match) {
+            return match;
+          }
+        } else {
+          // Claude: Nested structure - search in project subdirectories
+          const projectDirs = await fs.readdir(agentDir);
 
-        if (exists) {
-          return sessionPath;
+          for (const projectDir of projectDirs) {
+            const projectPath = path.join(agentDir, projectDir);
+            const stats = await fs.stat(projectPath);
+
+            if (!stats.isDirectory()) {
+              continue;
+            }
+
+            const sessionPath = path.join(projectPath, `${sessionId}.jsonl`);
+            const exists = await this.fileExists(sessionPath);
+
+            if (exists) {
+              return sessionPath;
+            }
+          }
         }
       }
 
@@ -211,6 +509,64 @@ export class SessionIndexer {
    */
   private decodeProjectPath(encoded: string): string {
     return encoded.replace(/^-/, '/').replace(/-/g, '/');
+  }
+
+  /**
+   * Recursively find all .jsonl files in a directory
+   * Used for Codex which stores sessions in nested date directories (2026/01/18/)
+   */
+  private async findJsonlFilesRecursively(dir: string): Promise<string[]> {
+    const results: string[] = [];
+
+    const entries = await fs.readdir(dir, { withFileTypes: true });
+
+    for (const entry of entries) {
+      const fullPath = path.join(dir, entry.name);
+
+      if (entry.isDirectory()) {
+        // Recurse into subdirectories
+        const subResults = await this.findJsonlFilesRecursively(fullPath);
+        results.push(...subResults);
+      } else if (entry.isFile() && entry.name.endsWith('.jsonl')) {
+        results.push(fullPath);
+      }
+    }
+
+    return results;
+  }
+
+  /**
+   * Find Gemini session files
+   * Structure: tmp/{projectHash}/chats/session-*.json
+   */
+  private async findGeminiSessionFiles(tmpDir: string): Promise<string[]> {
+    const results: string[] = [];
+
+    try {
+      const projectHashes = await fs.readdir(tmpDir, { withFileTypes: true });
+
+      for (const hashEntry of projectHashes) {
+        if (!hashEntry.isDirectory()) continue;
+
+        const chatsDir = path.join(tmpDir, hashEntry.name, 'chats');
+
+        // Check if chats directory exists
+        if (!(await this.directoryExists(chatsDir))) continue;
+
+        const chatFiles = await fs.readdir(chatsDir, { withFileTypes: true });
+
+        for (const file of chatFiles) {
+          // Match session-*.json files
+          if (file.isFile() && file.name.startsWith('session-') && file.name.endsWith('.json')) {
+            results.push(path.join(chatsDir, file.name));
+          }
+        }
+      }
+    } catch (error) {
+      console.warn(`Error scanning Gemini sessions in ${tmpDir}:`, error);
+    }
+
+    return results;
   }
 
   /**

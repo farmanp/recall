@@ -28,7 +28,7 @@ import type {
 export function initializeTranscriptSchema(): void {
   const db = getTranscriptDbInstance();
 
-  // 1. SESSION_METADATA
+  // 1. SESSION_METADATA - create table first without agent_type for migration compatibility
   db.exec(`
     CREATE TABLE IF NOT EXISTS session_metadata (
       session_id TEXT PRIMARY KEY,
@@ -43,15 +43,28 @@ export function initializeTranscriptSchema(): void {
       first_user_message TEXT,
       parsed_at TEXT NOT NULL
     );
+  `);
 
+  // Migration: Add agent_type column if it doesn't exist
+  const sessionColumns = db.pragma('table_info(session_metadata)') as Array<{ name: string }>;
+  const hasAgentTypeInSessions = sessionColumns.some((col) => col.name === 'agent_type');
+  if (!hasAgentTypeInSessions) {
+    db.exec(`ALTER TABLE session_metadata ADD COLUMN agent_type TEXT NOT NULL DEFAULT 'claude'`);
+  }
+
+  // Create indexes after migration
+  db.exec(`
     CREATE INDEX IF NOT EXISTS idx_session_project
       ON session_metadata(project);
 
     CREATE INDEX IF NOT EXISTS idx_session_start_time
       ON session_metadata(start_time DESC);
+
+    CREATE INDEX IF NOT EXISTS idx_sessions_agent
+      ON session_metadata(agent_type);
   `);
 
-  // 2. PLAYBACK_FRAMES
+  // 2. PLAYBACK_FRAMES - create table first without agent_type for migration compatibility
   db.exec(`
     CREATE TABLE IF NOT EXISTS playback_frames (
       id TEXT PRIMARY KEY,
@@ -68,7 +81,17 @@ export function initializeTranscriptSchema(): void {
       files_modified TEXT,
       FOREIGN KEY (session_id) REFERENCES session_metadata(session_id)
     );
+  `);
 
+  // Migration: Add agent_type column to playback_frames if it doesn't exist
+  const frameColumns = db.pragma('table_info(playback_frames)') as Array<{ name: string }>;
+  const hasAgentTypeInFrames = frameColumns.some((col) => col.name === 'agent_type');
+  if (!hasAgentTypeInFrames) {
+    db.exec(`ALTER TABLE playback_frames ADD COLUMN agent_type TEXT NOT NULL DEFAULT 'claude'`);
+  }
+
+  // Create indexes after migration
+  db.exec(`
     CREATE INDEX IF NOT EXISTS idx_frame_session_timestamp
       ON playback_frames(session_id, timestamp_ms);
 
@@ -153,6 +176,7 @@ export function getTranscriptSessions(query: TranscriptSessionListQuery): {
     offset = 0,
     limit = 20,
     project,
+    agent,
     dateStart,
     dateEnd,
   } = query;
@@ -164,6 +188,11 @@ export function getTranscriptSessions(query: TranscriptSessionListQuery): {
   if (project) {
     whereClauses.push('project = @project');
     params.project = project;
+  }
+
+  if (agent) {
+    whereClauses.push('agent_type = @agent');
+    params.agent = agent;
   }
 
   if (dateStart) {
@@ -205,6 +234,7 @@ export function getTranscriptSessions(query: TranscriptSessionListQuery): {
     sessionId: row.session_id,
     slug: row.slug,
     project: row.project,
+    agent: (row.agent_type || 'claude') as SessionMetadata['agent'],
     startTime: row.start_time,
     endTime: row.end_time || undefined,
     duration: row.duration_seconds || undefined,
@@ -245,6 +275,7 @@ export function getTranscriptSessionById(sessionId: string): SessionMetadata | n
     sessionId: row.session_id,
     slug: row.slug,
     project: row.project,
+    agent: (row.agent_type || 'claude') as SessionMetadata['agent'],
     startTime: row.start_time,
     endTime: row.end_time || undefined,
     duration: row.duration_seconds || undefined,
@@ -390,6 +421,7 @@ export function insertSession(session: SessionMetadata): void {
       session_id,
       slug,
       project,
+      agent_type,
       start_time,
       end_time,
       duration_seconds,
@@ -402,6 +434,7 @@ export function insertSession(session: SessionMetadata): void {
       @sessionId,
       @slug,
       @project,
+      @agentType,
       @startTime,
       @endTime,
       @duration,
@@ -415,6 +448,7 @@ export function insertSession(session: SessionMetadata): void {
     sessionId: session.sessionId,
     slug: session.slug,
     project: session.project,
+    agentType: session.agent || 'claude',
     startTime: session.startTime,
     endTime: session.endTime || null,
     duration: session.duration || null,
@@ -451,7 +485,8 @@ export function insertFrame(sessionId: string, frame: PlaybackFrame): void {
       response_text,
       cwd,
       files_read,
-      files_modified
+      files_modified,
+      agent_type
     ) VALUES (
       @id,
       @sessionId,
@@ -464,7 +499,8 @@ export function insertFrame(sessionId: string, frame: PlaybackFrame): void {
       @responseText,
       @cwd,
       @filesRead,
-      @filesModified
+      @filesModified,
+      @agentType
     )
   `).run({
     id: frame.id,
@@ -479,6 +515,7 @@ export function insertFrame(sessionId: string, frame: PlaybackFrame): void {
     cwd: frame.context.cwd,
     filesRead: frame.context.filesRead ? JSON.stringify(frame.context.filesRead) : null,
     filesModified: frame.context.filesModified ? JSON.stringify(frame.context.filesModified) : null,
+    agentType: frame.agent || 'claude',
   });
 }
 
@@ -705,6 +742,7 @@ function convertRowToFrame(row: PlaybackFrameRow): PlaybackFrame {
     type: row.frame_type as PlaybackFrame['type'],
     timestamp: row.timestamp_ms,
     duration: row.duration_ms || undefined,
+    agent: (row.agent_type || 'claude') as PlaybackFrame['agent'],
     context: {
       cwd: row.cwd,
       filesRead: row.files_read ? JSON.parse(row.files_read) : undefined,

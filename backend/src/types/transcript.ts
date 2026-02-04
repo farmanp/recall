@@ -1,7 +1,13 @@
 /**
- * TypeScript interfaces for Claude Code session transcript data structures
- * Based on actual .jsonl transcript format from ~/.claude/projects/
+ * TypeScript interfaces for AI coding agent session transcript data structures
+ * Supports multiple agents: Claude, Codex, Gemini, etc.
+ * Based on actual .jsonl transcript formats from various agent session directories.
  */
+
+/**
+ * Supported AI coding agent types
+ */
+export type AgentType = 'claude' | 'codex' | 'gemini' | 'unknown';
 
 /**
  * Raw entry from .jsonl transcript file
@@ -87,6 +93,7 @@ export interface TranscriptMetadata {
   slug?: string;
   projectName?: string;
   claudeVersion?: string;
+  agentVersion?: string; // Generic version field for any agent
 }
 
 /**
@@ -97,19 +104,23 @@ export interface PlaybackFrame {
   type: FrameType;
   timestamp: number; // epoch ms
   duration?: number; // ms to next frame (for auto-advance)
+  originalDuration?: number; // uncompressed duration (for UI indicator)
+  isCompressed?: boolean; // flag for visual indicator when dead air is compressed
+  agent?: AgentType; // Which agent produced this frame
 
   // User message
   userMessage?: {
     text: string;
   };
 
-  // Claude thinking
+  // Agent thinking (Claude, Codex reasoning, etc.)
   thinking?: {
     text: string;
-    signature?: string;
+    signature?: string; // Claude-specific
+    tokenCount?: number; // Codex o1 reasoning token count
   };
 
-  // Claude response
+  // Agent response
   claudeResponse?: {
     text: string;
   };
@@ -159,12 +170,14 @@ export interface SessionTimeline {
   sessionId: string;
   slug: string;
   project: string;
+  agent: AgentType; // Which agent produced this session
   startedAt: number; // epoch ms
   completedAt?: number; // epoch ms
   frames: PlaybackFrame[];
   totalFrames: number;
   metadata: {
     claudeVersion?: string;
+    agentVersion?: string; // Generic version for any agent
     gitBranch?: string;
     cwd: string;
   };
@@ -177,6 +190,7 @@ export interface SessionMetadata {
   sessionId: string;
   slug: string;
   project: string;
+  agent?: AgentType; // Which agent produced this session
   startTime: string;
   endTime?: string;
   duration?: number; // seconds
