@@ -1,372 +1,238 @@
 # Recall
 
-A local-first web application that visualizes Claude Code sessions like a video player, enabling you to watch how features were built, decisions made, and problems solved.
+A local-first web application that lets you **replay AI coding sessions** like a video player. Watch how features were built, decisions made, and problems solved across multiple AI coding agents.
+
+**Supported Agents:**
+- **Claude Code** - Anthropic's CLI coding assistant
+- **Codex CLI** - OpenAI's command-line coding tool
+- **Gemini CLI** - Google's terminal-based AI assistant
 
 ---
 
-## 🎯 Project Status
-
-**Current Phase:** Phase 1 - Backend Complete ✅
-
-**Completed:**
-- ✅ Phase 0: Timeline Validation (ALL CHECKS PASSED)
-- ✅ Phase 1: Backend API with validated timeline ordering
-- ⏳ Phase 1: Frontend (Next step)
-
----
-
-## 🏗️ Project Structure
-
-```
-recall/
-├── backend/               # Node.js + Express + SQLite API
-│   ├── src/
-│   │   ├── db/
-│   │   │   ├── connection.ts    # SQLite connection
-│   │   │   ├── schema.ts        # TypeScript types
-│   │   │   └── queries.ts       # Database queries (validated)
-│   │   ├── routes/
-│   │   │   └── sessions.ts      # API endpoints
-│   │   ├── server.ts            # Express app
-│   │   └── index.ts             # Entry point
-│   ├── package.json
-│   └── tsconfig.json
-├── frontend/              # React + TypeScript (TODO)
-├── shared/                # Shared types (TODO)
-├── docs/                  # Documentation
-│   └── PHASE_0_RESULTS.md  # Validation results
-└── validate_timeline.js   # Phase 0 validation script
-
-```
-
----
-
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
-- Node.js 18+ (tested with v22.14.0)
-- `claude-mem` installed with recorded sessions (`~/.claude-mem/claude-mem.db`)
+- **Node.js 18+** (check with `node --version`)
+- At least one AI coding agent with session history:
+  - Claude Code sessions in `~/.claude/projects/`
+  - Codex CLI sessions in `~/.codex/sessions/`
+  - Gemini CLI sessions in `~/.gemini/tmp/`
 
-### Run Backend Server
+### Installation
 
 ```bash
+# Clone the repository
+git clone https://github.com/anthropics/recall.git
+cd recall
+
+# Install backend dependencies
 cd backend
 npm install
-npm run dev
+
+# Install frontend dependencies
+cd ../frontend
+npm install
 ```
 
-Server will start on: `http://localhost:3001`
+### Running the Application
 
-### Test API
+You need to run both the backend and frontend servers:
 
-```bash
-# Health check
-curl http://localhost:3001/api/health
-
-# List sessions
-curl 'http://localhost:3001/api/sessions?limit=5'
-
-# Get session details
-curl http://localhost:3001/api/sessions/<session_id>
-
-# Get session timeline
-curl 'http://localhost:3001/api/sessions/<session_id>/events?limit=100'
-```
-
----
-
-## 📡 API Endpoints
-
-### `GET /api/health`
-Health check endpoint
-
-**Response:**
-```json
-{
-  "status": "ok",
-  "timestamp": "2026-02-02T20:00:00.000Z",
-  "database": "connected"
-}
-```
-
-### `GET /api/sessions`
-List all sessions with pagination
-
-**Query Parameters:**
-- `offset` (number): Skip N sessions (default: 0)
-- `limit` (number): Return N sessions (default: 20)
-- `project` (string): Filter by project name
-- `dateStart` (string): Filter by start date (ISO format)
-- `dateEnd` (string): Filter by end date (ISO format)
-
-**Response:**
-```json
-{
-  "sessions": [
-    {
-      "id": 123,
-      "claude_session_id": "uuid",
-      "sdk_session_id": "uuid",
-      "project": "my-project",
-      "user_prompt": "First prompt...",
-      "started_at": "2026-02-02T10:00:00.000Z",
-      "started_at_epoch": 1738508400000,
-      "completed_at": "2026-02-02T11:00:00.000Z",
-      "completed_at_epoch": 1738512000000,
-      "status": "completed",
-      "prompt_counter": 15
-    }
-  ],
-  "total": 127,
-  "offset": 0,
-  "limit": 20
-}
-```
-
-### `GET /api/sessions/:id`
-Get session metadata and statistics
-
-**Response:**
-```json
-{
-  "session": { /* session object */ },
-  "eventCount": 150,
-  "promptCount": 15,
-  "observationCount": 135
-}
-```
-
-### `GET /api/sessions/:id/events`
-Get session timeline with TIME-FIRST ordering
-
-**Query Parameters:**
-- `offset` (number): Skip N events (default: 0)
-- `limit` (number): Return N events (default: 100)
-- `types` (string): Filter by observation types (comma-separated: "feature,bugfix,decision")
-- `afterTs` (number): Get events after timestamp (epoch ms)
-
-**Response:**
-```json
-{
-  "events": [
-    {
-      "event_type": "prompt",
-      "row_id": 1,
-      "prompt_number": 1,
-      "ts": 1738508400000,
-      "text": "User's prompt...",
-      "kind_rank": 0
-    },
-    {
-      "event_type": "observation",
-      "row_id": 1,
-      "prompt_number": 1,
-      "ts": 1738508420000,
-      "text": "Feature implementation completed",
-      "kind_rank": 1,
-      "obs_type": "feature",
-      "title": "Feature Title",
-      "subtitle": "Subtitle",
-      "facts": ["fact 1", "fact 2"],
-      "narrative": "Full narrative...",
-      "concepts": ["concept1", "concept2"],
-      "files_read": ["file1.ts", "file2.ts"],
-      "files_modified": ["file1.ts"]
-    }
-  ],
-  "total": 150,
-  "offset": 0,
-  "limit": 100,
-  "sessionId": "uuid"
-}
-```
-
-### `GET /api/sessions/:sessionId/events/:eventType/:eventId`
-Get single event details
-
-**Parameters:**
-- `sessionId`: Session UUID
-- `eventType`: "prompt" or "observation"
-- `eventId`: Event row ID
-
-**Response:**
-```json
-{
-  "event_type": "observation",
-  "row_id": 123,
-  "prompt_number": 5,
-  "ts": 1738508400000,
-  "text": "Event text",
-  "kind_rank": 1,
-  "obs_type": "feature",
-  "title": "Title",
-  /* ... other fields ... */
-}
-```
-
----
-
-## 🔬 Phase 0 Validation Results
-
-**Status:** ✅ ALL CHECKS PASSED
-
-**Database Statistics:**
-- 127 sessions (88 multi-turn, 39 single-turn)
-- 4,915 observations (0% NULL prompt_numbers)
-- Perfect ID mapping (0 mismatches)
-
-**Test Sessions:**
-- Small session: 11 events ✅
-- Large session: 902 events (44 prompts, 858 observations) ✅
-
-**Timeline Ordering Algorithm:**
-```sql
-ORDER BY
-  ts ASC,                                 -- PRIMARY: Chronological time
-  COALESCE(prompt_number, 999999) ASC,   -- SECONDARY: Group by prompt
-  kind_rank ASC,                          -- TERTIARY: Prompt before obs
-  row_id ASC                              -- FINAL: Stable tiebreaker
-```
-
-**All validation checks passed:**
-1. ✅ Global ID Mapping (127/127 matches)
-2. ✅ Monotonic Timestamps (0 violations)
-3. ✅ Prompt-Before-Observation Order (0 violations)
-4. ✅ No Duplicate Row IDs (0 duplicates)
-5. ✅ NULL Prompt Number Analysis (0% NULL)
-
-Full report: `docs/PHASE_0_RESULTS.md`
-
----
-
-## 🛠️ Development
-
-### Backend
-
+**Terminal 1 - Backend:**
 ```bash
 cd backend
-
-# Development (with hot reload)
 npm run dev
-
-# Build
-npm run build
-
-# Production
-npm start
 ```
+Backend will start on http://localhost:3001
 
-### Testing
-
+**Terminal 2 - Frontend:**
 ```bash
-# Run Phase 0 validation
-node validate_timeline.js [session_id]
+cd frontend
+npm run dev
+```
+Frontend will start on http://localhost:5173 (or next available port)
 
-# Test API endpoints
-curl http://localhost:3001/api/health
+### Using Recall
+
+1. Open your browser to http://localhost:5173
+2. You'll see a list of all your AI coding sessions
+3. Use the filter tabs (All, Claude, Codex, Gemini) to filter by agent
+4. Click on any session to open the replay player
+5. Use the playback controls to step through the session
+
+---
+
+## Features
+
+### Session Browser
+- View all sessions across Claude, Codex, and Gemini
+- Filter by agent type, date range, and duration
+- Search sessions by project name or content
+- See session metadata (duration, event count, first message)
+
+### Session Player
+- **Frame-by-frame playback** of coding sessions
+- **Frame types:** User messages, AI responses, AI thinking, Tool executions
+- **Filter controls** to show/hide specific frame types
+- **Keyboard shortcuts** for navigation (arrow keys, space, etc.)
+- **Search** within sessions to find specific content
+
+### Multi-Agent Support
+- Automatically detects and parses sessions from all supported agents
+- Agent-specific badges and colors in the UI
+- Normalized frame format for consistent playback experience
+
+---
+
+## Project Structure
+
+```
+recall/
+├── backend/                 # Node.js + Express + TypeScript
+│   ├── src/
+│   │   ├── parser/          # Agent-specific parsers
+│   │   │   ├── agent-detector.ts    # Detects agent from file path
+│   │   │   ├── base-parser.ts       # Abstract parser base class
+│   │   │   ├── claude-parser.ts     # Claude Code parser
+│   │   │   ├── codex-parser.ts      # Codex CLI parser
+│   │   │   ├── gemini-parser.ts     # Gemini CLI parser
+│   │   │   └── parser-factory.ts    # Parser selection factory
+│   │   ├── routes/          # API endpoints
+│   │   ├── db/              # Database layer
+│   │   └── types/           # TypeScript types
+│   └── package.json
+│
+├── frontend/                # React + Vite + TypeScript
+│   ├── src/
+│   │   ├── pages/           # Main pages (SessionList, SessionPlayer)
+│   │   ├── components/      # Reusable components
+│   │   ├── api/             # API client
+│   │   └── types/           # TypeScript types
+│   └── package.json
+│
+└── README.md
 ```
 
-### TypeScript Configuration
+---
 
-The backend uses strict TypeScript settings:
-- `strict: true`
-- `noUnusedLocals: true`
-- `noUnusedParameters: true`
-- `noImplicitReturns: true`
+## API Reference
+
+### List Sessions
+```bash
+# Get all sessions
+curl 'http://localhost:3001/api/sessions'
+
+# Filter by agent
+curl 'http://localhost:3001/api/sessions?agent=claude'
+curl 'http://localhost:3001/api/sessions?agent=codex'
+curl 'http://localhost:3001/api/sessions?agent=gemini'
+
+# Pagination
+curl 'http://localhost:3001/api/sessions?limit=10&offset=20'
+```
+
+### Get Available Agents
+```bash
+curl 'http://localhost:3001/api/agents'
+# Returns: { "agents": ["claude", "codex", "gemini"], "counts": {...} }
+```
+
+### Get Session Details
+```bash
+curl 'http://localhost:3001/api/sessions/{sessionId}'
+```
+
+### Get Session Frames
+```bash
+curl 'http://localhost:3001/api/sessions/{sessionId}/frames'
+```
 
 ---
 
-## 📊 Database Schema
+## Keyboard Shortcuts (Session Player)
 
-The application reads from `~/.claude-mem/claude-mem.db` (read-only mode for safety).
-
-**Key Tables:**
-- `sdk_sessions`: Session metadata
-- `user_prompts`: User prompts with timestamps
-- `observations`: Claude's work observations (feature, bugfix, decision, etc.)
-
-**Data Integrity:**
-- `claude_session_id === sdk_session_id` for all sessions
-- All observations have valid `prompt_number` values
-- Chronological ordering preserved via timestamps
+| Key | Action |
+|-----|--------|
+| `Space` | Play/Pause |
+| `←` / `→` | Previous/Next frame |
+| `Home` / `End` | First/Last frame |
+| `n` / `p` | Next/Previous search match |
+| `?` | Toggle help panel |
 
 ---
 
-## 🎬 Roadmap
+## Development
 
-### ✅ Phase 0: Timeline Validation (Complete)
-- Validation script
-- All checks passed
-- Data quality verified
+### Backend Development
+```bash
+cd backend
+npm run dev      # Development with hot reload
+npm run build    # Build for production
+npm start        # Run production build
+npm test         # Run tests
+```
 
-### ✅ Phase 1: Backend (Complete)
-- Express + TypeScript + SQLite
-- API endpoints with pagination
-- Validated timeline queries
-- JSON field parsing
-
-### ⏳ Phase 1: Frontend (In Progress)
-- Vite + React + TypeScript
-- Virtualized session list
-- Timeline viewer
-
-### 📅 Phase 2: Playback (Planned)
-- Video-style controls (play/pause/speed)
-- Dead air compression
-- Chapter markers
-- File context panel
-
-### 📅 Phase 3: Search + Deep Links (Planned)
-- Full-text search
-- Deep links to specific moments
-- Annotations/bookmarks
-
-### 📅 Phase 4: File Diffs + Export (Planned)
-- File diffs (when git available)
-- Export to Markdown/HTML/JSON
-
-### 📅 Phase 5: Production Polish (Planned)
-- Performance optimization
-- Documentation
-- Deployment options
+### Frontend Development
+```bash
+cd frontend
+npm run dev      # Development with hot reload
+npm run build    # Build for production
+npm run lint     # Run ESLint
+npm run preview  # Preview production build
+```
 
 ---
 
-## 🔒 Security
+## Session File Locations
 
-**Database Access:**
-- Read-only mode (no writes)
-- Local-only (no cloud deployment recommended)
-- Database may contain sensitive data (tokens, credentials)
+Recall automatically scans these directories for sessions:
 
-**Recommendations:**
-- Keep local-first architecture
-- Use deep links only within trusted team
-- Do not expose to public internet
+| Agent | Directory | File Format |
+|-------|-----------|-------------|
+| Claude Code | `~/.claude/projects/{project}/` | `*.jsonl` |
+| Codex CLI | `~/.codex/sessions/` | `*.jsonl` (with date subdirs) |
+| Gemini CLI | `~/.gemini/tmp/{hash}/chats/` | `session-*.json` |
 
 ---
 
-## 🤝 Contributing
+## Troubleshooting
 
-This is a personal project implementing the plan from `~/.claude/plans/ticklish-wishing-moonbeam.md`.
+### No sessions showing up?
+1. Make sure you have session files in one of the supported directories
+2. Check the backend console for any errors
+3. Try the API directly: `curl http://localhost:3001/api/agents`
 
----
+### Backend won't start?
+1. Make sure you're in the `backend` directory
+2. Run `npm install` to install dependencies
+3. Check that port 3001 is available
 
-## 📝 License
-
-MIT (or your preferred license)
-
----
-
-## 🙏 Credits
-
-- Built with [Node.js](https://nodejs.org/)
-- [Express](https://expressjs.com/) web framework
-- [better-sqlite3](https://github.com/WiseLibs/better-sqlite3) for SQLite
-- [claude-mem](https://github.com/anthropics/claude-mem) for session storage
+### Frontend won't start?
+1. Make sure you're in the `frontend` directory
+2. Run `npm install` to install dependencies
+3. The frontend will automatically find an available port if 5173 is taken
 
 ---
 
-**Last Updated:** 2026-02-02
-**Version:** Phase 1 (Backend Complete)
+## Security Notes
+
+- **Local-only**: This app is designed for local use only
+- **Read-only**: Session files are read but never modified
+- **Sensitive data**: Session files may contain API keys, credentials, or sensitive code - do not expose this app to the internet
+
+---
+
+## License
+
+MIT
+
+---
+
+## Credits
+
+Built with:
+- [Node.js](https://nodejs.org/) + [Express](https://expressjs.com/)
+- [React](https://react.dev/) + [Vite](https://vitejs.dev/)
+- [TypeScript](https://www.typescriptlang.org/)
+- [Tailwind CSS](https://tailwindcss.com/)
