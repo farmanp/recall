@@ -11,6 +11,7 @@ import { useWorkUnit } from '../hooks/useWorkUnits';
 import { useSessionFrames } from '../hooks/useTranscriptApi';
 import type { PlaybackFrame } from '../types/transcript';
 import type { WorkUnitSession } from '../types/work-unit';
+import ReactMarkdown from 'react-markdown';
 import { CodeBlock } from '../components/CodeBlock';
 import { DiffViewer } from '../components/DiffViewer';
 import { AgentBadge } from '../components/AgentBadge';
@@ -315,22 +316,22 @@ export const WorkUnitPlayerPage: React.FC = () => {
             {/* Frame content */}
             <div className="bg-gray-800 rounded-lg p-6">
               {currentFrame.type === 'user_message' && currentFrame.userMessage && (
-                <div className="prose prose-invert max-w-none">
-                  <p className="text-lg">{currentFrame.userMessage.text}</p>
+                <div className="prose prose-invert prose-blue max-w-none">
+                  <ReactMarkdown>{currentFrame.userMessage.text}</ReactMarkdown>
                 </div>
               )}
 
               {currentFrame.type === 'claude_thinking' && currentFrame.thinking && (
-                <div className="prose prose-invert max-w-none">
-                  <div className="text-purple-300 italic whitespace-pre-wrap">
-                    {currentFrame.thinking.text}
+                <div className="prose prose-invert prose-purple max-w-none">
+                  <div className="text-purple-300 italic">
+                    <ReactMarkdown>{currentFrame.thinking.text}</ReactMarkdown>
                   </div>
                 </div>
               )}
 
               {currentFrame.type === 'claude_response' && currentFrame.claudeResponse && (
-                <div className="prose prose-invert max-w-none">
-                  <p>{currentFrame.claudeResponse.text}</p>
+                <div className="prose prose-invert prose-green max-w-none">
+                  <ReactMarkdown>{currentFrame.claudeResponse.text}</ReactMarkdown>
                 </div>
               )}
 

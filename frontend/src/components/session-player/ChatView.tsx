@@ -7,6 +7,7 @@
 import React, { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { PlaybackFrame } from '../../types/transcript';
+import ReactMarkdown from 'react-markdown';
 import { CodeBlock } from '../CodeBlock';
 import { Clock, Zap, Settings } from 'lucide-react';
 
@@ -129,10 +130,8 @@ const ChatMessage: React.FC<{
     return (
       <motion.div {...slideIn} className="flex items-start gap-3 justify-end">
         <div className="flex flex-col items-end max-w-2xl">
-          <div className="bg-blue-600 text-white rounded-3xl rounded-tr-md px-6 py-4 shadow-xl shadow-blue-500/20">
-            <p className="whitespace-pre-wrap leading-relaxed font-medium">
-              {highlightText(frame.userMessage.text)}
-            </p>
+          <div className="bg-blue-600 text-white rounded-3xl rounded-tr-md px-6 py-4 shadow-xl shadow-blue-500/20 prose prose-invert prose-p:text-white prose-p:font-medium max-w-none">
+            <ReactMarkdown>{frame.userMessage.text}</ReactMarkdown>
           </div>
           <span className="text-[10px] text-gray-500 font-mono mt-1 flex items-center gap-1">
             <Clock className="w-3 h-3" />
@@ -154,11 +153,12 @@ const ChatMessage: React.FC<{
           <Zap className="w-5 h-5" />
         </div>
         <div className="flex flex-col items-start max-w-2xl">
-          <div className="bg-gray-900/60 backdrop-blur-sm text-gray-400 rounded-3xl rounded-tl-md px-6 py-4 border-l-4 border-purple-500/40 shadow-lg italic">
-            <p className="text-sm leading-relaxed font-mono">
-              {highlightText(frame.thinking.text.substring(0, 500))}
-              {frame.thinking.text.length > 500 && '...'}
-            </p>
+          <div className="bg-gray-900/60 backdrop-blur-sm text-gray-400 rounded-3xl rounded-tl-md px-6 py-4 border-l-4 border-purple-500/40 shadow-lg italic prose prose-invert prose-p:text-sm prose-p:leading-relaxed prose-p:font-mono max-w-none">
+            <ReactMarkdown>
+              {frame.thinking.text.length > 500
+                ? frame.thinking.text.substring(0, 500) + '...'
+                : frame.thinking.text}
+            </ReactMarkdown>
           </div>
           <span className="text-[10px] text-gray-500 font-mono mt-1 flex items-center gap-1">
             <Clock className="w-3 h-3" />
@@ -177,10 +177,8 @@ const ChatMessage: React.FC<{
           AI
         </div>
         <div className="flex flex-col items-start max-w-2xl">
-          <div className="bg-gray-800/80 backdrop-blur-sm text-gray-100 rounded-3xl rounded-tl-md px-6 py-4 border border-white/10 shadow-xl">
-            <p className="whitespace-pre-wrap leading-relaxed">
-              {highlightText(frame.claudeResponse.text)}
-            </p>
+          <div className="bg-gray-800/80 backdrop-blur-sm text-gray-100 rounded-3xl rounded-tl-md px-6 py-4 border border-white/10 shadow-xl prose prose-invert max-w-none">
+            <ReactMarkdown>{frame.claudeResponse.text}</ReactMarkdown>
           </div>
           <span className="text-[10px] text-gray-500 font-mono mt-1 flex items-center gap-1">
             <Clock className="w-3 h-3" />

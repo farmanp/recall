@@ -12,6 +12,7 @@ import {
   useSessionCommentary,
 } from '../hooks/useTranscriptApi';
 import type { PlaybackFrame, CommentaryData, SessionTimeline } from '../types/transcript';
+import ReactMarkdown from 'react-markdown';
 import { CodeBlock } from '../components/CodeBlock';
 import { DiffViewer } from '../components/DiffViewer';
 import { AgentBadge } from '../components/AgentBadge';
@@ -837,26 +838,22 @@ const FrameRenderer: React.FC<{ frame: PlaybackFrame; searchQuery?: string }> = 
       </div>
 
       {frame.userMessage && (
-        <div className="bg-gray-900/50 rounded-xl p-6 border border-white/5">
-          <p className="whitespace-pre-wrap text-lg leading-relaxed text-gray-200">
-            {highlightText(frame.userMessage.text, searchQuery)}
-          </p>
+        <div className="bg-gray-900/50 rounded-xl p-6 border border-white/5 prose prose-invert prose-blue max-w-none">
+          <ReactMarkdown>{frame.userMessage.text}</ReactMarkdown>
         </div>
       )}
 
       {frame.thinking && (
-        <div className="bg-gray-900/50 rounded-xl p-6 border border-white/5 border-l-purple-500/50 border-l-4">
-          <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-400 italic font-mono">
-            {highlightText(frame.thinking.text, searchQuery)}
-          </p>
+        <div className="bg-gray-900/50 rounded-xl p-6 border border-white/5 border-l-purple-500/50 border-l-4 prose prose-invert prose-purple max-w-none">
+          <div className="text-sm leading-relaxed text-gray-400 italic font-mono">
+            <ReactMarkdown>{frame.thinking.text}</ReactMarkdown>
+          </div>
         </div>
       )}
 
       {frame.claudeResponse && (
-        <div className="bg-gray-900/50 rounded-xl p-6 border border-white/5 border-l-green-500/50 border-l-4">
-          <p className="whitespace-pre-wrap leading-relaxed text-gray-200">
-            {highlightText(frame.claudeResponse.text, searchQuery)}
-          </p>
+        <div className="bg-gray-900/50 rounded-xl p-6 border border-white/5 border-l-green-500/50 border-l-4 prose prose-invert prose-green max-w-none">
+          <ReactMarkdown>{frame.claudeResponse.text}</ReactMarkdown>
         </div>
       )}
 
