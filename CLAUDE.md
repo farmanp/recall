@@ -55,6 +55,65 @@ npm start            # Start production server
 npm publish          # Publish to npm
 ```
 
+## Publishing Process
+
+### Pre-Release Checklist
+
+1. **Run tests** to ensure nothing is broken:
+
+   ```bash
+   cd backend && npm test
+   cd frontend && npm test
+   ```
+
+2. **Update version** in `package.json` following semver:
+   - `patch` (1.0.x): Bug fixes
+   - `minor` (1.x.0): New features (backward compatible)
+   - `major` (x.0.0): Breaking changes
+
+3. **Update CHANGELOG.md** with the new version and changes:
+
+   ```markdown
+   ## [x.y.z] - YYYY-MM-DD
+
+   ### Added
+
+   - New features
+
+   ### Changed
+
+   - Changes to existing features
+
+   ### Fixed
+
+   - Bug fixes
+   ```
+
+4. **Commit and push** the version bump and changelog:
+   ```bash
+   git add package.json CHANGELOG.md
+   git commit -m "chore: bump version to x.y.z and update changelog"
+   git push
+   ```
+
+### Publishing to npm
+
+```bash
+# Build everything (runs automatically via prepublishOnly)
+npm run build
+
+# Publish to npm registry
+npm publish
+
+# Verify the publish
+npx recall-player --version
+```
+
+### Post-Publish
+
+- Test installation: `npx recall-player`
+- Create GitHub release (optional) with changelog notes
+
 ### Testing the API
 
 ```bash
