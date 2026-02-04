@@ -11,9 +11,10 @@ import type { PlaybackFrame, CommentaryData, SessionTimeline } from '../types/tr
 import { CodeBlock } from '../components/CodeBlock';
 import { DiffViewer } from '../components/DiffViewer';
 import { AgentBadge } from '../components/AgentBadge';
-import { ChevronLeft, Share2, Play, Pause, FastForward, Settings, Download, Info, Zap, Search as SearchIcon, Folder, Calendar, Hash } from 'lucide-react';
+import { ChevronLeft, Share2, Play, Pause, FastForward, Settings, Download, Info, Zap, Search as SearchIcon, Folder, Calendar, Hash, MessageSquare, Layout } from 'lucide-react';
 import { CommentaryTimeline, CommentaryCard } from '../components/CommentaryBubble';
 import { TimelineScrubber } from '../components/session-player/TimelineScrubber';
+import { ChatView } from '../components/session-player/ChatView';
 import { FrameTypeFilters, findNextVisibleFrame, findPrevVisibleFrame } from '../components/session-player/FrameTypeFilters';
 import { HelpPanel } from '../components/session-player/HelpPanel';
 import { StatsPanel } from '../components/session-player/StatsPanel';
@@ -45,6 +46,7 @@ export const SessionPlayerPage: React.FC = () => {
   const [showHelp, setShowHelp] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [viewMode, setViewMode] = useState<'timeline' | 'chat'>('timeline');
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
 
   // Fetch session details and all frames
@@ -320,6 +322,17 @@ export const SessionPlayerPage: React.FC = () => {
           </button>
 
           <button
+            onClick={() => setViewMode(viewMode === 'timeline' ? 'chat' : 'timeline')}
+            className={`p-2.5 rounded-xl transition-all border active:scale-95 ${viewMode === 'chat'
+              ? 'bg-purple-600 border-purple-500 text-white'
+              : 'bg-gray-800 border-white/5 text-gray-400 hover:text-white'
+              }`}
+            title={`Switch to ${viewMode === 'timeline' ? 'Chat' : 'Timeline'} View`}
+          >
+            {viewMode === 'timeline' ? <MessageSquare className="w-5 h-5" /> : <Layout className="w-5 h-5" />}
+          </button>
+
+          <button
             onClick={() => setShowStats(!showStats)}
             className={`p-2.5 rounded-xl transition-all border active:scale-95 ${showStats
               ? 'bg-blue-600 border-blue-500 text-white'
@@ -333,31 +346,41 @@ export const SessionPlayerPage: React.FC = () => {
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 overflow-y-auto px-6 py-8">
-        <div className="max-w-4xl mx-auto">
-          {/* Dead air compression indicator */}
-          {currentFrame?.isCompressed && compressionEnabled && (
-            <div className="mb-4 px-4 py-2 bg-amber-900/50 border border-amber-700 rounded-lg flex items-center gap-2 text-amber-300 text-sm">
-              <Zap className="w-4 h-4 fill-current" />
-              <span>Compressed Gap: {Math.round((currentFrame.originalDuration || 0) / 1000)}s</span>
-              <span className="text-amber-500">→</span>
-              <span>{Math.round((currentFrame.duration || 0) / 1000)}s</span>
-            </div>
-          )}
-
-          {currentFrame && activeFrameTypes.has(currentFrame.type) ? (
-            <FrameRenderer frame={currentFrame} searchQuery={searchQuery} />
-          ) : currentFrame && (
-            <div className="text-center py-24 text-gray-600">
-              <div className="w-16 h-16 bg-gray-900 rounded-full flex items-center justify-center mx-auto mb-4 border border-white/5">
-                <SearchIcon className="w-8 h-8 opacity-20" />
+      {viewMode === 'chat' ? (
+        <ChatView
+          frames={frames}
+          currentFrameIndex={currentFrameIndex}
+          isPlaying={isPlaying}
+          searchQuery={searchQuery}
+          activeFrameTypes={activeFrameTypes}
+        />
+      ) : (
+        <div className="flex-1 overflow-y-auto px-6 py-8">
+          <div className="max-w-4xl mx-auto">
+            {/* Dead air compression indicator */}
+            {currentFrame?.isCompressed && compressionEnabled && (
+              <div className="mb-4 px-4 py-2 bg-amber-900/50 border border-amber-700 rounded-lg flex items-center gap-2 text-amber-300 text-sm">
+                <Zap className="w-4 h-4 fill-current" />
+                <span>Compressed Gap: {Math.round((currentFrame.originalDuration || 0) / 1000)}s</span>
+                <span className="text-amber-500">→</span>
+                <span>{Math.round((currentFrame.duration || 0) / 1000)}s</span>
               </div>
-              <p className="font-bold uppercase tracking-widest text-[10px]">Frame Filtered</p>
-              <p className="text-sm mt-1 opacity-50">Enable "{currentFrame.type.replace('_', ' ')}" to view this part of the session.</p>
-            </div>
-          )}
+            )}
+
+            {currentFrame && activeFrameTypes.has(currentFrame.type) ? (
+              <FrameRenderer frame={currentFrame} searchQuery={searchQuery} />
+            ) : currentFrame && (
+              <div className="text-center py-24 text-gray-600">
+                <div className="w-16 h-16 bg-gray-900 rounded-full flex items-center justify-center mx-auto mb-4 border border-white/5">
+                  <SearchIcon className="w-8 h-8 opacity-20" />
+                </div>
+                <p className="font-bold uppercase tracking-widest text-[10px]">Frame Filtered</p>
+                <p className="text-sm mt-1 opacity-50">Enable "{currentFrame.type.replace('_', ' ')}" to view this part of the session.</p>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Footer Area: Stats + Filters + Scrubber + Controls */}
       <div className="relative z-30">

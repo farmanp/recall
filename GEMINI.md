@@ -6,12 +6,12 @@ This file provides context and guidance for Gemini agents working on the Recall 
 
 Recall is a local-first web application that visualizes Claude Code sessions like a video player. It reads from the `claude-mem` SQLite database (`~/.claude-mem/claude-mem.db`) in read-only mode to visualize how features were built, decisions made, and problems solved.
 
-## 🎯 Current Status (Phase 2 Completed)
+## 🎯 Current Status (Phase 2+ Completed)
 
 - **Backend**: ✅ Complete. Express + TypeScript + SQLite API is functional. Includes transcript import services and file watching.
-- **Frontend**: ✅ Complete. React + Vite project with **Video Player UI**. Features include timeline scrubber, playback controls, speed adjustment, and color-coded event visualization.
+- **Frontend**: ✅ Complete. React + Vite project with **Video Player UI** and **Chat View mode**. Features include timeline scrubber, playback controls, speed adjustment, color-coded event visualization, and conversational chat interface.
 - **Validation**: ✅ Phase 0 Timeline Validation passed all checks.
-
+- **New**: ✅ **Chat View Mode** - Toggle between Timeline View (technical) and Chat View (conversational messaging interface)
 ## 🏗️ Architecture
 
 ### Tech Stack
