@@ -1,6 +1,6 @@
 {
   "name": "recall-player",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "description": "Replay AI coding sessions like a video player - supports Claude Code, Codex CLI, and Gemini CLI",
   "bin": {
     "recall": "./bin/recall.js"
@@ -52,7 +52,8 @@
     "cors": "^2.8.6",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
-    "open": "^10.0.0"
+    "open": "^10.0.0",
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
     "husky": "^9.1.7",
