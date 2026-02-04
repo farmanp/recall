@@ -9,6 +9,7 @@ import fs from 'fs';
 import readline from 'readline';
 import path from 'path';
 import { AgentType, detectAgentFromPath, getAgentInfo } from './agent-detector';
+import { createHash } from 'crypto';
 import {
   TranscriptEntry,
   ParsedTranscript,
@@ -19,6 +20,7 @@ import {
   ToolUseBlock,
   ToolResultBlock,
   FileDiff,
+  ClaudeMdInfo,
 } from '../types/transcript';
 
 // Dead air compression constants
@@ -121,6 +123,12 @@ export abstract class AgentParser {
       ? new Date(transcript.metadata.endTime).getTime()
       : undefined;
 
+    // Extract CLAUDE.md files from entries (Phase 2: content + hash for deduplication)
+    const claudeMdFiles = this.extractClaudeMdFiles(
+      transcript.entries,
+      transcript.metadata.startTime
+    );
+
     return {
       sessionId: transcript.sessionId,
       slug: transcript.metadata.slug || 'unknown-session',
@@ -134,6 +142,7 @@ export abstract class AgentParser {
         cwd: transcript.metadata.cwd || '',
         claudeVersion: transcript.metadata.claudeVersion,
         agentVersion: transcript.metadata.agentVersion,
+        claudeMdFiles,
       },
     };
   }
@@ -269,6 +278,95 @@ export abstract class AgentParser {
       }
     }
     return undefined;
+  }
+
+  /**
+   * Extract CLAUDE.md file references and content from transcript entries
+   * Looks for patterns like "Contents of /path/CLAUDE.md:\n<content>"
+   *
+   * @param entries - Parsed transcript entries
+   * @param startTime - Session start time (fallback for timestamps)
+   * @returns Array of CLAUDE.md file info with content and hash
+   */
+  protected extractClaudeMdFiles(entries: TranscriptEntry[], startTime: string): ClaudeMdInfo[] {
+    const claudeMdFiles: ClaudeMdInfo[] = [];
+    const seenPaths = new Set<string>();
+
+    for (const entry of entries) {
+      // Get timestamp for this entry
+      const entryTimestamp = entry.timestamp || startTime;
+
+      // Check raw entry content for CLAUDE.md references
+      const rawEntry = (entry as any).rawEntry || entry;
+
+      // Try to extract text content from various entry formats
+      let textContent = '';
+
+      // Claude format: { message: { content: [...] } }
+      if (rawEntry.message?.content) {
+        const content = rawEntry.message.content;
+        if (Array.isArray(content)) {
+          textContent = content
+            .map((block: any) => {
+              if (block.type === 'text') return block.text || '';
+              if (block.type === 'thinking') return block.thinking || '';
+              if (block.type === 'tool_result' && typeof block.content === 'string') {
+                return block.content;
+              }
+              return '';
+            })
+            .join('\n');
+        } else if (typeof content === 'string') {
+          textContent = content;
+        }
+      }
+
+      if (!textContent) continue;
+
+      // Pattern to match CLAUDE.md paths and content
+      const claudeMdContentRegex =
+        /Contents of ([^\s:]+CLAUDE\.md)(?:\s*\([^)]+\))?:\s*\n([\s\S]*?)(?=\nContents of [^\s:]+:|$)/gi;
+
+      let match;
+      while ((match = claudeMdContentRegex.exec(textContent)) !== null) {
+        const claudeMdPath = match[1];
+        const claudeMdContent = match[2]?.trim() || '';
+
+        if (!claudeMdPath) continue;
+
+        // Filter out placeholder/example paths
+        if (
+          (!claudeMdPath.startsWith('/') && !claudeMdPath.startsWith('~')) ||
+          claudeMdPath.includes('/path/') ||
+          claudeMdPath.includes('/path/to/') ||
+          claudeMdPath.startsWith('.../') ||
+          claudeMdPath.startsWith('[')
+        ) {
+          continue;
+        }
+
+        // Deduplicate by path - keep only first occurrence
+        if (seenPaths.has(claudeMdPath)) {
+          continue;
+        }
+
+        seenPaths.add(claudeMdPath);
+
+        // Compute content hash for deduplication
+        const contentHash = claudeMdContent
+          ? createHash('sha256').update(claudeMdContent, 'utf8').digest('hex')
+          : undefined;
+
+        claudeMdFiles.push({
+          path: claudeMdPath,
+          loadedAt: entryTimestamp,
+          content: claudeMdContent || undefined,
+          contentHash,
+        });
+      }
+    }
+
+    return claudeMdFiles;
   }
 
   // ============================================

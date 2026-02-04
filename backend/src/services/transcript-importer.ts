@@ -28,6 +28,7 @@ import {
   updateParsingStatus,
   getTranscriptSessionById,
 } from '../db/transcript-queries';
+import { ClaudeMdStorage } from './claudemd-storage';
 import type { ImportJobConfig } from '../db/transcript-schema';
 import type { SessionMetadata } from '../types/transcript';
 
@@ -130,6 +131,19 @@ export async function importTranscript(filePath: string, agent?: AgentType): Pro
 
     // Insert session
     insertSession(sessionMetadata);
+
+    // Store CLAUDE.md snapshots if present (Phase 2: Evolution Tracking)
+    if (timeline.metadata.claudeMdFiles && timeline.metadata.claudeMdFiles.length > 0) {
+      try {
+        ClaudeMdStorage.storeClaudeMdFiles(sessionId, timeline.metadata.claudeMdFiles);
+        console.log(
+          `[Import] Stored ${timeline.metadata.claudeMdFiles.length} CLAUDE.md snapshot(s)`
+        );
+      } catch (error) {
+        // Log but don't fail the import if CLAUDE.md storage fails
+        console.warn(`[Import] Failed to store CLAUDE.md snapshots:`, error);
+      }
+    }
 
     // Insert frames
     let framesInserted = 0;

@@ -178,11 +178,13 @@ export interface SessionTimeline {
 
 /**
  * CLAUDE.md file information for observability
+ * Phase 2: Extended with content and hash for versioning
  */
 export interface ClaudeMdInfo {
   path: string; // Full path to the CLAUDE.md file
   loadedAt: string; // ISO 8601 timestamp when first seen
-  content?: string; // Optional: the actual content (fetched on demand)
+  content?: string; // Full file content (extracted from transcript)
+  contentHash?: string; // SHA-256 hash for deduplication
 }
 
 /**

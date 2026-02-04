@@ -686,12 +686,15 @@ export class SessionIndexer {
               ? content
               : '';
 
-          // Pattern to match CLAUDE.md paths in "Contents of /path/CLAUDE.md" format
-          const claudeMdPathRegex = /Contents of ([^\s:]+CLAUDE\.md)/gi;
+          // Pattern to match CLAUDE.md paths and content in "Contents of /path/CLAUDE.md:\n<content>" format
+          // Content ends at the next "Contents of" block or end of text
+          const claudeMdContentRegex =
+            /Contents of ([^\s:]+CLAUDE\.md)(?:\s*\([^)]+\))?:\s*\n([\s\S]*?)(?=\nContents of [^\s:]+:|$)/gi;
 
           let match;
-          while ((match = claudeMdPathRegex.exec(textContent)) !== null) {
+          while ((match = claudeMdContentRegex.exec(textContent)) !== null) {
             const claudeMdPath = match[1];
+            const claudeMdContent = match[2]?.trim() || '';
 
             if (!claudeMdPath) continue;
 
@@ -707,16 +710,23 @@ export class SessionIndexer {
               continue;
             }
 
-            // Deduplicate by path (Phase 1 just tracks which files were loaded)
+            // Deduplicate by path - keep only first occurrence
             if (seenPaths.has(claudeMdPath)) {
               continue;
             }
 
             seenPaths.add(claudeMdPath);
 
+            // Compute content hash for Phase 2 deduplication
+            const contentHash = claudeMdContent
+              ? this.computeContentHash(claudeMdContent)
+              : undefined;
+
             claudeMdFiles.push({
               path: claudeMdPath,
               loadedAt: entryTimestamp,
+              content: claudeMdContent || undefined,
+              contentHash,
             });
           }
         }
@@ -730,9 +740,8 @@ export class SessionIndexer {
 
   /**
    * Compute SHA-256 hash of content for deduplication
-   * TODO: Used in Phase 2 for content extraction
+   * Used in Phase 2 for content-based deduplication of CLAUDE.md snapshots
    */
-  // @ts-expect-error - Reserved for Phase 2 content extraction
   private computeContentHash(content: string): string {
     return createHash('sha256').update(content, 'utf8').digest('hex');
   }
