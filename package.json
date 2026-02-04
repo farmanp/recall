@@ -1,5 +1,5 @@
 {
-  "name": "recall",
+  "name": "recall-player",
   "version": "1.0.0",
   "description": "Replay AI coding sessions like a video player - supports Claude Code, Codex CLI, and Gemini CLI",
   "bin": {
