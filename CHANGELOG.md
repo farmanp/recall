@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-02-04
+
+### Added
+
+- **CWD Session Filtering**: Automatically filter sessions to the directory where `recall-player` is started
+- **`RECALL_FILTER_CWD` env var**: Set to `false` to disable automatic directory filtering
+- **`?showAll=true` query param**: Override CWD filter for individual API requests
+- **`/api/sessions/cwd-filter` endpoint**: Check current filter status
+- **`RECALL_EXCLUDE_PATTERNS` env var**: Exclude directories from session scanning (comma-separated patterns)
+
+### Fixed
+
+- Scanner now skips corrupt/malformed session files instead of failing entirely
+- Improved error handling in session indexer and transcript importer
+
 ## [1.3.2] - 2026-02-04
 
 ### Fixed
