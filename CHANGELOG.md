@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.1] - 2026-02-04
+
+### Fixed
+
+- **Model Extraction**: Increased chunk size from 2KB to 16KB to capture model info from assistant messages
+- **CWD Filter Path**: Strip `/backend` subdirectory when detecting project root (fixes filter when running via npm scripts)
+- **Empty Session Files**: Silently skip 0-byte abandoned session files instead of logging errors
+- **Partial Line Parsing**: Discard incomplete JSON lines at chunk boundaries to prevent parse errors
+- **CWD Extraction**: Search first 10 entries for CWD field (handles `file-history-snapshot` entries without CWD)
+
 ## [1.4.0] - 2026-02-04
 
 ### Added
