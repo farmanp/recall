@@ -315,8 +315,17 @@ export class SessionIndexer {
       const endText = endChunk.toString('utf-8');
 
       // Extract complete lines from chunks
-      const startLines = startText.split('\n').filter((line) => line.trim());
-      const endLines = endText.split('\n').filter((line) => line.trim());
+      // Discard the last line from start chunk if it's incomplete (chunk doesn't end with newline)
+      let startLines = startText.split('\n').filter((line) => line.trim());
+      if (!startText.endsWith('\n') && startLines.length > 0) {
+        startLines = startLines.slice(0, -1); // Remove potentially truncated last line
+      }
+
+      // Discard the first line from end chunk if it's incomplete (chunk doesn't start at line boundary)
+      let endLines = endText.split('\n').filter((line) => line.trim());
+      if (endOffset > 0 && endLines.length > 0) {
+        endLines = endLines.slice(1); // Remove potentially truncated first line
+      }
 
       // Combine for metadata extraction (we need more lines for slug, model, etc.)
       const lines = [...startLines, ...endLines].filter((line) => line.trim());
@@ -451,8 +460,23 @@ export class SessionIndexer {
         }
       }
 
-      // Get cwd from appropriate field (handle both Claude and Codex formats)
-      const extractedCwd = firstEntry.payload?.cwd || firstEntry.cwd || '';
+      // Get cwd from appropriate field - search through entries since first entry
+      // may be file-history-snapshot without cwd (handle both Claude and Codex formats)
+      let extractedCwd = '';
+      for (let i = 0; i < Math.min(10, lines.length); i++) {
+        const line = lines[i];
+        if (!line) continue;
+        try {
+          const entry = JSON.parse(line);
+          const cwd = entry.payload?.cwd || entry.cwd;
+          if (cwd) {
+            extractedCwd = cwd;
+            break;
+          }
+        } catch {
+          // Skip malformed JSON lines
+        }
+      }
 
       // Extract CLAUDE.md files for Claude sessions
       const claudeMdFiles =
