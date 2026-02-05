@@ -127,7 +127,11 @@ export class SessionIndexer {
           this.sessionFilePaths.set(metadata.sessionId, sessionPath);
           sessions.push(metadata);
         } catch (error) {
-          console.warn(`Failed to index session ${sessionPath}:`, error);
+          // Silently skip empty session files (abandoned sessions)
+          const errorMsg = error instanceof Error ? error.message : '';
+          if (!errorMsg.includes('Empty session file')) {
+            console.warn(`Failed to index session ${sessionPath}:`, error);
+          }
         }
       }
     } else if (agent === 'gemini') {
@@ -183,7 +187,11 @@ export class SessionIndexer {
               this.sessionFilePaths.set(metadata.sessionId, sessionPath);
               sessions.push(metadata);
             } catch (error) {
-              console.warn(`Failed to index session ${sessionPath}:`, error);
+              // Silently skip empty session files (abandoned sessions)
+              const errorMsg = error instanceof Error ? error.message : '';
+              if (!errorMsg.includes('Empty session file')) {
+                console.warn(`Failed to index session ${sessionPath}:`, error);
+              }
             }
           }
         } catch (error) {
@@ -284,6 +292,11 @@ export class SessionIndexer {
   ): Promise<SessionMetadata> {
     const stats = await fs.stat(filePath);
     const fileSize = stats.size;
+
+    // Skip empty files silently (these are abandoned sessions)
+    if (fileSize === 0) {
+      throw new Error('Empty session file (0 bytes)');
+    }
 
     // Handle Gemini's single JSON format differently (still needs full read for JSON parsing)
     if (agent === 'gemini') {
