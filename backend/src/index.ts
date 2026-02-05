@@ -18,11 +18,17 @@ const PORT = process.env.PORT || 3001;
 const AUTO_WATCH = process.env.AUTO_WATCH !== 'false'; // Default: enabled
 const FILTER_BY_CWD = process.env.RECALL_FILTER_CWD !== 'false'; // Default: enabled
 
-// Get the actual project root, not the backend subdirectory
-// When running via npm scripts, we may be in backend/ but user started from project root
+// Get the actual project root where the user ran the command
+// RECALL_USER_CWD is set by bin/recall.js when running via npx
+// Falls back to process.cwd() and strips common server subdirectories
 function getProjectRoot(): string {
+  // Prefer the explicitly passed user CWD (set by bin/recall.js for npx usage)
+  if (process.env.RECALL_USER_CWD) {
+    return process.env.RECALL_USER_CWD;
+  }
+
+  // Fallback: strip common server subdirectories from process.cwd()
   let cwd = process.cwd();
-  // Strip common server subdirectories to get actual project root
   const subdirs = ['/backend', '/server', '/api', '/src'];
   for (const subdir of subdirs) {
     if (cwd.endsWith(subdir)) {
