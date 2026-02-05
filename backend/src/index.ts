@@ -17,7 +17,23 @@ dotenv.config();
 const PORT = process.env.PORT || 3001;
 const AUTO_WATCH = process.env.AUTO_WATCH !== 'false'; // Default: enabled
 const FILTER_BY_CWD = process.env.RECALL_FILTER_CWD !== 'false'; // Default: enabled
-const STARTUP_CWD = process.cwd();
+
+// Get the actual project root, not the backend subdirectory
+// When running via npm scripts, we may be in backend/ but user started from project root
+function getProjectRoot(): string {
+  let cwd = process.cwd();
+  // Strip common server subdirectories to get actual project root
+  const subdirs = ['/backend', '/server', '/api', '/src'];
+  for (const subdir of subdirs) {
+    if (cwd.endsWith(subdir)) {
+      cwd = cwd.slice(0, -subdir.length);
+      break;
+    }
+  }
+  return cwd;
+}
+
+const STARTUP_CWD = getProjectRoot();
 
 /**
  * Start the server
