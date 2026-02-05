@@ -9,12 +9,15 @@ import {
 } from './db/transcript-connection';
 import { initializeTranscriptSchema } from './db/transcript-queries';
 import { startWatcher, stopWatcher } from './services/file-watcher';
+import { getSessionIndexer } from './parser/session-indexer';
 
 // Load environment variables
 dotenv.config();
 
 const PORT = process.env.PORT || 3001;
 const AUTO_WATCH = process.env.AUTO_WATCH !== 'false'; // Default: enabled
+const FILTER_BY_CWD = process.env.RECALL_FILTER_CWD !== 'false'; // Default: enabled
+const STARTUP_CWD = process.cwd();
 
 /**
  * Start the server
@@ -38,6 +41,16 @@ function start(): void {
       .get() as { count: number };
     console.log(`✅ Transcript database: ${transcriptResult.count} sessions imported`);
     console.log(`   Location: ${getTranscriptDbPath()}`);
+
+    // Configure CWD filter for session indexer
+    const indexer = getSessionIndexer();
+    if (FILTER_BY_CWD) {
+      indexer.setCwdFilter(STARTUP_CWD);
+      console.log(`✅ CWD filter: enabled (${STARTUP_CWD})`);
+    } else {
+      indexer.setCwdFilter(null);
+      console.log(`⏸️  CWD filter disabled (RECALL_FILTER_CWD=false)`);
+    }
 
     // Start file watcher
     if (AUTO_WATCH) {

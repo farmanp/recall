@@ -16,6 +16,10 @@ export const sessionListSchema = paginationSchema.extend({
   project: z.string().optional(),
   agent: z.enum(['claude', 'codex', 'gemini', 'unknown']).optional(),
   hasClaudeMd: z.coerce.boolean().optional(),
+  showAll: z
+    .preprocess((val) => val === 'true' || val === '1' || val === true, z.boolean())
+    .optional()
+    .default(false),
 });
 
 /**

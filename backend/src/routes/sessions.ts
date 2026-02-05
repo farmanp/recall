@@ -28,6 +28,21 @@ import {
 
 const router = Router();
 
+/**
+ * Check if a session's cwd matches the filter directory
+ * Returns true if session cwd is the filter directory or a subdirectory of it
+ */
+function matchesCwd(sessionCwd: string, filterCwd: string): boolean {
+  if (!sessionCwd || !filterCwd) return false;
+  // Normalize paths by removing trailing slashes
+  const normalizedSession = sessionCwd.replace(/\/$/, '');
+  const normalizedFilter = filterCwd.replace(/\/$/, '');
+  // Match if session is in or under the filter directory
+  return (
+    normalizedSession === normalizedFilter || normalizedSession.startsWith(normalizedFilter + '/')
+  );
+}
+
 // Global LRU cache for parsed timelines to prevent memory leaks
 // Capped at 50 sessions (~200MB max) with 30-minute TTL
 const timelineCache = new LRUCache<string, SessionTimeline>({
@@ -66,6 +81,27 @@ router.get('/agents', async (_req: Request, res: Response) => {
 });
 
 /**
+ * GET /api/sessions/cwd-filter
+ * Get the current CWD filter configuration
+ *
+ * Response:
+ * - enabled: Whether CWD filtering is enabled
+ * - cwd: The current working directory filter (null if disabled)
+ *
+ * @example
+ * GET /api/sessions/cwd-filter
+ * { "enabled": true, "cwd": "/Users/me/projects/myapp" }
+ */
+router.get('/cwd-filter', (_req: Request, res: Response) => {
+  const indexer = getSessionIndexer();
+  const cwdFilter = indexer.getCwdFilter();
+  res.json({
+    enabled: cwdFilter !== null,
+    cwd: cwdFilter,
+  });
+});
+
+/**
  * GET /api/sessions
  * List all available sessions
  *
@@ -99,6 +135,7 @@ router.get('/', validateQuery(sessionListSchema), async (_req: Request, res: Res
       project: projectFilter,
       agent,
       hasClaudeMd,
+      showAll,
     } = res.locals.validatedQuery as SessionListParams;
 
     if (source === 'db') {
@@ -138,6 +175,12 @@ router.get('/', validateQuery(sessionListSchema), async (_req: Request, res: Res
         sessions = sessions.filter((s) => s.claudeMdFiles && s.claudeMdFiles.length > 0);
       }
 
+      // Apply CWD filter unless showAll is true
+      const cwdFilter = indexer.getCwdFilter();
+      if (!showAll && cwdFilter) {
+        sessions = sessions.filter((s) => matchesCwd(s.cwd, cwdFilter));
+      }
+
       // Sort by start time (most recent first)
       sessions.sort((a, b) => {
         return new Date(b.startTime).getTime() - new Date(a.startTime).getTime();
@@ -154,6 +197,7 @@ router.get('/', validateQuery(sessionListSchema), async (_req: Request, res: Res
         source: 'filesystem',
         agent,
         hasClaudeMd,
+        cwdFilter: !showAll ? cwdFilter : null,
       });
     }
   } catch (error) {

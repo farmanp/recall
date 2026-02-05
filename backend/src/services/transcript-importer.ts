@@ -340,6 +340,30 @@ async function importSingleFile(filePath: string, skipExisting: boolean): Promis
 }
 
 /**
+ * Check if a directory path should be excluded based on patterns
+ * Uses RECALL_EXCLUDE_PATTERNS env var (comma-separated)
+ */
+function shouldExcludeDirectory(dirPath: string): boolean {
+  const excludeEnv = process.env.RECALL_EXCLUDE_PATTERNS;
+  if (!excludeEnv) return false;
+
+  const patterns = excludeEnv
+    .split(',')
+    .map((p) => p.trim())
+    .filter(Boolean);
+
+  return patterns.some((pattern) => {
+    // Simple glob matching: **/pattern/** matches any path containing "pattern"
+    if (pattern.includes('**')) {
+      const searchTerm = pattern.replace(/\*\*/g, '').replace(/\//g, '');
+      return dirPath.includes(searchTerm);
+    }
+    // Direct match: check if path contains the pattern
+    return dirPath.includes(pattern);
+  });
+}
+
+/**
  * Recursively find all .jsonl files in a directory
  *
  * @param dirPath - Directory to search
@@ -347,6 +371,8 @@ async function importSingleFile(filePath: string, skipExisting: boolean): Promis
  */
 async function findTranscriptFiles(dirPath: string): Promise<string[]> {
   const files: string[] = [];
+  let skippedDirs = 0;
+  let excludedDirs = 0;
 
   // Check if directory exists
   if (!fs.existsSync(dirPath)) {
@@ -354,24 +380,58 @@ async function findTranscriptFiles(dirPath: string): Promise<string[]> {
     return files;
   }
 
-  // Read directory recursively
+  // Read directory recursively with error handling
   async function scanDir(dir: string): Promise<void> {
-    const entries = await fs.promises.readdir(dir, { withFileTypes: true });
+    // Check exclusion patterns
+    if (shouldExcludeDirectory(dir)) {
+      excludedDirs++;
+      return;
+    }
+
+    let entries;
+    try {
+      entries = await fs.promises.readdir(dir, { withFileTypes: true });
+    } catch (error) {
+      // Log warning but continue - don't let one directory failure stop the scan
+      console.warn(
+        `[Import] Cannot read directory ${dir}:`,
+        error instanceof Error ? error.message : error
+      );
+      skippedDirs++;
+      return;
+    }
 
     for (const entry of entries) {
       const fullPath = path.join(dir, entry.name);
 
-      if (entry.isDirectory()) {
-        // Recurse into subdirectories
-        await scanDir(fullPath);
-      } else if (entry.isFile() && entry.name.endsWith('.jsonl')) {
-        // Add .jsonl files
-        files.push(fullPath);
+      try {
+        if (entry.isDirectory()) {
+          // Recurse into subdirectories
+          await scanDir(fullPath);
+        } else if (entry.isFile() && entry.name.endsWith('.jsonl')) {
+          // Add .jsonl files
+          files.push(fullPath);
+        }
+      } catch (error) {
+        // Log warning but continue to next entry
+        console.warn(
+          `[Import] Skipping ${fullPath}:`,
+          error instanceof Error ? error.message : error
+        );
+        continue;
       }
     }
   }
 
   await scanDir(dirPath);
+
+  // Log summary of issues if any occurred
+  if (skippedDirs > 0) {
+    console.warn(`[Import] Skipped ${skippedDirs} directories due to errors`);
+  }
+  if (excludedDirs > 0) {
+    console.log(`[Import] Excluded ${excludedDirs} directories based on RECALL_EXCLUDE_PATTERNS`);
+  }
 
   return files;
 }

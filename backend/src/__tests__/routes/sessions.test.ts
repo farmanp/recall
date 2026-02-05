@@ -66,6 +66,8 @@ const indexer = {
     agents: ['claude', 'codex'],
     counts: { claude: 1, codex: 1, gemini: 0, unknown: 0 },
   })),
+  getCwdFilter: vi.fn(() => null), // No CWD filter in tests by default
+  setCwdFilter: vi.fn(),
 };
 
 vi.mock('../../parser/session-indexer', () => ({

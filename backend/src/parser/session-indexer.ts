@@ -12,6 +12,8 @@ export class SessionIndexer {
   private sessionIndex: Map<string, SessionMetadata> = new Map();
   private sessionFilePaths: Map<string, string> = new Map(); // sessionId -> filePath cache
   private agentDirs: Map<AgentType, string>;
+  private excludePatterns: string[] = [];
+  private cwdFilter: string | null = null;
 
   constructor(claudeProjectsDir?: string) {
     // Initialize agent directories
@@ -23,6 +25,55 @@ export class SessionIndexer {
       ['codex', path.join(os.homedir(), '.codex', 'sessions')],
       ['gemini', path.join(os.homedir(), '.gemini', 'tmp')],
     ]);
+
+    // Parse RECALL_EXCLUDE_PATTERNS env var (comma-separated directory patterns)
+    const excludeEnv = process.env.RECALL_EXCLUDE_PATTERNS;
+    if (excludeEnv) {
+      this.excludePatterns = excludeEnv
+        .split(',')
+        .map((p) => p.trim())
+        .filter(Boolean);
+      if (this.excludePatterns.length > 0) {
+        console.log(`[SessionIndexer] Excluding patterns: ${this.excludePatterns.join(', ')}`);
+      }
+    }
+  }
+
+  /**
+   * Set the CWD filter for session filtering
+   * Sessions will be filtered to only include those with matching cwd
+   */
+  setCwdFilter(cwd: string | null): void {
+    this.cwdFilter = cwd;
+    if (cwd) {
+      console.log(`[SessionIndexer] CWD filter enabled: ${cwd}`);
+    } else {
+      console.log(`[SessionIndexer] CWD filter disabled`);
+    }
+  }
+
+  /**
+   * Get the current CWD filter
+   */
+  getCwdFilter(): string | null {
+    return this.cwdFilter;
+  }
+
+  /**
+   * Check if a directory path should be excluded based on patterns
+   */
+  private shouldExclude(dirPath: string): boolean {
+    if (this.excludePatterns.length === 0) return false;
+
+    return this.excludePatterns.some((pattern) => {
+      // Simple glob matching: **/pattern/** matches any path containing "pattern"
+      if (pattern.includes('**')) {
+        const searchTerm = pattern.replace(/\*\*/g, '').replace(/\//g, '');
+        return dirPath.includes(searchTerm);
+      }
+      // Direct match: check if path contains the pattern
+      return dirPath.includes(pattern);
+    });
   }
 
   /**
@@ -95,32 +146,50 @@ export class SessionIndexer {
       }
     } else {
       // Claude (and others): Nested structure - projects/{project}/*.jsonl
-      const projectDirs = await fs.readdir(agentDir);
+      let projectDirs: string[];
+      try {
+        projectDirs = await fs.readdir(agentDir);
+      } catch (error) {
+        console.warn(`Failed to read agent directory ${agentDir}:`, error);
+        return sessions;
+      }
 
       for (const projectDir of projectDirs) {
         const projectPath = path.join(agentDir, projectDir);
 
-        // Check if it's a directory
-        const stats = await fs.stat(projectPath);
-        if (!stats.isDirectory()) {
+        // Check exclusion patterns
+        if (this.shouldExclude(projectPath)) {
+          console.log(`[SessionIndexer] Excluding directory: ${projectDir}`);
           continue;
         }
 
-        // Find all .jsonl files in this project
-        const files = await fs.readdir(projectPath);
-        const jsonlFiles = files.filter((f) => f.endsWith('.jsonl'));
-
-        // Index each session
-        for (const jsonlFile of jsonlFiles) {
-          const sessionPath = path.join(projectPath, jsonlFile);
-          try {
-            const metadata = await this.extractSessionMetadata(sessionPath, agent);
-            this.sessionIndex.set(metadata.sessionId, metadata);
-            this.sessionFilePaths.set(metadata.sessionId, sessionPath);
-            sessions.push(metadata);
-          } catch (error) {
-            console.warn(`Failed to index session ${sessionPath}:`, error);
+        try {
+          // Check if it's a directory
+          const stats = await fs.stat(projectPath);
+          if (!stats.isDirectory()) {
+            continue;
           }
+
+          // Find all .jsonl files in this project
+          const files = await fs.readdir(projectPath);
+          const jsonlFiles = files.filter((f) => f.endsWith('.jsonl'));
+
+          // Index each session
+          for (const jsonlFile of jsonlFiles) {
+            const sessionPath = path.join(projectPath, jsonlFile);
+            try {
+              const metadata = await this.extractSessionMetadata(sessionPath, agent);
+              this.sessionIndex.set(metadata.sessionId, metadata);
+              this.sessionFilePaths.set(metadata.sessionId, sessionPath);
+              sessions.push(metadata);
+            } catch (error) {
+              console.warn(`Failed to index session ${sessionPath}:`, error);
+            }
+          }
+        } catch (error) {
+          // Log warning but continue to next project directory
+          console.warn(`Skipping project directory ${projectDir}:`, error);
+          continue;
         }
       }
     }
@@ -173,6 +242,12 @@ export class SessionIndexer {
           const projectDirs = await fs.readdir(agentDir);
           for (const projectDir of projectDirs) {
             const projectPath = path.join(agentDir, projectDir);
+
+            // Check exclusion patterns
+            if (this.shouldExclude(projectPath)) {
+              continue;
+            }
+
             try {
               const stats = await fs.stat(projectPath);
               if (stats.isDirectory()) {
@@ -180,7 +255,8 @@ export class SessionIndexer {
                 sessionCount += files.filter((f) => f.endsWith('.jsonl')).length;
               }
             } catch {
-              // Skip this project directory
+              // Skip this project directory - continue to next
+              continue;
             }
           }
         } catch {

@@ -21,6 +21,47 @@ npm install -g recall-player
 recall
 ```
 
+## Environment Variables
+
+### `RECALL_EXCLUDE_PATTERNS`
+
+Comma-separated list of directory patterns to exclude from session scanning. Useful for skipping plugin directories, archived projects, or directories that cause scan failures.
+
+```bash
+# Exclude specific directories
+RECALL_EXCLUDE_PATTERNS="thedotmack,archived" npx recall-player
+
+# Exclude with glob-style patterns
+RECALL_EXCLUDE_PATTERNS="**/claude-mem/**,**/test-data/**" npx recall-player
+```
+
+**Pattern matching:**
+
+- Simple patterns (e.g., `thedotmack`) match any path containing that string
+- Glob patterns with `**` (e.g., `**/plugin/**`) match directories at any depth
+
+### `RECALL_FILTER_CWD`
+
+Controls automatic filtering of sessions based on the startup directory. When enabled (default), only sessions from the directory where `recall-player` was started are shown.
+
+```bash
+# Default behavior: filter to current directory
+cd /Users/me/projects/myapp
+npx recall-player
+# Shows only sessions from /Users/me/projects/myapp
+
+# Disable CWD filter to see all sessions
+RECALL_FILTER_CWD=false npx recall-player
+# Shows all sessions from all directories
+```
+
+**API query parameter:**
+
+- Use `?showAll=true` to override the CWD filter for a single request
+- `GET /api/sessions` - Uses CWD filter (default)
+- `GET /api/sessions?showAll=true` - Shows all sessions
+- `GET /api/sessions/cwd-filter` - Returns current filter status
+
 ## Development Commands
 
 ### Backend (Express + TypeScript)
@@ -136,6 +177,8 @@ npx recall-player --version
 curl http://localhost:3001/api/health
 curl http://localhost:3001/api/agents                    # List agents with counts
 curl 'http://localhost:3001/api/sessions?agent=claude'   # Filter by agent
+curl 'http://localhost:3001/api/sessions?showAll=true'   # Show all sessions (bypass CWD filter)
+curl 'http://localhost:3001/api/sessions/cwd-filter'     # Get current CWD filter status
 curl 'http://localhost:3001/api/sessions/<id>/frames'    # Get session frames
 ```
 
