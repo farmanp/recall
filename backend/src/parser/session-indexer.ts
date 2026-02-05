@@ -309,16 +309,17 @@ export class SessionIndexer {
     // Claude format: {uuid}.jsonl → extract "{uuid}"
     const sessionId = path.basename(filePath, '.jsonl');
 
-    // Read first 2KB for start timestamp and metadata
-    const startChunkSize = Math.min(2048, fileSize);
+    // Read first 16KB for start timestamp and metadata
+    // Need larger chunk to capture assistant messages with model info (typically line 6+)
+    const startChunkSize = Math.min(16384, fileSize);
     const startChunk = Buffer.alloc(startChunkSize);
     const fd = await fs.open(filePath, 'r');
 
     try {
       await fd.read(startChunk, 0, startChunkSize, 0);
 
-      // Read last 2KB for end timestamp
-      const endChunkSize = Math.min(2048, fileSize);
+      // Read last 16KB for end timestamp
+      const endChunkSize = Math.min(16384, fileSize);
       const endChunk = Buffer.alloc(endChunkSize);
       const endOffset = Math.max(0, fileSize - endChunkSize);
       await fd.read(endChunk, 0, endChunkSize, endOffset);
