@@ -605,221 +605,230 @@ export const SessionPlayerPage: React.FC = () => {
         </div>
       )}
 
-      {/* Footer Area: Stats + Filters + Scrubber + Controls */}
-      <div className="relative z-30">
-        <FrameTypeFilters
-          frames={frames}
-          activeFrameTypes={activeFrameTypes}
-          onToggleFrameType={(type) => {
-            setActiveFrameTypes((prev) => {
-              const next = new Set(prev);
-              if (next.has(type)) next.delete(type);
-              else next.add(type);
-              return next;
-            });
-          }}
-          onToggleAll={(showAll) => {
-            if (showAll)
-              setActiveFrameTypes(
-                new Set(['user_message', 'claude_response', 'tool_execution', 'claude_thinking'])
-              );
-            else setActiveFrameTypes(new Set());
-          }}
-          availableToolNames={availableToolNames}
-          activeToolNames={activeToolNames}
-          onToggleToolName={(toolName) => {
-            setActiveToolNames((prev) => {
-              const next = new Set(prev);
-              if (next.has(toolName)) next.delete(toolName);
-              else next.add(toolName);
-              return next;
-            });
-          }}
-          onToggleAllTools={(showAll) => {
-            if (showAll) {
-              setActiveToolNames(new Set(availableToolNames));
-            } else {
-              setActiveToolNames(new Set());
-            }
-          }}
-          toolFilterEnabled={toolFilterEnabled}
-          onToolFilterEnabledChange={setToolFilterEnabled}
-          toolErrorsOnly={toolErrorsOnly}
-          onToolErrorsOnlyChange={setToolErrorsOnly}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          searchMatchCount={searchMatches.length}
-          currentMatchRank={currentMatchRank}
-          onNextMatch={() => {
-            const nextIndex = findNextMatchIndex(currentFrameIndex, searchMatches);
-            if (nextIndex !== -1) {
-              handleFrameChange(nextIndex);
-              setIsPlaying(false);
-            }
-          }}
-          onPrevMatch={() => {
-            const prevIndex = findPrevMatchIndex(currentFrameIndex, searchMatches);
-            if (prevIndex !== -1) {
-              handleFrameChange(prevIndex);
-              setIsPlaying(false);
-            }
-          }}
-        />
-
-        <div className="bg-gray-900/70 border-t border-white/5 px-6 py-2">
-          <div className="max-w-6xl mx-auto flex items-center justify-between text-xs text-gray-300">
-            <span>
-              {searchQuery.trim().length > 0
-                ? searchMatches.length > 0
-                  ? `Search: ${searchMatches.length} matches`
-                  : 'Search: no matches'
-                : 'Search: off'}
-            </span>
-            <span>Filters: {activeFrameCount}/4 active</span>
-          </div>
-        </div>
-
-        <TimelineScrubber
-          frames={frames}
-          currentFrameIndex={currentFrameIndex}
-          onSeek={handleFrameChange}
-          showCommentary={showCommentary}
-          commentary={commentaryData?.commentary}
-          activeFrameTypes={activeFrameTypes}
-          isFrameVisible={isFrameVisible}
-        />
-
-        {/* Playback Controls Bar */}
-        <div className="bg-gray-900/60 backdrop-blur-md border-t border-white/5 px-6 py-6 transition-all duration-300">
-          <div className="max-w-6xl mx-auto flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => {
-                  const prevFrame = findPrevVisibleFrame(
-                    currentFrameIndex - 1,
-                    frames,
-                    activeFrameTypes,
-                    isFrameVisible
+      {/* Footer Area: Side Filters + Scrubber + Controls */}
+      <div className="relative z-30 border-t border-white/5 bg-gray-900/55 px-6 py-4">
+        <div className="mx-auto grid max-w-6xl grid-cols-1 gap-4 xl:grid-cols-[320px_minmax(0,1fr)]">
+          <aside className="xl:sticky xl:top-3 xl:self-start">
+            <FrameTypeFilters
+              frames={frames}
+              activeFrameTypes={activeFrameTypes}
+              onToggleFrameType={(type) => {
+                setActiveFrameTypes((prev) => {
+                  const next = new Set(prev);
+                  if (next.has(type)) next.delete(type);
+                  else next.add(type);
+                  return next;
+                });
+              }}
+              onToggleAll={(showAll) => {
+                if (showAll)
+                  setActiveFrameTypes(
+                    new Set([
+                      'user_message',
+                      'claude_response',
+                      'tool_execution',
+                      'claude_thinking',
+                    ])
                   );
-                  handleFrameChange(prevFrame);
+                else setActiveFrameTypes(new Set());
+              }}
+              availableToolNames={availableToolNames}
+              activeToolNames={activeToolNames}
+              onToggleToolName={(toolName) => {
+                setActiveToolNames((prev) => {
+                  const next = new Set(prev);
+                  if (next.has(toolName)) next.delete(toolName);
+                  else next.add(toolName);
+                  return next;
+                });
+              }}
+              onToggleAllTools={(showAll) => {
+                if (showAll) {
+                  setActiveToolNames(new Set(availableToolNames));
+                } else {
+                  setActiveToolNames(new Set());
+                }
+              }}
+              toolFilterEnabled={toolFilterEnabled}
+              onToolFilterEnabledChange={setToolFilterEnabled}
+              toolErrorsOnly={toolErrorsOnly}
+              onToolErrorsOnlyChange={setToolErrorsOnly}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              searchMatchCount={searchMatches.length}
+              currentMatchRank={currentMatchRank}
+              onNextMatch={() => {
+                const nextIndex = findNextMatchIndex(currentFrameIndex, searchMatches);
+                if (nextIndex !== -1) {
+                  handleFrameChange(nextIndex);
                   setIsPlaying(false);
-                }}
-                className="p-2.5 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white rounded-xl border border-white/5 transition-all disabled:opacity-20 active:scale-95"
-                disabled={currentFrameIndex === 0}
-                title="Previous Frame (Left Arrow)"
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-
-              <button
-                onClick={() => setIsPlaying(!isPlaying)}
-                className={`px-8 py-2.5 rounded-2xl font-black uppercase tracking-widest text-sm flex items-center gap-3 transition-all active:scale-95 shadow-lg ${
-                  isPlaying
-                    ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-amber-500/20'
-                    : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/20'
-                }`}
-              >
-                {isPlaying ? (
-                  <Pause className="w-5 h-5 fill-current" />
-                ) : (
-                  <Play className="w-5 h-5 fill-current" />
-                )}
-                {isPlaying ? 'Pause' : 'Play'}
-              </button>
-
-              <div className="ml-2 text-xs text-gray-300">
-                {isPlaying
-                  ? `Playing at ${playbackSpeed}x`
-                  : isEndOfSession
-                    ? 'End reached'
-                    : 'Paused'}
-              </div>
-
-              <button
-                onClick={() => {
-                  const nextFrame = findNextVisibleFrame(
-                    currentFrameIndex + 1,
-                    frames,
-                    activeFrameTypes,
-                    isFrameVisible
-                  );
-                  handleFrameChange(nextFrame);
+                }
+              }}
+              onPrevMatch={() => {
+                const prevIndex = findPrevMatchIndex(currentFrameIndex, searchMatches);
+                if (prevIndex !== -1) {
+                  handleFrameChange(prevIndex);
                   setIsPlaying(false);
-                }}
-                className="p-2.5 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white rounded-xl border border-white/5 transition-all disabled:opacity-20 active:scale-95"
-                disabled={currentFrameIndex >= frames.length - 1}
-                title="Next Frame (Right Arrow)"
-              >
-                <div className="rotate-180">
-                  <ChevronLeft className="w-5 h-5" />
-                </div>
-              </button>
+                }
+              }}
+            />
+          </aside>
+
+          <div className="min-w-0">
+            <div className="mb-2 flex items-center justify-between text-xs text-gray-300">
+              <span>
+                {searchQuery.trim().length > 0
+                  ? searchMatches.length > 0
+                    ? `Search: ${searchMatches.length} matches`
+                    : 'Search: no matches'
+                  : 'Search: off'}
+              </span>
+              <span>Filters: {activeFrameCount}/4 active</span>
             </div>
 
-            <div className="flex items-center gap-6">
-              <label className="flex items-center gap-3 cursor-pointer group select-none">
-                <div
-                  className={`w-10 h-6 rounded-full p-1 transition-all duration-300 ${showCommentary ? 'bg-blue-600' : 'bg-gray-700'}`}
-                >
-                  <div
-                    className={`w-4 h-4 bg-white rounded-full transition-transform duration-300 ${showCommentary ? 'translate-x-4' : ''}`}
-                  />
+            <TimelineScrubber
+              frames={frames}
+              currentFrameIndex={currentFrameIndex}
+              onSeek={handleFrameChange}
+              showCommentary={showCommentary}
+              commentary={commentaryData?.commentary}
+              activeFrameTypes={activeFrameTypes}
+              isFrameVisible={isFrameVisible}
+            />
+
+            {/* Playback Controls Bar */}
+            <div className="bg-gray-900/60 backdrop-blur-md border-t border-white/5 px-6 py-6 transition-all duration-300">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      const prevFrame = findPrevVisibleFrame(
+                        currentFrameIndex - 1,
+                        frames,
+                        activeFrameTypes,
+                        isFrameVisible
+                      );
+                      handleFrameChange(prevFrame);
+                      setIsPlaying(false);
+                    }}
+                    className="p-2.5 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white rounded-xl border border-white/5 transition-all disabled:opacity-20 active:scale-95"
+                    disabled={currentFrameIndex === 0}
+                    title="Previous Frame (Left Arrow)"
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+
+                  <button
+                    onClick={() => setIsPlaying(!isPlaying)}
+                    className={`px-8 py-2.5 rounded-2xl font-black uppercase tracking-widest text-sm flex items-center gap-3 transition-all active:scale-95 shadow-lg ${
+                      isPlaying
+                        ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-amber-500/20'
+                        : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/20'
+                    }`}
+                  >
+                    {isPlaying ? (
+                      <Pause className="w-5 h-5 fill-current" />
+                    ) : (
+                      <Play className="w-5 h-5 fill-current" />
+                    )}
+                    {isPlaying ? 'Pause' : 'Play'}
+                  </button>
+
+                  <div className="ml-2 text-xs text-gray-300">
+                    {isPlaying
+                      ? `Playing at ${playbackSpeed}x`
+                      : isEndOfSession
+                        ? 'End reached'
+                        : 'Paused'}
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      const nextFrame = findNextVisibleFrame(
+                        currentFrameIndex + 1,
+                        frames,
+                        activeFrameTypes,
+                        isFrameVisible
+                      );
+                      handleFrameChange(nextFrame);
+                      setIsPlaying(false);
+                    }}
+                    className="p-2.5 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white rounded-xl border border-white/5 transition-all disabled:opacity-20 active:scale-95"
+                    disabled={currentFrameIndex >= frames.length - 1}
+                    title="Next Frame (Right Arrow)"
+                  >
+                    <div className="rotate-180">
+                      <ChevronLeft className="w-5 h-5" />
+                    </div>
+                  </button>
                 </div>
-                <input
-                  type="checkbox"
-                  checked={showCommentary}
-                  onChange={(e) => setShowCommentary(e.target.checked)}
-                  className="hidden"
-                />
-                <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-white transition-colors">
-                  Commentary
-                </span>
-              </label>
 
-              <div className="flex items-center gap-2 bg-gray-800/80 rounded-2xl p-1.5 border border-white/5">
-                <button
-                  onClick={() => setCompressionEnabled(!compressionEnabled)}
-                  className={`p-2 rounded-xl transition-all ${
-                    compressionEnabled
-                      ? 'bg-amber-500/10 text-amber-500'
-                      : 'text-gray-500 hover:text-gray-300'
-                  }`}
-                  title={
-                    compressionEnabled
-                      ? 'Disable dead air compression'
-                      : 'Enable dead air compression'
-                  }
-                >
-                  <Zap className={`w-4 h-4 ${compressionEnabled ? 'fill-current' : ''}`} />
-                </button>
+                <div className="flex items-center gap-6">
+                  <label className="flex items-center gap-3 cursor-pointer group select-none">
+                    <div
+                      className={`w-10 h-6 rounded-full p-1 transition-all duration-300 ${showCommentary ? 'bg-blue-600' : 'bg-gray-700'}`}
+                    >
+                      <div
+                        className={`w-4 h-4 bg-white rounded-full transition-transform duration-300 ${showCommentary ? 'translate-x-4' : ''}`}
+                      />
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={showCommentary}
+                      onChange={(e) => setShowCommentary(e.target.checked)}
+                      className="hidden"
+                    />
+                    <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-white transition-colors">
+                      Commentary
+                    </span>
+                  </label>
 
-                <div className="w-[1px] h-4 bg-gray-700 mx-1" />
-
-                <div className="flex items-center gap-1">
-                  {[0.5, 1, 2, 5].map((speed) => (
+                  <div className="flex items-center gap-2 bg-gray-800/80 rounded-2xl p-1.5 border border-white/5">
                     <button
-                      key={speed}
-                      onClick={() => setPlaybackSpeed(speed)}
-                      className={`px-2.5 py-1 text-[10px] font-black rounded-lg transition-all ${
-                        playbackSpeed === speed
-                          ? 'bg-blue-600 text-white'
+                      onClick={() => setCompressionEnabled(!compressionEnabled)}
+                      className={`p-2 rounded-xl transition-all ${
+                        compressionEnabled
+                          ? 'bg-amber-500/10 text-amber-500'
                           : 'text-gray-500 hover:text-gray-300'
                       }`}
+                      title={
+                        compressionEnabled
+                          ? 'Disable dead air compression'
+                          : 'Enable dead air compression'
+                      }
                     >
-                      {speed}x
+                      <Zap className={`w-4 h-4 ${compressionEnabled ? 'fill-current' : ''}`} />
                     </button>
-                  ))}
+
+                    <div className="w-[1px] h-4 bg-gray-700 mx-1" />
+
+                    <div className="flex items-center gap-1">
+                      {[0.5, 1, 2, 5].map((speed) => (
+                        <button
+                          key={speed}
+                          onClick={() => setPlaybackSpeed(speed)}
+                          className={`px-2.5 py-1 text-[10px] font-black rounded-lg transition-all ${
+                            playbackSpeed === speed
+                              ? 'bg-blue-600 text-white'
+                              : 'text-gray-500 hover:text-gray-300'
+                          }`}
+                        >
+                          {speed}x
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="w-[1px] h-4 bg-gray-700 mx-1" />
+
+                    <button
+                      onClick={() => setShowHelp(true)}
+                      className="p-2 text-gray-500 hover:text-gray-300 rounded-xl transition-all"
+                      title="Keyboard shortcuts (?)"
+                    >
+                      <Info className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
-
-                <div className="w-[1px] h-4 bg-gray-700 mx-1" />
-
-                <button
-                  onClick={() => setShowHelp(true)}
-                  className="p-2 text-gray-500 hover:text-gray-300 rounded-xl transition-all"
-                  title="Keyboard shortcuts (?)"
-                >
-                  <Info className="w-4 h-4" />
-                </button>
               </div>
             </div>
           </div>

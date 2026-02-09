@@ -100,8 +100,8 @@ export const FrameTypeFilters: React.FC<FrameTypeFiltersProps> = ({
   };
 
   return (
-    <div className="bg-gray-800/95 border-b border-gray-700 px-6 py-3">
-      <div className="max-w-4xl mx-auto">
+    <div className="rounded-xl border border-white/10 bg-gray-900/75 p-3">
+      <div>
         {/* Search Input */}
         {onSearchChange && (
           <div className="mb-3">
@@ -112,7 +112,7 @@ export const FrameTypeFilters: React.FC<FrameTypeFiltersProps> = ({
                   value={searchQuery}
                   onChange={(e) => onSearchChange(e.target.value)}
                   placeholder="Search frames... (n/p to navigate)"
-                  className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded text-sm text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+                  className="w-full px-3 py-2 bg-gray-950 border border-gray-700 rounded text-sm text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
                 />
                 {searchQuery && (
                   <button
@@ -188,7 +188,7 @@ export const FrameTypeFilters: React.FC<FrameTypeFiltersProps> = ({
         </div>
 
         {/* Vertical Hierarchical Filters */}
-        <div className="rounded-lg border border-gray-700 bg-gray-900/70 p-3">
+        <div className="rounded-lg border border-gray-700 bg-gray-950/70 p-3">
           <div className="mb-3 flex items-center justify-between">
             <h3 className="text-sm font-semibold tracking-wide text-gray-200">HIERARCHY</h3>
             <span className="text-xs text-gray-400">Parent and child filters</span>
@@ -263,7 +263,7 @@ export const FrameTypeFilters: React.FC<FrameTypeFiltersProps> = ({
                         </div>
 
                         {availableToolNames.length > 0 ? (
-                          <div className="max-h-52 overflow-y-auto space-y-2 pr-1">
+                          <div className="max-h-40 overflow-y-auto space-y-2 pr-1">
                             {availableToolNames.map((toolName) => (
                               <label
                                 key={toolName}
