@@ -3,6 +3,13 @@ import { bulkImportTranscripts, importTranscript } from '../services/transcript-
 import { getImportStats } from '../db/transcript-queries';
 import { detectAgentFromPath } from '../parser/agent-detector';
 import type { AgentType } from '../types/transcript';
+import { validateBody } from '../middleware/validation';
+import {
+  importSingleBodySchema,
+  importStartBodySchema,
+  ImportSingleBodyParams,
+  ImportStartBodyParams,
+} from '../validation/schemas';
 
 const router = Router();
 
@@ -52,7 +59,7 @@ let currentImportJob: {
  *   "skipExisting": true
  * }
  */
-router.post('/start', async (req: Request, res: Response) => {
+router.post('/start', validateBody(importStartBodySchema), async (req: Request, res: Response) => {
   try {
     // Check if import is already running
     if (currentImportJob.status === 'importing') {
@@ -65,7 +72,7 @@ router.post('/start', async (req: Request, res: Response) => {
     }
 
     // Get config from request body
-    const { sourcePath, parallel = 10, skipExisting = true } = req.body || {};
+    const { sourcePath, parallel, skipExisting } = req.body as ImportStartBodyParams;
 
     // Reset job state
     currentImportJob = {
@@ -203,37 +210,33 @@ router.get('/stats', (_req: Request, res: Response) => {
  *   "agent": "codex"
  * }
  */
-router.post('/single', async (req: Request, res: Response) => {
-  try {
-    const { filePath, agent: specifiedAgent } = req.body || {};
+router.post(
+  '/single',
+  validateBody(importSingleBodySchema),
+  async (req: Request, res: Response) => {
+    try {
+      const { filePath, agent: specifiedAgent } = req.body as ImportSingleBodyParams;
 
-    if (!filePath || typeof filePath !== 'string') {
-      res.status(400).json({
-        success: false,
-        error: 'Missing required field: filePath',
+      // Determine agent type: use specified agent or auto-detect from path
+      const agent: AgentType = specifiedAgent || detectAgentFromPath(filePath);
+
+      // Import the file
+      await importTranscript(filePath, agent);
+
+      res.json({
+        success: true,
+        message: 'Transcript imported successfully',
+        agent,
       });
-      return;
+    } catch (error) {
+      console.error('Error importing transcript:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to import transcript',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
     }
-
-    // Determine agent type: use specified agent or auto-detect from path
-    const agent: AgentType = specifiedAgent || detectAgentFromPath(filePath);
-
-    // Import the file
-    await importTranscript(filePath, agent);
-
-    res.json({
-      success: true,
-      message: 'Transcript imported successfully',
-      agent,
-    });
-  } catch (error) {
-    console.error('Error importing transcript:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to import transcript',
-      message: error instanceof Error ? error.message : 'Unknown error',
-    });
   }
-});
+);
 
 export default router;
