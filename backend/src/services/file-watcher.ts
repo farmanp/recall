@@ -69,7 +69,7 @@ export function startWatcher(): void {
   console.log(`[FileWatcher] Starting file watcher on: ${WATCH_DIR}`);
 
   try {
-    watcher = chokidar.watch('*.jsonl', {
+    watcher = chokidar.watch('**/*.jsonl', {
       cwd: WATCH_DIR,
       persistent: true,
       ignoreInitial: false,
@@ -77,7 +77,9 @@ export function startWatcher(): void {
         stabilityThreshold: 500,
         pollInterval: 100,
       },
-      depth: 0, // Only watch the projects directory, not subdirectories
+      // Claude sessions are stored under ~/.claude/projects/{project}/<session>.jsonl
+      // so we must watch nested project directories.
+      depth: 5,
     });
 
     watcher

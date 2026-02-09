@@ -54,14 +54,14 @@ describe('file-watcher', () => {
     const addHandler = handlers.get('add');
     expect(addHandler).toBeDefined();
 
-    addHandler?.('session.jsonl');
+    addHandler?.('my-project/session.jsonl');
     expect(importTranscript).not.toHaveBeenCalled();
 
     vi.advanceTimersByTime(2000);
     await Promise.resolve();
 
     expect(importTranscript).toHaveBeenCalledWith(
-      path.join(process.env.HOME!, '.claude', 'projects', 'session.jsonl')
+      path.join(process.env.HOME!, '.claude', 'projects', 'my-project/session.jsonl')
     );
 
     await stopWatcher();
