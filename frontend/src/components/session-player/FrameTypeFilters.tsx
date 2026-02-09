@@ -187,116 +187,110 @@ export const FrameTypeFilters: React.FC<FrameTypeFiltersProps> = ({
           </label>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-4">
-          {/* Hierarchical Advanced Filters */}
-          {onToolFilterEnabledChange && onToolErrorsOnlyChange && (
-            <div className="rounded-lg border border-gray-700 bg-gray-900/70 p-3">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-semibold tracking-wide text-gray-200">HIERARCHY</h3>
-                <span className="text-xs text-gray-400">Tool filters</span>
-              </div>
+        {/* Vertical Hierarchical Filters */}
+        <div className="rounded-lg border border-gray-700 bg-gray-900/70 p-3">
+          <div className="mb-3 flex items-center justify-between">
+            <h3 className="text-sm font-semibold tracking-wide text-gray-200">HIERARCHY</h3>
+            <span className="text-xs text-gray-400">Parent and child filters</span>
+          </div>
 
-              <div className="space-y-3">
-                <div className="rounded border border-gray-700 bg-gray-800/40 p-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-100 font-medium">
-                      Parent: Tool Executions
-                    </span>
-                    <label className="flex items-center gap-2 text-sm cursor-pointer text-gray-200">
-                      <input
-                        type="checkbox"
-                        checked={toolFilterEnabled}
-                        onChange={(e) => onToolFilterEnabledChange(e.target.checked)}
-                        className="rounded"
-                      />
-                      Enable
-                    </label>
-                  </div>
-
-                  <div className="mt-3 pl-3 border-l border-gray-700 space-y-3">
-                    <label
-                      className={`flex items-center gap-2 text-sm cursor-pointer ${toolFilterEnabled ? 'text-gray-200' : 'text-gray-500'}`}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={toolErrorsOnly}
-                        onChange={(e) => onToolErrorsOnlyChange(e.target.checked)}
-                        className="rounded"
-                        disabled={!toolFilterEnabled}
-                      />
-                      Child: Errors only
-                    </label>
-
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs uppercase tracking-wide text-gray-400">
-                        Child: By tool name
-                      </span>
-                      {onToggleAllTools && (
-                        <button
-                          onClick={() => onToggleAllTools(!allToolsActive)}
-                          className="text-xs px-2 py-1 rounded bg-gray-700 hover:bg-gray-600 text-gray-100 disabled:opacity-50"
-                          title={allToolsActive ? 'Deselect all tools' : 'Select all tools'}
-                          disabled={!toolFilterEnabled}
-                        >
-                          {allToolsActive ? 'Deselect all' : 'Select all'}
-                        </button>
-                      )}
-                    </div>
-                    {availableToolNames.length > 0 ? (
-                      <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto pr-1">
-                        {availableToolNames.map((toolName) => (
-                          <label
-                            key={toolName}
-                            className={`flex items-center gap-2 text-sm cursor-pointer bg-gray-800/60 border border-gray-700 rounded px-2 py-1.5 ${toolFilterEnabled ? 'text-gray-200' : 'text-gray-500'}`}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={activeToolNames.has(toolName)}
-                              onChange={() => onToggleToolName?.(toolName)}
-                              className="rounded"
-                              disabled={!toolFilterEnabled}
-                            />
-                            <span className="font-mono text-xs">{toolName}</span>
-                          </label>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-xs text-gray-500">No tool executions in this session.</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Quick Frame Type Checkboxes */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 h-fit">
+          <div className="space-y-2">
             {(Object.keys(frameTypeMetadata) as FrameType[]).map((type) => {
               const metadata = frameTypeMetadata[type];
               const count = frameTypeCounts[type];
               const isActive = activeFrameTypes.has(type);
+              const isToolType = type === 'tool_execution';
 
               return (
-                <label
-                  key={type}
-                  className={`flex items-center gap-2 px-3 py-2 rounded border transition-all cursor-pointer ${
-                    isActive
-                      ? 'bg-gray-700 border-gray-500 shadow-[0_0_0_1px_rgba(148,163,184,0.35)]'
-                      : 'bg-gray-900 border-gray-800 opacity-60'
-                  }`}
-                >
-                  <input
-                    type="checkbox"
-                    checked={isActive}
-                    onChange={() => onToggleFrameType(type)}
-                    className="rounded"
-                  />
-                  <span className={`text-lg ${metadata.color}`}>{metadata.icon}</span>
-                  <div className="flex-1">
-                    <div className="text-xs text-gray-200">{metadata.label}</div>
-                    <div className="text-xs text-gray-400">({count})</div>
-                  </div>
-                </label>
+                <div key={type} className="rounded border border-gray-700 bg-gray-800/50 p-2.5">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={isActive}
+                      onChange={() => onToggleFrameType(type)}
+                      className="rounded"
+                    />
+                    <span className={`text-base ${metadata.color}`}>{metadata.icon}</span>
+                    <span className="text-sm text-gray-100">{metadata.label}</span>
+                    <span className="text-xs text-gray-400">({count})</span>
+                  </label>
+
+                  {isToolType && onToolFilterEnabledChange && onToolErrorsOnlyChange && (
+                    <div className="mt-3 ml-4 border-l border-gray-700 pl-3 space-y-3">
+                      <label
+                        className={`flex items-center gap-2 text-sm cursor-pointer ${isActive ? 'text-gray-200' : 'text-gray-500'}`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={toolFilterEnabled}
+                          onChange={(e) => onToolFilterEnabledChange(e.target.checked)}
+                          className="rounded"
+                          disabled={!isActive}
+                        />
+                        Child: Enable tool subfilters
+                      </label>
+
+                      <label
+                        className={`flex items-center gap-2 text-sm cursor-pointer ${isActive && toolFilterEnabled ? 'text-gray-200' : 'text-gray-500'}`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={toolErrorsOnly}
+                          onChange={(e) => onToolErrorsOnlyChange(e.target.checked)}
+                          className="rounded"
+                          disabled={!isActive || !toolFilterEnabled}
+                        />
+                        Grandchild: Errors only
+                      </label>
+
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span
+                            className={`text-xs uppercase tracking-wide ${isActive && toolFilterEnabled ? 'text-gray-300' : 'text-gray-500'}`}
+                          >
+                            Grandchild: By tool name
+                          </span>
+                          {onToggleAllTools && (
+                            <button
+                              onClick={() => onToggleAllTools(!allToolsActive)}
+                              className="text-xs px-2 py-1 rounded bg-gray-700 hover:bg-gray-600 text-gray-100 disabled:opacity-50"
+                              title={allToolsActive ? 'Deselect all tools' : 'Select all tools'}
+                              disabled={!isActive || !toolFilterEnabled}
+                            >
+                              {allToolsActive ? 'Deselect all' : 'Select all'}
+                            </button>
+                          )}
+                        </div>
+
+                        {availableToolNames.length > 0 ? (
+                          <div className="max-h-52 overflow-y-auto space-y-2 pr-1">
+                            {availableToolNames.map((toolName) => (
+                              <label
+                                key={toolName}
+                                className={`flex items-center gap-2 text-sm cursor-pointer bg-gray-800/60 border border-gray-700 rounded px-2 py-1.5 ${
+                                  isActive && toolFilterEnabled ? 'text-gray-200' : 'text-gray-500'
+                                }`}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={activeToolNames.has(toolName)}
+                                  onChange={() => onToggleToolName?.(toolName)}
+                                  className="rounded"
+                                  disabled={!isActive || !toolFilterEnabled}
+                                />
+                                <span className="font-mono text-xs">{toolName}</span>
+                              </label>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-xs text-gray-500">
+                            No tool executions in this session.
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
               );
             })}
           </div>
