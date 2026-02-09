@@ -15,6 +15,7 @@ vi.mock('../../services/transcript-importer', () => ({
 }));
 
 vi.mock('../../db/transcript-queries', () => ({
+  initializeTranscriptSchema: vi.fn(),
   getImportStats: vi.fn(() => ({
     total: 0,
     pending: 0,
