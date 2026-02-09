@@ -63,6 +63,9 @@ export function initializeTranscriptSchema(): void {
     CREATE INDEX IF NOT EXISTS idx_session_start_time
       ON session_metadata(start_time DESC);
 
+    CREATE INDEX IF NOT EXISTS idx_session_start_time_session_id
+      ON session_metadata(start_time DESC, session_id DESC);
+
     CREATE INDEX IF NOT EXISTS idx_sessions_agent
       ON session_metadata(agent_type);
   `);
@@ -97,6 +100,9 @@ export function initializeTranscriptSchema(): void {
   db.exec(`
     CREATE INDEX IF NOT EXISTS idx_frame_session_timestamp
       ON playback_frames(session_id, timestamp_ms);
+
+    CREATE INDEX IF NOT EXISTS idx_frame_session_timestamp_id
+      ON playback_frames(session_id, timestamp_ms, id);
 
     CREATE INDEX IF NOT EXISTS idx_frame_type
       ON playback_frames(frame_type);
@@ -270,7 +276,7 @@ export function getTranscriptSessions(query: TranscriptSessionListQuery): {
     SELECT *
     FROM session_metadata
     ${whereClause}
-    ORDER BY start_time DESC
+    ORDER BY start_time DESC, session_id DESC
     LIMIT @limit OFFSET @offset
   `;
 
@@ -504,7 +510,7 @@ export function getTranscriptFrames(
     SELECT *
     FROM playback_frames
     ${whereClause}
-    ORDER BY timestamp_ms ASC
+    ORDER BY timestamp_ms ASC, id ASC
     LIMIT @limit OFFSET @offset
   `;
 
