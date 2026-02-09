@@ -35,11 +35,11 @@ import {
   MessageSquare,
   Layout,
   FileText,
+  SlidersHorizontal,
 } from 'lucide-react';
 import { CommentaryTimeline, CommentaryCard } from '../components/CommentaryBubble';
 import { TimelineScrubber } from '../components/session-player/TimelineScrubber';
 import { ChatView } from '../components/session-player/ChatView';
-import { FrameTypeFilters } from '../components/session-player/FrameTypeFilters';
 import {
   findNextVisibleFrame,
   findPrevVisibleFrame,
@@ -48,6 +48,7 @@ import { HelpPanel } from '../components/session-player/HelpPanel';
 import { StatsPanel } from '../components/session-player/StatsPanel';
 import { ClaudeMdPanel } from '../components/session-player/ClaudeMdPanel';
 import { ArtifactsPanel } from '../components/session-player/ArtifactsPanel';
+import { FiltersPanel } from '../components/session-player/FiltersPanel';
 import { useSessionStats } from '../hooks/useSessionStats';
 import {
   findMatchingFrameIndices,
@@ -297,6 +298,11 @@ export const SessionPlayerPage: React.FC = () => {
           e.preventDefault();
           setShowArtifacts((prev) => !prev);
           break;
+        case 'f':
+        case 'F':
+          e.preventDefault();
+          setShowFiltersPanel((prev) => !prev);
+          break;
         case 'd':
         case 'D':
           e.preventDefault();
@@ -320,6 +326,8 @@ export const SessionPlayerPage: React.FC = () => {
             setShowClaudeMd(false);
           } else if (showArtifacts) {
             setShowArtifacts(false);
+          } else if (showFiltersPanel) {
+            setShowFiltersPanel(false);
           } else {
             navigate('/');
           }
@@ -390,6 +398,7 @@ export const SessionPlayerPage: React.FC = () => {
     showStats,
     showClaudeMd,
     showArtifacts,
+    showFiltersPanel,
     isFrameVisible,
   ]);
 
@@ -548,6 +557,24 @@ export const SessionPlayerPage: React.FC = () => {
           </button>
 
           <button
+            onClick={() => setShowFiltersPanel(!showFiltersPanel)}
+            className={`inline-flex items-center gap-2 px-3 py-2.5 rounded-xl transition-all border active:scale-95 ${
+              showFiltersPanel
+                ? 'bg-indigo-600 border-indigo-500 text-white'
+                : activeFrameCount < 4
+                  ? 'bg-indigo-900/50 border-indigo-500/30 text-indigo-300 hover:text-white'
+                  : 'bg-gray-800 border-white/5 text-gray-300 hover:text-white'
+            }`}
+            title="Frame filters (f)"
+            aria-label="Toggle frame filters"
+          >
+            <SlidersHorizontal className="w-5 h-5" />
+            <span className="hidden xl:inline text-xs font-semibold">
+              Filters{activeFrameCount < 4 ? `: ${activeFrameCount}/4` : ''}
+            </span>
+          </button>
+
+          <button
             onClick={() => setShowStats(!showStats)}
             className={`inline-flex items-center gap-2 px-3 py-2.5 rounded-xl transition-all border active:scale-95 ${
               showStats
@@ -606,81 +633,9 @@ export const SessionPlayerPage: React.FC = () => {
         </div>
       )}
 
-      {/* Footer Area: Side Filters + Scrubber + Controls */}
+      {/* Footer Area: Scrubber + Controls */}
       <div className="relative z-30 border-t border-white/5 bg-gray-900/55 px-6 py-4">
-        <div
-          className={`mx-auto grid max-w-6xl grid-cols-1 gap-4 ${
-            showFiltersPanel ? 'xl:grid-cols-[320px_minmax(0,1fr)]' : ''
-          }`}
-        >
-          {showFiltersPanel && (
-            <aside className="xl:sticky xl:top-3 xl:self-start max-h-[70vh] overflow-y-auto pr-1">
-              <FrameTypeFilters
-                frames={frames}
-                activeFrameTypes={activeFrameTypes}
-                onToggleFrameType={(type) => {
-                  setActiveFrameTypes((prev) => {
-                    const next = new Set(prev);
-                    if (next.has(type)) next.delete(type);
-                    else next.add(type);
-                    return next;
-                  });
-                }}
-                onToggleAll={(showAll) => {
-                  if (showAll)
-                    setActiveFrameTypes(
-                      new Set([
-                        'user_message',
-                        'claude_response',
-                        'tool_execution',
-                        'claude_thinking',
-                      ])
-                    );
-                  else setActiveFrameTypes(new Set());
-                }}
-                availableToolNames={availableToolNames}
-                activeToolNames={activeToolNames}
-                onToggleToolName={(toolName) => {
-                  setActiveToolNames((prev) => {
-                    const next = new Set(prev);
-                    if (next.has(toolName)) next.delete(toolName);
-                    else next.add(toolName);
-                    return next;
-                  });
-                }}
-                onToggleAllTools={(showAll) => {
-                  if (showAll) {
-                    setActiveToolNames(new Set(availableToolNames));
-                  } else {
-                    setActiveToolNames(new Set());
-                  }
-                }}
-                toolFilterEnabled={toolFilterEnabled}
-                onToolFilterEnabledChange={setToolFilterEnabled}
-                toolErrorsOnly={toolErrorsOnly}
-                onToolErrorsOnlyChange={setToolErrorsOnly}
-                searchQuery={searchQuery}
-                onSearchChange={setSearchQuery}
-                searchMatchCount={searchMatches.length}
-                currentMatchRank={currentMatchRank}
-                onNextMatch={() => {
-                  const nextIndex = findNextMatchIndex(currentFrameIndex, searchMatches);
-                  if (nextIndex !== -1) {
-                    handleFrameChange(nextIndex);
-                    setIsPlaying(false);
-                  }
-                }}
-                onPrevMatch={() => {
-                  const prevIndex = findPrevMatchIndex(currentFrameIndex, searchMatches);
-                  if (prevIndex !== -1) {
-                    handleFrameChange(prevIndex);
-                    setIsPlaying(false);
-                  }
-                }}
-              />
-            </aside>
-          )}
-
+        <div className="mx-auto max-w-6xl">
           <div className="min-w-0">
             <div className="mb-2 flex items-center justify-between text-xs text-gray-300">
               <span>
@@ -690,15 +645,7 @@ export const SessionPlayerPage: React.FC = () => {
                     : 'Search: no matches'
                   : 'Search: off'}
               </span>
-              <div className="flex items-center gap-3">
-                <span>Filters: {activeFrameCount}/4 active</span>
-                <button
-                  onClick={() => setShowFiltersPanel((prev) => !prev)}
-                  className="rounded border border-white/10 bg-gray-800 px-2 py-1 text-[11px] font-semibold text-gray-200 hover:bg-gray-700"
-                >
-                  {showFiltersPanel ? 'Hide filters' : 'Show filters'}
-                </button>
-              </div>
+              <span>Filters: {activeFrameCount}/4 active</span>
             </div>
 
             <TimelineScrubber
@@ -876,6 +823,67 @@ export const SessionPlayerPage: React.FC = () => {
             handleFrameChange(index);
             setShowArtifacts(false);
           }}
+        />
+      )}
+      {showFiltersPanel && (
+        <FiltersPanel
+          frames={frames}
+          activeFrameTypes={activeFrameTypes}
+          onToggleFrameType={(type) => {
+            setActiveFrameTypes((prev) => {
+              const next = new Set(prev);
+              if (next.has(type)) next.delete(type);
+              else next.add(type);
+              return next;
+            });
+          }}
+          onToggleAll={(showAll) => {
+            if (showAll)
+              setActiveFrameTypes(
+                new Set(['user_message', 'claude_response', 'tool_execution', 'claude_thinking'])
+              );
+            else setActiveFrameTypes(new Set());
+          }}
+          availableToolNames={availableToolNames}
+          activeToolNames={activeToolNames}
+          onToggleToolName={(toolName) => {
+            setActiveToolNames((prev) => {
+              const next = new Set(prev);
+              if (next.has(toolName)) next.delete(toolName);
+              else next.add(toolName);
+              return next;
+            });
+          }}
+          onToggleAllTools={(showAll) => {
+            if (showAll) {
+              setActiveToolNames(new Set(availableToolNames));
+            } else {
+              setActiveToolNames(new Set());
+            }
+          }}
+          toolFilterEnabled={toolFilterEnabled}
+          onToolFilterEnabledChange={setToolFilterEnabled}
+          toolErrorsOnly={toolErrorsOnly}
+          onToolErrorsOnlyChange={setToolErrorsOnly}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          searchMatchCount={searchMatches.length}
+          currentMatchRank={currentMatchRank}
+          onNextMatch={() => {
+            const nextIndex = findNextMatchIndex(currentFrameIndex, searchMatches);
+            if (nextIndex !== -1) {
+              handleFrameChange(nextIndex);
+              setIsPlaying(false);
+            }
+          }}
+          onPrevMatch={() => {
+            const prevIndex = findPrevMatchIndex(currentFrameIndex, searchMatches);
+            if (prevIndex !== -1) {
+              handleFrameChange(prevIndex);
+              setIsPlaying(false);
+            }
+          }}
+          onClose={() => setShowFiltersPanel(false)}
         />
       )}
     </div>
