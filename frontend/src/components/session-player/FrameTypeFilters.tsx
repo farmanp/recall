@@ -187,120 +187,120 @@ export const FrameTypeFilters: React.FC<FrameTypeFiltersProps> = ({
           </label>
         </div>
 
-        {/* Filter Checkboxes Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {(Object.keys(frameTypeMetadata) as FrameType[]).map((type) => {
-            const metadata = frameTypeMetadata[type];
-            const count = frameTypeCounts[type];
-            const isActive = activeFrameTypes.has(type);
-
-            return (
-              <label
-                key={type}
-                className={`flex items-center gap-2 px-3 py-2 rounded border transition-all cursor-pointer ${
-                  isActive
-                    ? 'bg-gray-700 border-gray-500 shadow-[0_0_0_1px_rgba(148,163,184,0.35)]'
-                    : 'bg-gray-900 border-gray-800 opacity-60'
-                }`}
-              >
-                <input
-                  type="checkbox"
-                  checked={isActive}
-                  onChange={() => onToggleFrameType(type)}
-                  className="rounded"
-                />
-                <span className={`text-lg ${metadata.color}`}>{metadata.icon}</span>
-                <div className="flex-1">
-                  <div className="text-xs text-gray-200">{metadata.label}</div>
-                  <div className="text-xs text-gray-400">({count})</div>
-                </div>
-              </label>
-            );
-          })}
-        </div>
-
-        {/* Hierarchical Advanced Filters */}
-        {onToolFilterEnabledChange && onToolErrorsOnlyChange && (
-          <div className="mt-4 border-t border-gray-700 pt-4">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold tracking-wide text-gray-200">
-                ADVANCED FILTERS
-              </h3>
-              <span className="text-xs text-gray-400">Vertical hierarchy</span>
-            </div>
-
-            <div className="rounded-lg border border-gray-700 bg-gray-900/60 p-3">
-              <div className="flex items-center justify-between">
-                <div className="flex flex-col">
-                  <span className="text-sm text-gray-100 font-medium">Tool Executions</span>
-                  <span className="text-xs text-gray-400">
-                    Filter by tool name and result state
-                  </span>
-                </div>
-                <label className="flex items-center gap-2 text-sm cursor-pointer text-gray-200">
-                  <input
-                    type="checkbox"
-                    checked={toolFilterEnabled}
-                    onChange={(e) => onToolFilterEnabledChange(e.target.checked)}
-                    className="rounded"
-                  />
-                  Enable
-                </label>
+        <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-4">
+          {/* Hierarchical Advanced Filters */}
+          {onToolFilterEnabledChange && onToolErrorsOnlyChange && (
+            <div className="rounded-lg border border-gray-700 bg-gray-900/70 p-3">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-semibold tracking-wide text-gray-200">HIERARCHY</h3>
+                <span className="text-xs text-gray-400">Tool filters</span>
               </div>
 
-              {toolFilterEnabled && (
-                <div className="mt-3 pl-4 border-l border-gray-700 space-y-3">
-                  <label className="flex items-center gap-2 text-sm text-gray-200 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={toolErrorsOnly}
-                      onChange={(e) => onToolErrorsOnlyChange(e.target.checked)}
-                      className="rounded"
-                    />
-                    Errors only
-                  </label>
+              <div className="space-y-3">
+                <div className="rounded border border-gray-700 bg-gray-800/40 p-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-100 font-medium">
+                      Parent: Tool Executions
+                    </span>
+                    <label className="flex items-center gap-2 text-sm cursor-pointer text-gray-200">
+                      <input
+                        type="checkbox"
+                        checked={toolFilterEnabled}
+                        onChange={(e) => onToolFilterEnabledChange(e.target.checked)}
+                        className="rounded"
+                      />
+                      Enable
+                    </label>
+                  </div>
 
-                  {availableToolNames.length > 0 ? (
-                    <>
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs uppercase tracking-wide text-gray-400">
-                          By tool name
-                        </span>
-                        {onToggleAllTools && (
-                          <button
-                            onClick={() => onToggleAllTools(!allToolsActive)}
-                            className="text-xs px-2 py-1 rounded bg-gray-700 hover:bg-gray-600 text-gray-100"
-                            title={allToolsActive ? 'Deselect all tools' : 'Select all tools'}
-                          >
-                            {allToolsActive ? 'Deselect all' : 'Select all'}
-                          </button>
-                        )}
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <div className="mt-3 pl-3 border-l border-gray-700 space-y-3">
+                    <label
+                      className={`flex items-center gap-2 text-sm cursor-pointer ${toolFilterEnabled ? 'text-gray-200' : 'text-gray-500'}`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={toolErrorsOnly}
+                        onChange={(e) => onToolErrorsOnlyChange(e.target.checked)}
+                        className="rounded"
+                        disabled={!toolFilterEnabled}
+                      />
+                      Child: Errors only
+                    </label>
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs uppercase tracking-wide text-gray-400">
+                        Child: By tool name
+                      </span>
+                      {onToggleAllTools && (
+                        <button
+                          onClick={() => onToggleAllTools(!allToolsActive)}
+                          className="text-xs px-2 py-1 rounded bg-gray-700 hover:bg-gray-600 text-gray-100 disabled:opacity-50"
+                          title={allToolsActive ? 'Deselect all tools' : 'Select all tools'}
+                          disabled={!toolFilterEnabled}
+                        >
+                          {allToolsActive ? 'Deselect all' : 'Select all'}
+                        </button>
+                      )}
+                    </div>
+                    {availableToolNames.length > 0 ? (
+                      <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto pr-1">
                         {availableToolNames.map((toolName) => (
                           <label
                             key={toolName}
-                            className="flex items-center gap-2 text-sm text-gray-200 cursor-pointer bg-gray-800/60 border border-gray-700 rounded px-2 py-1.5"
+                            className={`flex items-center gap-2 text-sm cursor-pointer bg-gray-800/60 border border-gray-700 rounded px-2 py-1.5 ${toolFilterEnabled ? 'text-gray-200' : 'text-gray-500'}`}
                           >
                             <input
                               type="checkbox"
                               checked={activeToolNames.has(toolName)}
                               onChange={() => onToggleToolName?.(toolName)}
                               className="rounded"
+                              disabled={!toolFilterEnabled}
                             />
                             <span className="font-mono text-xs">{toolName}</span>
                           </label>
                         ))}
                       </div>
-                    </>
-                  ) : (
-                    <p className="text-xs text-gray-500">No tool executions in this session.</p>
-                  )}
+                    ) : (
+                      <p className="text-xs text-gray-500">No tool executions in this session.</p>
+                    )}
+                  </div>
                 </div>
-              )}
+              </div>
             </div>
+          )}
+
+          {/* Quick Frame Type Checkboxes */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 h-fit">
+            {(Object.keys(frameTypeMetadata) as FrameType[]).map((type) => {
+              const metadata = frameTypeMetadata[type];
+              const count = frameTypeCounts[type];
+              const isActive = activeFrameTypes.has(type);
+
+              return (
+                <label
+                  key={type}
+                  className={`flex items-center gap-2 px-3 py-2 rounded border transition-all cursor-pointer ${
+                    isActive
+                      ? 'bg-gray-700 border-gray-500 shadow-[0_0_0_1px_rgba(148,163,184,0.35)]'
+                      : 'bg-gray-900 border-gray-800 opacity-60'
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={isActive}
+                    onChange={() => onToggleFrameType(type)}
+                    className="rounded"
+                  />
+                  <span className={`text-lg ${metadata.color}`}>{metadata.icon}</span>
+                  <div className="flex-1">
+                    <div className="text-xs text-gray-200">{metadata.label}</div>
+                    <div className="text-xs text-gray-400">({count})</div>
+                  </div>
+                </label>
+              );
+            })}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

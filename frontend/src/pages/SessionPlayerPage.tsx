@@ -82,7 +82,7 @@ export const SessionPlayerPage: React.FC = () => {
   const [activeFrameTypes, setActiveFrameTypes] = useState<Set<FrameType>>(
     new Set(['user_message', 'claude_response', 'tool_execution', 'claude_thinking'])
   );
-  const [toolFilterEnabled, setToolFilterEnabled] = useState(false);
+  const [toolFilterEnabled, setToolFilterEnabled] = useState(true);
   const [activeToolNames, setActiveToolNames] = useState<Set<string>>(new Set());
   const [toolErrorsOnly, setToolErrorsOnly] = useState(false);
   const [compressionEnabled, setCompressionEnabled] = useState(true);
