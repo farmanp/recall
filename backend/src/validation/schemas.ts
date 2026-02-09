@@ -12,7 +12,7 @@ export const paginationSchema = z.object({
  * Session list query parameters
  */
 export const sessionListSchema = paginationSchema.extend({
-  source: z.enum(['filesystem', 'db']).default('filesystem'),
+  source: z.enum(['filesystem', 'db']).default('db'),
   project: z.string().optional(),
   agent: z.enum(['claude', 'codex', 'gemini', 'unknown']).optional(),
   hasClaudeMd: z.coerce.boolean().optional(),
@@ -36,7 +36,7 @@ export const sessionIdSchema = z.object({
 export const frameListSchema = z.object({
   offset: z.coerce.number().int().min(0).default(0),
   limit: z.coerce.number().int().min(1).max(1000).default(100),
-  source: z.enum(['filesystem', 'db']).default('filesystem'),
+  source: z.enum(['filesystem', 'db']).default('db'),
 });
 
 /**

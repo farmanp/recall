@@ -100,7 +100,9 @@ describe('Session Routes', () => {
 
   describe('GET /api/sessions', () => {
     it('returns session list with pagination', async () => {
-      const response = await request(app).get('/api/sessions?limit=1&offset=0').expect(200);
+      const response = await request(app)
+        .get('/api/sessions?source=filesystem&limit=1&offset=0')
+        .expect(200);
 
       expect(response.body.sessions.length).toBe(1);
       expect(response.body.total).toBe(mockSessions.length);
@@ -108,14 +110,18 @@ describe('Session Routes', () => {
     });
 
     it('filters by project', async () => {
-      const response = await request(app).get('/api/sessions?project=test-project').expect(200);
+      const response = await request(app)
+        .get('/api/sessions?source=filesystem&project=test-project')
+        .expect(200);
 
       expect(response.body.sessions.length).toBe(1);
       expect(response.body.sessions[0].project).toBe('test-project');
     });
 
     it('filters by agent', async () => {
-      const response = await request(app).get('/api/sessions?agent=codex').expect(200);
+      const response = await request(app)
+        .get('/api/sessions?source=filesystem&agent=codex')
+        .expect(200);
 
       expect(response.body.sessions.length).toBe(1);
       expect(response.body.sessions[0].agent).toBe('codex');
@@ -138,7 +144,9 @@ describe('Session Routes', () => {
 
   describe('GET /api/sessions/:id/frames', () => {
     it('returns frames with pagination', async () => {
-      const response = await request(app).get('/api/sessions/session-1/frames?limit=1').expect(200);
+      const response = await request(app)
+        .get('/api/sessions/session-1/frames?source=filesystem&limit=1')
+        .expect(200);
 
       expect(response.body.frames.length).toBe(1);
       expect(response.body.total).toBe(2);

@@ -159,11 +159,13 @@ export interface SessionListQuery {
   project?: string;
   agent?: AgentType;
   hasClaudeMd?: boolean;
+  source?: 'filesystem' | 'db';
 }
 
 export interface SessionFramesQuery {
   offset?: number;
   limit?: number;
+  source?: 'filesystem' | 'db';
 }
 
 /**

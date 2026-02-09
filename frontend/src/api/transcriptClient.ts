@@ -33,6 +33,7 @@ const API_BASE_URL = '/api';
  */
 export async function fetchSessions(query: SessionListQuery = {}): Promise<SessionListResponse> {
   const params = new URLSearchParams();
+  params.append('source', query.source ?? 'db');
   if (query.offset !== undefined) params.append('offset', query.offset.toString());
   if (query.limit !== undefined) params.append('limit', query.limit.toString());
   if (query.project) params.append('project', query.project);
@@ -71,6 +72,7 @@ export async function fetchSessionFrames(
   query: SessionFramesQuery = {}
 ): Promise<SessionFramesResponse> {
   const params = new URLSearchParams();
+  params.append('source', query.source ?? 'db');
   if (query.offset !== undefined) params.append('offset', query.offset.toString());
   if (query.limit !== undefined) params.append('limit', query.limit.toString());
 
