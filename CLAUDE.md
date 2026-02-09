@@ -55,13 +55,6 @@ RECALL_FILTER_CWD=false npx recall-player
 # Shows all sessions from all directories
 ```
 
-**API query parameter:**
-
-- Use `?showAll=true` to override the CWD filter for a single request
-- `GET /api/sessions` - Uses CWD filter (default)
-- `GET /api/sessions?showAll=true` - Shows all sessions
-- `GET /api/sessions/cwd-filter` - Returns current filter status
-
 ## Development Commands
 
 ### Backend (Express + TypeScript)
@@ -91,9 +84,33 @@ npm run preview      # Preview production build
 ### Full Build & Publish
 
 ```bash
-npm run build        # Build backend + frontend
+npm run build        # Build backend + frontend (cleans and copies)
 npm start            # Start production server
 npm publish          # Publish to npm
+```
+
+### Build Workflow Details
+
+The frontend build is served by the backend from `backend/public/`. The build process:
+
+1. `npm run build:backend` - Compiles backend TypeScript to `backend/dist/`
+2. `npm run build:frontend` - Builds React app to `frontend/dist/` (Vite creates hashed filenames)
+3. `npm run clean:frontend` - Removes `backend/public/` using `rimraf` (cross-platform)
+4. `npm run copy:frontend` - Copies `frontend/dist/*` to `backend/public/`
+
+**Important:** Always use `npm run build` from root (not just `cd frontend && npm run build`) to ensure:
+
+- Old hashed files are cleaned (prevents stale JS/CSS accumulation)
+- Files are copied to `backend/public/` where the server serves them
+
+For development iteration without full rebuild:
+
+```bash
+# Quick frontend rebuild and copy
+npm run build:frontend && npm run copy:frontend
+
+# Then restart backend to serve new files
+# Or use frontend dev server at :5173 for hot reload
 ```
 
 ## Publishing Process
@@ -128,23 +145,7 @@ npm publish          # Publish to npm
    - `minor` (1.x.0): New features (backward compatible)
    - `major` (x.0.0): Breaking changes
 
-4. **Update CHANGELOG.md** with the new version and changes:
-
-   ```markdown
-   ## [x.y.z] - YYYY-MM-DD
-
-   ### Added
-
-   - New features
-
-   ### Changed
-
-   - Changes to existing features
-
-   ### Fixed
-
-   - Bug fixes
-   ```
+4. **Update CHANGELOG.md** with the new version and changes
 
 5. **Commit and push** the version bump and changelog:
    ```bash
@@ -166,23 +167,29 @@ npm publish
 npx recall-player --version
 ```
 
-### Post-Publish
-
-- Test installation: `npx recall-player`
-- Create GitHub release (optional) with changelog notes
-
-### Testing the API
-
-```bash
-curl http://localhost:3001/api/health
-curl http://localhost:3001/api/agents                    # List agents with counts
-curl 'http://localhost:3001/api/sessions?agent=claude'   # Filter by agent
-curl 'http://localhost:3001/api/sessions?showAll=true'   # Show all sessions (bypass CWD filter)
-curl 'http://localhost:3001/api/sessions/cwd-filter'     # Get current CWD filter status
-curl 'http://localhost:3001/api/sessions/<id>/frames'    # Get session frames
-```
-
 ## Architecture
+
+### Dual Database System
+
+The backend uses two SQLite databases:
+
+1. **Claude-mem DB** (`~/.claude-mem/claude-mem.db`)
+   - Read-only access
+   - Stores observations from claude-mem plugin
+   - Used for commentary/insights on sessions
+
+2. **Transcript DB** (`~/.claude/transcripts.db`)
+   - Read-write access
+   - Stores parsed session frames for fast querying
+   - Populated via file watcher or manual import
+
+### File Watcher (Auto-Import)
+
+On startup, the backend starts a file watcher on `~/.claude/projects/` that:
+
+- Detects new `.jsonl` files
+- Auto-imports them to the transcript database after a 2-second debounce
+- Enables real-time session availability
 
 ### Multi-Agent Parser System
 
@@ -201,20 +208,34 @@ File Path → AgentDetector → ParserFactory → AgentParser → PlaybackFrames
 - `gemini-parser.ts` - Gemini CLI JSON format
 - `parser-factory.ts` - Selects appropriate parser based on agent type
 - `session-indexer.ts` - Scans and indexes sessions from all agents
+- `transcript-parser.ts` - Parses transcripts for database import
+- `timeline-builder.ts` - Builds playback timelines from parsed events
 
 ### Backend Layers
 
 1. **Server Layer** (`src/index.ts`, `src/server.ts`): Express app, static file serving, graceful shutdown
-2. **Route Layer** (`src/routes/sessions.ts`): API handlers with agent filtering
+2. **Route Layer** (`src/routes/`): API handlers
+   - `sessions.ts` - Session listing, frames, search, CLAUDE.md history
+   - `import.ts` - Bulk and single transcript import
+   - `work-units.ts` - Work unit CRUD operations
+   - `commentary.ts` - Claude-mem observations integration
 3. **Parser Layer** (`src/parser/`): Multi-agent session parsing
-4. **Database Layer** (`src/db/`): SQLite with session caching
+4. **Database Layer** (`src/db/`): SQLite with dual-database architecture
+5. **Services Layer** (`src/services/`):
+   - `file-watcher.ts` - Auto-import on file changes
+   - `transcript-importer.ts` - Bulk/single import logic
+   - `work-unit-correlator.ts` - Groups related sessions
 
 ### Frontend Structure
 
 - **State**: Zustand for global state, React Query for server state
-- **Routing**: React Router with `/` (session list) and `/session/:sessionId` (player)
-- **Components**: `src/components/` with specialized viewers (DiffViewer, SyntaxHighlighter)
-- **Pages**: `SessionListPage` with agent filter tabs, `SessionPlayerPage` with playback controls
+- **Routing**: React Router with:
+  - `/` - Session list
+  - `/session/:sessionId` - Session player
+  - `/work-units` - Work unit list
+  - `/work-units/:workUnitId` - Work unit player
+- **Components**: `src/components/` with specialized viewers (DiffViewer, SyntaxHighlighter, TimelineScrubber)
+- **Pages**: SessionListPage, SessionPlayerPage, WorkUnitListPage, WorkUnitPlayerPage
 
 ### Session File Formats
 
@@ -223,6 +244,74 @@ File Path → AgentDetector → ParserFactory → AgentParser → PlaybackFrames
 | Claude | `~/.claude/projects/{project}/` | JSONL  | One event per line        |
 | Codex  | `~/.codex/sessions/YYYY/MM/`    | JSONL  | `{type, payload}` wrapper |
 | Gemini | `~/.gemini/tmp/{hash}/chats/`   | JSON   | `session-*.json` files    |
+
+## API Reference
+
+### Health & Status
+
+```bash
+GET /api/health                      # Health check with DB status
+GET /api/agents                      # List agents with session counts
+GET /api/sessions/cwd-filter         # Get CWD filter status
+```
+
+### Sessions
+
+```bash
+# List sessions
+GET /api/sessions                    # List sessions (respects CWD filter)
+GET /api/sessions?showAll=true       # Bypass CWD filter
+GET /api/sessions?source=db          # Use database instead of filesystem
+GET /api/sessions?agent=claude       # Filter by agent type
+GET /api/sessions?project=<path>     # Filter by project path
+GET /api/sessions?hasClaudeMd=true   # Only sessions with CLAUDE.md
+
+# Session details
+GET /api/sessions/:id                # Get session metadata
+GET /api/sessions/:id/frames         # Get playback frames (paginated)
+GET /api/sessions/:id/frames?source=db  # Frames from database
+POST /api/sessions/:id/refresh       # Refresh cached timeline
+
+# Search
+GET /api/sessions/search?q=<query>   # Global content search
+```
+
+### CLAUDE.md History
+
+```bash
+GET /api/sessions/:id/claudemd-history    # Version history for session's project
+GET /api/sessions/:id/claudemd-snapshots  # Snapshots linked to session
+GET /api/claudemd/compare?from=1&to=2     # Compare two snapshots
+GET /api/claudemd/content?path=<path>     # Get CLAUDE.md file content
+```
+
+### Import
+
+```bash
+POST /api/import/start               # Start bulk import
+GET /api/import/status               # Get import job status
+GET /api/import/stats                # Get database import statistics
+POST /api/import/single              # Import single transcript file
+```
+
+### Work Units
+
+```bash
+GET /api/work-units                  # List work units
+GET /api/work-units/stats            # Work unit statistics
+GET /api/work-units/:id              # Get work unit details
+GET /api/work-units/:id/sessions     # Get sessions in work unit
+POST /api/work-units/recompute       # Trigger work unit recomputation
+PATCH /api/work-units/:id            # Add/remove session from work unit
+DELETE /api/work-units/:id           # Delete work unit
+GET /api/sessions/:id/work-unit      # Get work unit for a session
+```
+
+### Commentary
+
+```bash
+GET /api/sessions/:id/commentary     # Get claude-mem observations for session
+```
 
 ## Key Constraints
 
