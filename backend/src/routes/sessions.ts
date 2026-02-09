@@ -176,6 +176,9 @@ router.get('/', validateQuery(sessionListSchema), async (_req: Request, res: Res
         sessions = sessions.filter((s) => s.claudeMdFiles && s.claudeMdFiles.length > 0);
       }
 
+      // Capture count before CWD filter for UI transparency
+      const totalBeforeCwdFilter = sessions.length;
+
       // Apply CWD filter unless showAll is true
       const cwdFilter = indexer.getCwdFilter();
       if (!showAll && cwdFilter) {
@@ -193,6 +196,7 @@ router.get('/', validateQuery(sessionListSchema), async (_req: Request, res: Res
       res.json({
         sessions: paginatedSessions,
         total: sessions.length,
+        totalUnfiltered: totalBeforeCwdFilter,
         offset,
         limit,
         source: 'filesystem',

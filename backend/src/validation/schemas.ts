@@ -12,7 +12,7 @@ export const paginationSchema = z.object({
  * Session list query parameters
  */
 export const sessionListSchema = paginationSchema.extend({
-  source: z.enum(['filesystem', 'db']).default('db'),
+  source: z.enum(['filesystem', 'db']).default('filesystem'),
   project: z.string().optional(),
   agent: z.enum(['claude', 'codex', 'gemini', 'unknown']).optional(),
   hasClaudeMd: z.coerce.boolean().optional(),

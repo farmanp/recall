@@ -124,6 +124,11 @@ export interface SessionListResponse {
   total: number;
   offset: number;
   limit: number;
+  source?: 'filesystem' | 'db';
+  agent?: AgentType;
+  hasClaudeMd?: boolean;
+  cwdFilter?: string | null; // Current working directory filter (null if showAll=true or no filter)
+  totalUnfiltered?: number; // Total sessions before CWD filter was applied
 }
 
 export interface SessionDetailsResponse {

@@ -12,6 +12,7 @@ import type { SessionMetadata, AgentType, SearchResult } from '../types/transcri
 import { AgentBadge } from '../components/AgentBadge';
 import { ModelBadge } from '../components/ModelBadge';
 import { ErrorMessage } from '../components/shared/ErrorMessage';
+import { CwdFilterBanner } from '../components/shared/CwdFilterBanner';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Calendar,
@@ -375,6 +376,16 @@ export const SessionListPage: React.FC = () => {
 
       {/* Session List */}
       <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* CWD Filter Banner - show when filtering is active */}
+        {data?.cwdFilter && !showAllProjects && (
+          <CwdFilterBanner
+            cwdPath={data.cwdFilter}
+            filteredCount={data.total}
+            totalCount={data.totalUnfiltered ?? data.total}
+            onShowAll={() => setShowAllProjects(true)}
+          />
+        )}
+
         {searchMode === 'content' && searchQuery.length > 2 ? (
           <div className="space-y-6">
             {isSearchingContent && !globalSearchData ? (

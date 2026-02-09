@@ -99,6 +99,15 @@ describe('Session Routes', () => {
   });
 
   describe('GET /api/sessions', () => {
+    it('defaults to filesystem source when no source specified', async () => {
+      const response = await request(app).get('/api/sessions').expect(200);
+
+      // This test prevents regression of the bug where source defaulted to 'db'
+      // which returned 0 sessions when the database was empty
+      expect(response.body.source).toBe('filesystem');
+      expect(response.body.sessions.length).toBeGreaterThan(0);
+    });
+
     it('returns session list with pagination', async () => {
       const response = await request(app)
         .get('/api/sessions?source=filesystem&limit=1&offset=0')
@@ -125,6 +134,39 @@ describe('Session Routes', () => {
 
       expect(response.body.sessions.length).toBe(1);
       expect(response.body.sessions[0].agent).toBe('codex');
+    });
+
+    it('returns totalUnfiltered when CWD filter is active', async () => {
+      // Set up CWD filter to match only session-1
+      indexer.getCwdFilter.mockReturnValue('/tmp/project');
+
+      const response = await request(app).get('/api/sessions?source=filesystem').expect(200);
+
+      // Should return filtered count and total unfiltered count
+      expect(response.body.total).toBe(1); // Only session-1 matches /tmp/project
+      expect(response.body.totalUnfiltered).toBe(2); // Both sessions before CWD filter
+      expect(response.body.cwdFilter).toBe('/tmp/project');
+      expect(response.body.sessions[0].cwd).toBe('/tmp/project');
+
+      // Reset mock
+      indexer.getCwdFilter.mockReturnValue(null);
+    });
+
+    it('returns all sessions when showAll=true bypasses CWD filter', async () => {
+      // Set up CWD filter
+      indexer.getCwdFilter.mockReturnValue('/tmp/project');
+
+      const response = await request(app)
+        .get('/api/sessions?source=filesystem&showAll=true')
+        .expect(200);
+
+      // showAll=true should bypass CWD filter
+      expect(response.body.total).toBe(2); // All sessions
+      expect(response.body.cwdFilter).toBeNull(); // Filter not applied
+      expect(response.body.sessions.length).toBe(2);
+
+      // Reset mock
+      indexer.getCwdFilter.mockReturnValue(null);
     });
   });
 

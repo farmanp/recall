@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2026-02-09
+
+### Added
+
+- **CWD Filter Banner**: Shows an info banner when sessions are filtered by current directory, displaying the filtered path and "Showing X of Y sessions" count with a quick "Show all sessions" action
+- **E2E Test Suite**: Added Playwright tests for session list page to catch UI regressions
+
+### Fixed
+
+- **Session List Empty**: Fixed bug where session list showed "0 sessions" because API defaulted to empty database instead of filesystem source
+- **API Default Source**: Changed default `source` parameter from `db` to `filesystem` in both backend schema and frontend client
+
 ## [1.5.1] - 2026-02-09
 
 ### Fixed

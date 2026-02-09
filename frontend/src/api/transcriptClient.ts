@@ -33,8 +33,8 @@ const API_BASE_URL = '/api';
  */
 export async function fetchSessions(query: SessionListQuery = {}): Promise<SessionListResponse> {
   const params = new URLSearchParams();
-  // Use filesystem source when showAll is true to get all sessions
-  const source = query.showAll ? 'filesystem' : (query.source ?? 'db');
+  // Default to filesystem source since sessions are indexed from the filesystem
+  const source = query.source ?? 'filesystem';
   params.append('source', source);
   if (query.offset !== undefined) params.append('offset', query.offset.toString());
   if (query.limit !== undefined) params.append('limit', query.limit.toString());
