@@ -7,6 +7,7 @@ import importRouter from './routes/import';
 import workUnitsRouter, { getSessionWorkUnit } from './routes/work-units';
 import { getDbInstance } from './db/connection';
 import { getTranscriptDbInstance } from './db/transcript-connection';
+import { initializeTranscriptSchema } from './db/transcript-queries';
 
 /**
  * Create and configure Express application
@@ -32,14 +33,33 @@ import { getTranscriptDbInstance } from './db/transcript-connection';
  */
 export function createServer(): Application {
   const app = express();
+  initializeTranscriptSchema();
+  const allowedOrigins = (
+    process.env.RECALL_CORS_ORIGINS ||
+    'http://localhost:3001,http://127.0.0.1:3001,http://localhost:5174,http://127.0.0.1:5174'
+  )
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
 
   // Middleware
-  app.use(cors());
+  app.use(
+    cors({
+      origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+          callback(null, true);
+          return;
+        }
+        callback(new Error('CORS origin not allowed'));
+      },
+    })
+  );
   app.use(express.json());
 
   // Request logging
   app.use((req: Request, _res: Response, next: NextFunction) => {
-    console.log(`${new Date().toISOString()} ${req.method} ${req.url}`);
+    const safePath = req.originalUrl.split('?')[0];
+    console.log(`${new Date().toISOString()} ${req.method} ${safePath}`);
     next();
   });
 
@@ -66,7 +86,6 @@ export function createServer(): Application {
       res.status(500).json({
         status: 'error',
         message: err instanceof Error ? err.message : 'Database connection failed',
-        stack: err instanceof Error ? err.stack : undefined,
       });
     }
   });
@@ -107,7 +126,6 @@ export function createServer(): Application {
     res.status(500).json({
       error: 'Internal server error',
       message: err.message,
-      stack: err.stack,
     });
   });
 

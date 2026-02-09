@@ -15,6 +15,7 @@ import { getSessionIndexer } from './parser/session-indexer';
 dotenv.config();
 
 const PORT = process.env.PORT || 3001;
+const HOST = process.env.HOST || '127.0.0.1';
 const AUTO_WATCH = process.env.AUTO_WATCH !== 'false'; // Default: enabled
 const FILTER_BY_CWD = process.env.RECALL_FILTER_CWD !== 'false'; // Default: enabled
 
@@ -87,9 +88,9 @@ function start(): void {
     const app = createServer();
 
     // Start listening
-    const server = app.listen(PORT, () => {
+    const server = app.listen(Number(PORT), HOST, () => {
       console.log(`\n🚀 Recall Server`);
-      console.log(`📡 Server running on http://localhost:${PORT}`);
+      console.log(`📡 Server running on http://${HOST}:${PORT}`);
       console.log(`💾 Claude-mem DB: ~/.claude-mem/claude-mem.db`);
       console.log(`💾 Transcript DB: ${getTranscriptDbPath()}`);
       console.log(`\nAPI Endpoints:`);

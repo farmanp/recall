@@ -33,9 +33,25 @@ describe('Server', () => {
   });
 
   it('includes CORS headers', async () => {
-    const response = await request(app).get('/api/health').expect(200);
+    const response = await request(app)
+      .get('/api/health')
+      .set('Origin', 'http://localhost:3001')
+      .expect(200);
 
     expect(response.headers['access-control-allow-origin']).toBeDefined();
+  });
+
+  it('allows configured CORS origins', async () => {
+    const response = await request(app)
+      .get('/api/health')
+      .set('Origin', 'http://localhost:5174')
+      .expect(200);
+
+    expect(response.headers['access-control-allow-origin']).toBe('http://localhost:5174');
+  });
+
+  it('rejects non-whitelisted CORS origins', async () => {
+    await request(app).get('/api/health').set('Origin', 'http://evil.invalid').expect(500);
   });
 
   it('serves sessions list (even if empty)', async () => {

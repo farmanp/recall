@@ -7,6 +7,7 @@ import { SessionTimeline } from '../types/transcript';
 import {
   getTranscriptSessions,
   getTranscriptFrames,
+  getTranscriptSessionById,
   searchGlobalFrames,
 } from '../db/transcript-queries';
 import { SearchGlobalRequest } from '../types/transcript';
@@ -342,6 +343,12 @@ router.get(
       const { source, offset, limit } = res.locals.validatedQuery as FrameListParams;
 
       if (source === 'db') {
+        const session = getTranscriptSessionById(sessionId);
+        if (!session) {
+          res.status(404).json({ error: 'Session not found' });
+          return;
+        }
+
         // Use database
         const result = getTranscriptFrames(sessionId, { offset, limit });
 
