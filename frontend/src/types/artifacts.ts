@@ -19,6 +19,8 @@ export interface ArtifactOperation {
     oldContent?: string;
     newContent?: string;
   };
+  // For reads, store the content that was read
+  content?: string;
   // Error message if operation failed
   errorMessage?: string;
 }

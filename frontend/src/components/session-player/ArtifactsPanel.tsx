@@ -55,12 +55,26 @@ export const ArtifactsPanel: React.FC<ArtifactsPanelProps> = ({
   const parentRef = React.useRef<HTMLDivElement>(null);
 
   // Setup virtualizer for performance with large file lists
+  // Dynamic row height based on expansion state
   const virtualizer = useVirtualizer({
     count: displayArtifacts.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 64, // Estimated row height
+    estimateSize: (index) => {
+      const artifact = displayArtifacts[index];
+      if (expandedPaths.has(artifact.path)) {
+        // Expanded: header (64px) + full path (48px) + operations (44px each) + summary footer (44px) + padding
+        const operationsHeight = Math.max(artifact.operations.length, 1) * 44;
+        return 72 + 48 + operationsHeight + 44 + 8;
+      }
+      return 72; // Collapsed row height with padding
+    },
     overscan: 5,
   });
+
+  // Re-measure all rows when expanded paths change
+  useEffect(() => {
+    virtualizer.measure();
+  }, [expandedPaths]);
 
   // Close on Escape key (also handled in parent, but good for direct modal interactions)
   useEffect(() => {
@@ -198,7 +212,21 @@ export const ArtifactsPanel: React.FC<ArtifactsPanelProps> = ({
                 </p>
               )}
             </div>
+          ) : displayArtifacts.length <= 100 ? (
+            // Simple rendering for smaller lists (no virtualization issues)
+            <div className="space-y-2">
+              {displayArtifacts.map((artifact) => (
+                <ArtifactFileRow
+                  key={artifact.path}
+                  artifact={artifact}
+                  isExpanded={expandedPaths.has(artifact.path)}
+                  onToggleExpand={() => toggleExpand(artifact.path)}
+                  onNavigateToFrame={onNavigateToFrame}
+                />
+              ))}
+            </div>
           ) : (
+            // Virtualized rendering for large lists
             <div
               style={{
                 height: `${virtualizer.getTotalSize()}px`,
@@ -217,6 +245,7 @@ export const ArtifactsPanel: React.FC<ArtifactsPanelProps> = ({
                       left: 0,
                       width: '100%',
                       transform: `translateY(${virtualRow.start}px)`,
+                      paddingBottom: '8px',
                     }}
                   >
                     <ArtifactFileRow

@@ -6,7 +6,7 @@
  * Expanded state shows full path, list of operations with frame numbers, and optional inline diff viewer.
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   File,
   FolderOpen,
@@ -14,8 +14,12 @@ import {
   ChevronDown,
   ExternalLink,
   AlertCircle,
+  Eye,
+  X,
 } from 'lucide-react';
 import type { ArtifactFile, ArtifactOperation, ArtifactStatus } from '../../types/artifacts';
+import { CodeBlock } from '../CodeBlock';
+import { DiffViewer } from '../DiffViewer';
 
 interface ArtifactFileRowProps {
   artifact: ArtifactFile;
@@ -105,8 +109,16 @@ export const ArtifactFileRow: React.FC<ArtifactFileRowProps> = ({
   onToggleExpand,
   onNavigateToFrame,
 }) => {
+  const [viewingOperation, setViewingOperation] = useState<ArtifactOperation | null>(null);
   const statusBadge = getStatusBadge(artifact.status);
   const changeStats = formatChangeStats(artifact.totalAdditions, artifact.totalDeletions);
+
+  // Check if operation has viewable content
+  const hasViewableContent = (op: ArtifactOperation): boolean => {
+    if (op.type === 'read' && op.content) return true;
+    if ((op.type === 'write' || op.type === 'edit') && op.diff?.newContent) return true;
+    return false;
+  };
 
   return (
     <div
@@ -188,65 +200,127 @@ export const ArtifactFileRow: React.FC<ArtifactFileRowProps> = ({
             {artifact.operations.map((operation, index) => {
               const opStyle = getOperationStyle(operation.type);
               return (
-                <div
-                  key={index}
-                  className={`px-4 py-2 flex items-center justify-between ${
-                    operation.isError ? 'bg-red-900/20' : ''
-                  }`}
-                >
-                  <div className="flex items-center gap-3 min-w-0 flex-1">
-                    {/* Operation Type */}
-                    <span className={`text-xs font-medium ${opStyle.color}`}>{opStyle.label}</span>
+                <div key={index} className={operation.isError ? 'bg-red-900/20' : ''}>
+                  <div className="px-4 py-2 flex items-center justify-between">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      {/* Operation Type */}
+                      <span className={`text-xs font-medium ${opStyle.color}`}>
+                        {opStyle.label}
+                      </span>
 
-                    {/* Tool Name */}
-                    <span className="text-xs text-gray-500 font-mono">{operation.tool}</span>
+                      {/* Tool Name */}
+                      <span className="text-xs text-gray-500 font-mono">{operation.tool}</span>
 
-                    {/* Timestamp */}
-                    <span className="text-xs text-gray-600">{formatTime(operation.timestamp)}</span>
+                      {/* Timestamp */}
+                      <span className="text-xs text-gray-600">
+                        {formatTime(operation.timestamp)}
+                      </span>
 
-                    {/* Diff Stats (if available) */}
-                    {operation.diff &&
-                      (operation.diff.additions > 0 || operation.diff.deletions > 0) && (
-                        <span className="text-xs font-mono">
-                          {operation.diff.additions > 0 && (
-                            <span className="text-green-500">+{operation.diff.additions}</span>
-                          )}
-                          {operation.diff.additions > 0 && operation.diff.deletions > 0 && (
-                            <span className="text-gray-600"> </span>
-                          )}
-                          {operation.diff.deletions > 0 && (
-                            <span className="text-red-500">-{operation.diff.deletions}</span>
+                      {/* Diff Stats (if available) */}
+                      {operation.diff &&
+                        (operation.diff.additions > 0 || operation.diff.deletions > 0) && (
+                          <span className="text-xs font-mono">
+                            {operation.diff.additions > 0 && (
+                              <span className="text-green-500">+{operation.diff.additions}</span>
+                            )}
+                            {operation.diff.additions > 0 && operation.diff.deletions > 0 && (
+                              <span className="text-gray-600"> </span>
+                            )}
+                            {operation.diff.deletions > 0 && (
+                              <span className="text-red-500">-{operation.diff.deletions}</span>
+                            )}
+                          </span>
+                        )}
+
+                      {/* Error Indicator */}
+                      {operation.isError && (
+                        <span className="flex items-center gap-1 text-xs text-red-400">
+                          <AlertCircle className="w-3 h-3" />
+                          {operation.errorMessage ? (
+                            <span className="truncate max-w-[200px]" title={operation.errorMessage}>
+                              {operation.errorMessage}
+                            </span>
+                          ) : (
+                            'Error'
                           )}
                         </span>
                       )}
+                    </div>
 
-                    {/* Error Indicator */}
-                    {operation.isError && (
-                      <span className="flex items-center gap-1 text-xs text-red-400">
-                        <AlertCircle className="w-3 h-3" />
-                        {operation.errorMessage ? (
-                          <span className="truncate max-w-[200px]" title={operation.errorMessage}>
-                            {operation.errorMessage}
-                          </span>
-                        ) : (
-                          'Error'
-                        )}
-                      </span>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {/* View Content Button */}
+                      {hasViewableContent(operation) && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setViewingOperation(viewingOperation === operation ? null : operation);
+                          }}
+                          className={`flex items-center gap-1 px-2 py-1 text-xs rounded transition-colors ${
+                            viewingOperation === operation
+                              ? 'bg-cyan-600 text-white'
+                              : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                          }`}
+                          title="View content"
+                        >
+                          <Eye className="w-3 h-3" />
+                          <span>View</span>
+                        </button>
+                      )}
+
+                      {/* Go to Frame Button */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onNavigateToFrame(operation.frameIndex);
+                        }}
+                        className="flex items-center gap-1 px-2 py-1 text-xs text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors"
+                        title={`Go to frame ${operation.frameIndex}`}
+                      >
+                        <span className="font-mono">#{operation.frameIndex}</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </button>
+                    </div>
                   </div>
 
-                  {/* Go to Frame Button */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onNavigateToFrame(operation.frameIndex);
-                    }}
-                    className="flex items-center gap-1 px-2 py-1 text-xs text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors"
-                    title={`Go to frame ${operation.frameIndex}`}
-                  >
-                    <span className="font-mono">#{operation.frameIndex}</span>
-                    <ExternalLink className="w-3 h-3" />
-                  </button>
+                  {/* Inline Content Viewer */}
+                  {viewingOperation === operation && (
+                    <div className="mx-4 mb-2 border border-gray-700 rounded-lg overflow-hidden">
+                      <div className="flex items-center justify-between px-3 py-2 bg-gray-800 border-b border-gray-700">
+                        <span className="text-xs text-gray-400">
+                          {operation.type === 'read' ? 'File Content' : 'Changes'}
+                        </span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setViewingOperation(null);
+                          }}
+                          className="text-gray-400 hover:text-white"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                      <div className="max-h-[300px] overflow-auto">
+                        {operation.type === 'read' && operation.content ? (
+                          <CodeBlock
+                            code={operation.content}
+                            language={artifact.language}
+                            showLineNumbers
+                            maxHeight="300px"
+                          />
+                        ) : operation.diff ? (
+                          <DiffViewer
+                            filePath={artifact.path}
+                            oldContent={operation.diff.oldContent || ''}
+                            newContent={operation.diff.newContent || ''}
+                            language={artifact.language}
+                            isEdit={operation.type === 'edit'}
+                          />
+                        ) : (
+                          <div className="p-4 text-gray-500 text-sm">No content available</div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               );
             })}

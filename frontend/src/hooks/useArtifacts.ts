@@ -207,6 +207,9 @@ function processFrame(
     tool,
     isError: output.isError,
     errorMessage: output.isError ? output.content : undefined,
+    // Store content for reads (truncate large content)
+    content:
+      operationType === 'read' && !output.isError ? output.content?.slice(0, 50000) : undefined,
   };
 
   // Add diff info for edits/writes
