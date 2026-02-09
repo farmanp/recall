@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Frame Filters Popup**: Press `f` to open filters in a modal dialog (frees up screen space)
 - **Hierarchical Tool Filters**: Tool execution filters now show as a collapsible tree under the parent frame type
 - **Filter Status Indicator**: Header button shows active filter count and highlights when filters are applied
+- **Inline Artifact Viewing**: View file contents and diffs directly in the Artifacts panel
 
 ### Changed
 
