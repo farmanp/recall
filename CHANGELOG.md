@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2026-02-09
+
+### Added
+
+- **Frame Filters Popup**: Press `f` to open filters in a modal dialog (frees up screen space)
+- **Hierarchical Tool Filters**: Tool execution filters now show as a collapsible tree under the parent frame type
+- **Filter Status Indicator**: Header button shows active filter count and highlights when filters are applied
+
+### Changed
+
+- **Filter UX**: Moved frame type filters from inline sidebar to popup modal for cleaner layout
+- **Session Player Controls**: Improved clarity and discoverability of playback controls
+
 ## [1.4.2] - 2026-02-04
 
 ### Fixed
