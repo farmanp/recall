@@ -98,6 +98,10 @@ export async function importTranscript(filePath: string, agent?: AgentType): Pro
     // Parse transcript file using ParserFactory
     const parsed = await ParserFactory.parseFile(filePath);
     sessionId = parsed.sessionId;
+    if (!sessionId) {
+      throw new Error(`Parser did not return a session ID for file: ${filePath}`);
+    }
+    const safeSessionId = sessionId;
 
     console.log(`[Import] Parsed session: ${sessionId} (${parsed.entries.length} entries)`);
 
@@ -134,18 +138,18 @@ export async function importTranscript(filePath: string, agent?: AgentType): Pro
     // Persist transcript rows atomically so partial imports don't leak stale data.
     const db = getTranscriptDbInstance();
     const persistImport = db.transaction(() => {
-      deleteTranscriptSessionData(sessionId);
+      deleteTranscriptSessionData(safeSessionId);
       insertSession(sessionMetadata);
 
       for (const frame of timeline.frames) {
-        insertFrame(sessionId, frame);
+        insertFrame(safeSessionId, frame);
 
         if (frame.toolExecution) {
           insertToolExecution(frame.id, frame.toolExecution);
         }
       }
 
-      updateSessionFrameCount(sessionId);
+      updateSessionFrameCount(safeSessionId);
     });
 
     persistImport();

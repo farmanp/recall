@@ -1,4 +1,3 @@
-// @ts-nocheck - Functions used in closure confuse TS strict mode
 import dotenv from 'dotenv';
 import { createServer } from './server';
 import { getDbInstance, closeDatabase } from './db/connection';
