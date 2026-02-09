@@ -33,12 +33,15 @@ const API_BASE_URL = '/api';
  */
 export async function fetchSessions(query: SessionListQuery = {}): Promise<SessionListResponse> {
   const params = new URLSearchParams();
-  params.append('source', query.source ?? 'db');
+  // Use filesystem source when showAll is true to get all sessions
+  const source = query.showAll ? 'filesystem' : (query.source ?? 'db');
+  params.append('source', source);
   if (query.offset !== undefined) params.append('offset', query.offset.toString());
   if (query.limit !== undefined) params.append('limit', query.limit.toString());
   if (query.project) params.append('project', query.project);
   if (query.agent) params.append('agent', query.agent);
   if (query.hasClaudeMd) params.append('hasClaudeMd', 'true');
+  if (query.showAll) params.append('showAll', 'true');
 
   const url = `${API_BASE_URL}/sessions?${params.toString()}`;
   const response = await fetch(url);
@@ -72,7 +75,8 @@ export async function fetchSessionFrames(
   query: SessionFramesQuery = {}
 ): Promise<SessionFramesResponse> {
   const params = new URLSearchParams();
-  params.append('source', query.source ?? 'db');
+  // Default to filesystem to support sessions not yet imported to DB
+  params.append('source', query.source ?? 'filesystem');
   if (query.offset !== undefined) params.append('offset', query.offset.toString());
   if (query.limit !== undefined) params.append('limit', query.limit.toString());
 

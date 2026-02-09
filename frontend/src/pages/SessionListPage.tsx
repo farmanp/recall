@@ -19,6 +19,7 @@ import {
   ChevronRight,
   Hash,
   Folder,
+  FolderOpen,
   Activity,
   Search,
   FileText,
@@ -39,6 +40,7 @@ export const SessionListPage: React.FC = () => {
   const [minEventCount, setMinEventCount] = useState<number>(0);
   const [selectedAgent, setSelectedAgent] = useState<AgentType | 'all'>('all');
   const [hasClaudeMdFilter, setHasClaudeMdFilter] = useState<boolean>(false);
+  const [showAllProjects, setShowAllProjects] = useState<boolean>(false);
   const [searchMode, setSearchMode] = useState<'sessions' | 'content'>(
     (searchParams.get('mode') as 'sessions' | 'content') || 'sessions'
   );
@@ -48,6 +50,7 @@ export const SessionListPage: React.FC = () => {
     limit: LIMIT,
     ...(selectedAgent !== 'all' && { agent: selectedAgent }),
     ...(hasClaudeMdFilter && { hasClaudeMd: true }),
+    ...(showAllProjects && { showAll: true }),
   });
 
   const { data: globalSearchData, isLoading: isSearchingContent } = useGlobalSearch({
@@ -327,13 +330,30 @@ export const SessionListPage: React.FC = () => {
               </button>
             </div>
 
+            {/* Show All Projects Toggle */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowAllProjects(!showAllProjects)}
+                className={`px-3 py-1 text-sm rounded flex items-center gap-1.5 transition-all ${
+                  showAllProjects
+                    ? 'bg-cyan-600 text-white'
+                    : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700/50 border border-cyan-500/20'
+                }`}
+                title="Show sessions from all directories, not just the current working directory"
+              >
+                <FolderOpen className="w-3.5 h-3.5" />
+                All Projects
+              </button>
+            </div>
+
             {/* Clear Filters Button */}
             {(searchQuery ||
               dateRange !== 'all' ||
               minDuration > 0 ||
               minEventCount > 0 ||
               selectedAgent !== 'all' ||
-              hasClaudeMdFilter) && (
+              hasClaudeMdFilter ||
+              showAllProjects) && (
               <button
                 onClick={() => {
                   setSearchQuery('');
@@ -342,6 +362,7 @@ export const SessionListPage: React.FC = () => {
                   setMinEventCount(0);
                   setSelectedAgent('all');
                   setHasClaudeMdFilter(false);
+                  setShowAllProjects(false);
                 }}
                 className="ml-auto px-3 py-1 text-sm text-gray-400 hover:text-gray-200 underline"
               >
@@ -451,7 +472,8 @@ export const SessionListPage: React.FC = () => {
             dateRange !== 'all' ||
             minDuration > 0 ||
             minEventCount > 0 ||
-            selectedAgent !== 'all' ? (
+            selectedAgent !== 'all' ||
+            showAllProjects ? (
               <button
                 onClick={() => {
                   setSearchQuery('');
@@ -460,6 +482,7 @@ export const SessionListPage: React.FC = () => {
                   setMinEventCount(0);
                   setSelectedAgent('all');
                   setHasClaudeMdFilter(false);
+                  setShowAllProjects(false);
                 }}
                 className="px-8 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-500/25 active:scale-95"
               >

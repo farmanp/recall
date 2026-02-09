@@ -160,6 +160,7 @@ export interface SessionListQuery {
   agent?: AgentType;
   hasClaudeMd?: boolean;
   source?: 'filesystem' | 'db';
+  showAll?: boolean; // Bypass CWD filter to show sessions from all directories
 }
 
 export interface SessionFramesQuery {
