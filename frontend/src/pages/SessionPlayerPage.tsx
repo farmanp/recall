@@ -93,6 +93,7 @@ export const SessionPlayerPage: React.FC = () => {
   const [artifactViewMode, setArtifactViewMode] = useState<'cumulative' | 'full'>('cumulative');
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'timeline' | 'chat'>('timeline');
+  const [showFiltersPanel, setShowFiltersPanel] = useState(false);
 
   // Fetch session details and all frames
   const { data: sessionDetails, isLoading: loadingDetails } = useSessionDetails(sessionId);
@@ -607,72 +608,78 @@ export const SessionPlayerPage: React.FC = () => {
 
       {/* Footer Area: Side Filters + Scrubber + Controls */}
       <div className="relative z-30 border-t border-white/5 bg-gray-900/55 px-6 py-4">
-        <div className="mx-auto grid max-w-6xl grid-cols-1 gap-4 xl:grid-cols-[320px_minmax(0,1fr)]">
-          <aside className="xl:sticky xl:top-3 xl:self-start">
-            <FrameTypeFilters
-              frames={frames}
-              activeFrameTypes={activeFrameTypes}
-              onToggleFrameType={(type) => {
-                setActiveFrameTypes((prev) => {
-                  const next = new Set(prev);
-                  if (next.has(type)) next.delete(type);
-                  else next.add(type);
-                  return next;
-                });
-              }}
-              onToggleAll={(showAll) => {
-                if (showAll)
-                  setActiveFrameTypes(
-                    new Set([
-                      'user_message',
-                      'claude_response',
-                      'tool_execution',
-                      'claude_thinking',
-                    ])
-                  );
-                else setActiveFrameTypes(new Set());
-              }}
-              availableToolNames={availableToolNames}
-              activeToolNames={activeToolNames}
-              onToggleToolName={(toolName) => {
-                setActiveToolNames((prev) => {
-                  const next = new Set(prev);
-                  if (next.has(toolName)) next.delete(toolName);
-                  else next.add(toolName);
-                  return next;
-                });
-              }}
-              onToggleAllTools={(showAll) => {
-                if (showAll) {
-                  setActiveToolNames(new Set(availableToolNames));
-                } else {
-                  setActiveToolNames(new Set());
-                }
-              }}
-              toolFilterEnabled={toolFilterEnabled}
-              onToolFilterEnabledChange={setToolFilterEnabled}
-              toolErrorsOnly={toolErrorsOnly}
-              onToolErrorsOnlyChange={setToolErrorsOnly}
-              searchQuery={searchQuery}
-              onSearchChange={setSearchQuery}
-              searchMatchCount={searchMatches.length}
-              currentMatchRank={currentMatchRank}
-              onNextMatch={() => {
-                const nextIndex = findNextMatchIndex(currentFrameIndex, searchMatches);
-                if (nextIndex !== -1) {
-                  handleFrameChange(nextIndex);
-                  setIsPlaying(false);
-                }
-              }}
-              onPrevMatch={() => {
-                const prevIndex = findPrevMatchIndex(currentFrameIndex, searchMatches);
-                if (prevIndex !== -1) {
-                  handleFrameChange(prevIndex);
-                  setIsPlaying(false);
-                }
-              }}
-            />
-          </aside>
+        <div
+          className={`mx-auto grid max-w-6xl grid-cols-1 gap-4 ${
+            showFiltersPanel ? 'xl:grid-cols-[320px_minmax(0,1fr)]' : ''
+          }`}
+        >
+          {showFiltersPanel && (
+            <aside className="xl:sticky xl:top-3 xl:self-start max-h-[70vh] overflow-y-auto pr-1">
+              <FrameTypeFilters
+                frames={frames}
+                activeFrameTypes={activeFrameTypes}
+                onToggleFrameType={(type) => {
+                  setActiveFrameTypes((prev) => {
+                    const next = new Set(prev);
+                    if (next.has(type)) next.delete(type);
+                    else next.add(type);
+                    return next;
+                  });
+                }}
+                onToggleAll={(showAll) => {
+                  if (showAll)
+                    setActiveFrameTypes(
+                      new Set([
+                        'user_message',
+                        'claude_response',
+                        'tool_execution',
+                        'claude_thinking',
+                      ])
+                    );
+                  else setActiveFrameTypes(new Set());
+                }}
+                availableToolNames={availableToolNames}
+                activeToolNames={activeToolNames}
+                onToggleToolName={(toolName) => {
+                  setActiveToolNames((prev) => {
+                    const next = new Set(prev);
+                    if (next.has(toolName)) next.delete(toolName);
+                    else next.add(toolName);
+                    return next;
+                  });
+                }}
+                onToggleAllTools={(showAll) => {
+                  if (showAll) {
+                    setActiveToolNames(new Set(availableToolNames));
+                  } else {
+                    setActiveToolNames(new Set());
+                  }
+                }}
+                toolFilterEnabled={toolFilterEnabled}
+                onToolFilterEnabledChange={setToolFilterEnabled}
+                toolErrorsOnly={toolErrorsOnly}
+                onToolErrorsOnlyChange={setToolErrorsOnly}
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                searchMatchCount={searchMatches.length}
+                currentMatchRank={currentMatchRank}
+                onNextMatch={() => {
+                  const nextIndex = findNextMatchIndex(currentFrameIndex, searchMatches);
+                  if (nextIndex !== -1) {
+                    handleFrameChange(nextIndex);
+                    setIsPlaying(false);
+                  }
+                }}
+                onPrevMatch={() => {
+                  const prevIndex = findPrevMatchIndex(currentFrameIndex, searchMatches);
+                  if (prevIndex !== -1) {
+                    handleFrameChange(prevIndex);
+                    setIsPlaying(false);
+                  }
+                }}
+              />
+            </aside>
+          )}
 
           <div className="min-w-0">
             <div className="mb-2 flex items-center justify-between text-xs text-gray-300">
@@ -683,7 +690,15 @@ export const SessionPlayerPage: React.FC = () => {
                     : 'Search: no matches'
                   : 'Search: off'}
               </span>
-              <span>Filters: {activeFrameCount}/4 active</span>
+              <div className="flex items-center gap-3">
+                <span>Filters: {activeFrameCount}/4 active</span>
+                <button
+                  onClick={() => setShowFiltersPanel((prev) => !prev)}
+                  className="rounded border border-white/10 bg-gray-800 px-2 py-1 text-[11px] font-semibold text-gray-200 hover:bg-gray-700"
+                >
+                  {showFiltersPanel ? 'Hide filters' : 'Show filters'}
+                </button>
+              </div>
             </div>
 
             <TimelineScrubber
