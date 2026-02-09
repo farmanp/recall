@@ -30,6 +30,7 @@ interface TimelineScrubberProps {
   showCommentary: boolean;
   commentary?: CommentaryData[];
   activeFrameTypes: Set<string>;
+  isFrameVisible?: (frame: PlaybackFrame) => boolean;
 }
 
 export const TimelineScrubber: React.FC<TimelineScrubberProps> = ({
@@ -39,6 +40,7 @@ export const TimelineScrubber: React.FC<TimelineScrubberProps> = ({
   showCommentary,
   commentary,
   activeFrameTypes,
+  isFrameVisible,
 }) => {
   const [hoverInfo, setHoverInfo] = useState<{ frameIndex: number; x: number } | null>(null);
   const timelineRef = useRef<HTMLDivElement>(null);
@@ -100,6 +102,7 @@ export const TimelineScrubber: React.FC<TimelineScrubberProps> = ({
     () =>
       frames.map((frame, idx) => {
         if (!activeFrameTypes.has(frame.type)) return null;
+        if (isFrameVisible && !isFrameVisible(frame)) return null;
         const position = frames.length > 1 ? (idx / (frames.length - 1)) * 100 : 0;
         const color = FRAME_TYPE_COLOR_MAP[frame.type] || 'bg-gray-500';
 

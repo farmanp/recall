@@ -82,6 +82,9 @@ export const SessionPlayerPage: React.FC = () => {
   const [activeFrameTypes, setActiveFrameTypes] = useState<Set<FrameType>>(
     new Set(['user_message', 'claude_response', 'tool_execution', 'claude_thinking'])
   );
+  const [toolFilterEnabled, setToolFilterEnabled] = useState(false);
+  const [activeToolNames, setActiveToolNames] = useState<Set<string>>(new Set());
+  const [toolErrorsOnly, setToolErrorsOnly] = useState(false);
   const [compressionEnabled, setCompressionEnabled] = useState(true);
   const [showHelp, setShowHelp] = useState(false);
   const [showStats, setShowStats] = useState(false);
@@ -103,8 +106,51 @@ export const SessionPlayerPage: React.FC = () => {
 
   const frames = useMemo(() => framesData?.frames ?? [], [framesData?.frames]);
   const currentFrame = useMemo(() => frames[currentFrameIndex], [frames, currentFrameIndex]);
+  const availableToolNames = useMemo(() => {
+    const names = new Set<string>();
+    for (const frame of frames) {
+      if (frame.type === 'tool_execution') {
+        names.add(frame.toolExecution?.tool || 'Unknown Tool');
+      }
+    }
+    return Array.from(names).sort((a, b) => a.localeCompare(b));
+  }, [frames]);
   const isEndOfSession = frames.length > 0 && currentFrameIndex >= frames.length - 1;
   const activeFrameCount = activeFrameTypes.size;
+
+  const isFrameVisible = React.useCallback(
+    (frame: PlaybackFrame): boolean => {
+      if (!activeFrameTypes.has(frame.type as FrameType)) {
+        return false;
+      }
+
+      if (frame.type === 'tool_execution' && toolFilterEnabled) {
+        const toolName = frame.toolExecution?.tool || 'Unknown Tool';
+
+        if (activeToolNames.size > 0 && !activeToolNames.has(toolName)) {
+          return false;
+        }
+
+        if (toolErrorsOnly && !frame.toolExecution?.output?.isError) {
+          return false;
+        }
+      }
+
+      return true;
+    },
+    [activeFrameTypes, toolFilterEnabled, activeToolNames, toolErrorsOnly]
+  );
+
+  useEffect(() => {
+    setActiveToolNames((prev) => {
+      const available = new Set(availableToolNames);
+      const pruned = new Set(Array.from(prev).filter((name) => available.has(name)));
+      if (pruned.size > 0) {
+        return pruned;
+      }
+      return new Set(availableToolNames);
+    });
+  }, [availableToolNames]);
 
   // Mark as mounted after data has loaded
   useEffect(() => {
@@ -161,7 +207,12 @@ export const SessionPlayerPage: React.FC = () => {
     const duration = baseDuration / playbackSpeed;
 
     timeoutRef.current = setTimeout(() => {
-      const nextFrame = findNextVisibleFrame(currentFrameIndex + 1, frames, activeFrameTypes);
+      const nextFrame = findNextVisibleFrame(
+        currentFrameIndex + 1,
+        frames,
+        activeFrameTypes,
+        isFrameVisible
+      );
       handleFrameChange(nextFrame);
     }, duration);
 
@@ -178,6 +229,7 @@ export const SessionPlayerPage: React.FC = () => {
     frames.length,
     frames,
     activeFrameTypes,
+    isFrameVisible,
     compressionEnabled,
   ]);
 
@@ -201,22 +253,28 @@ export const SessionPlayerPage: React.FC = () => {
           break;
         case 'ArrowRight':
           e.preventDefault();
-          handleFrameChange(findNextVisibleFrame(currentFrameIndex + 1, frames, activeFrameTypes));
+          handleFrameChange(
+            findNextVisibleFrame(currentFrameIndex + 1, frames, activeFrameTypes, isFrameVisible)
+          );
           setIsPlaying(false);
           break;
         case 'ArrowLeft':
           e.preventDefault();
-          handleFrameChange(findPrevVisibleFrame(currentFrameIndex - 1, frames, activeFrameTypes));
+          handleFrameChange(
+            findPrevVisibleFrame(currentFrameIndex - 1, frames, activeFrameTypes, isFrameVisible)
+          );
           setIsPlaying(false);
           break;
         case 'Home':
           e.preventDefault();
-          handleFrameChange(findNextVisibleFrame(0, frames, activeFrameTypes));
+          handleFrameChange(findNextVisibleFrame(0, frames, activeFrameTypes, isFrameVisible));
           setIsPlaying(false);
           break;
         case 'End':
           e.preventDefault();
-          handleFrameChange(findPrevVisibleFrame(frames.length - 1, frames, activeFrameTypes));
+          handleFrameChange(
+            findPrevVisibleFrame(frames.length - 1, frames, activeFrameTypes, isFrameVisible)
+          );
           setIsPlaying(false);
           break;
         case '?':
@@ -331,6 +389,7 @@ export const SessionPlayerPage: React.FC = () => {
     showStats,
     showClaudeMd,
     showArtifacts,
+    isFrameVisible,
   ]);
 
   if (loadingDetails || loadingFrames) {
@@ -527,7 +586,7 @@ export const SessionPlayerPage: React.FC = () => {
               </div>
             )}
 
-            {currentFrame && activeFrameTypes.has(currentFrame.type) ? (
+            {currentFrame && isFrameVisible(currentFrame) ? (
               <FrameRenderer frame={currentFrame} searchQuery={searchQuery} />
             ) : (
               currentFrame && (
@@ -566,6 +625,27 @@ export const SessionPlayerPage: React.FC = () => {
               );
             else setActiveFrameTypes(new Set());
           }}
+          availableToolNames={availableToolNames}
+          activeToolNames={activeToolNames}
+          onToggleToolName={(toolName) => {
+            setActiveToolNames((prev) => {
+              const next = new Set(prev);
+              if (next.has(toolName)) next.delete(toolName);
+              else next.add(toolName);
+              return next;
+            });
+          }}
+          onToggleAllTools={(showAll) => {
+            if (showAll) {
+              setActiveToolNames(new Set(availableToolNames));
+            } else {
+              setActiveToolNames(new Set());
+            }
+          }}
+          toolFilterEnabled={toolFilterEnabled}
+          onToolFilterEnabledChange={setToolFilterEnabled}
+          toolErrorsOnly={toolErrorsOnly}
+          onToolErrorsOnlyChange={setToolErrorsOnly}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           searchMatchCount={searchMatches.length}
@@ -606,6 +686,7 @@ export const SessionPlayerPage: React.FC = () => {
           showCommentary={showCommentary}
           commentary={commentaryData?.commentary}
           activeFrameTypes={activeFrameTypes}
+          isFrameVisible={isFrameVisible}
         />
 
         {/* Playback Controls Bar */}
@@ -617,7 +698,8 @@ export const SessionPlayerPage: React.FC = () => {
                   const prevFrame = findPrevVisibleFrame(
                     currentFrameIndex - 1,
                     frames,
-                    activeFrameTypes
+                    activeFrameTypes,
+                    isFrameVisible
                   );
                   handleFrameChange(prevFrame);
                   setIsPlaying(false);
@@ -658,7 +740,8 @@ export const SessionPlayerPage: React.FC = () => {
                   const nextFrame = findNextVisibleFrame(
                     currentFrameIndex + 1,
                     frames,
-                    activeFrameTypes
+                    activeFrameTypes,
+                    isFrameVisible
                   );
                   handleFrameChange(nextFrame);
                   setIsPlaying(false);

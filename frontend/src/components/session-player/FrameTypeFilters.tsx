@@ -14,6 +14,14 @@ interface FrameTypeFiltersProps {
   activeFrameTypes: Set<FrameType>;
   onToggleFrameType: (type: FrameType) => void;
   onToggleAll: (showAll: boolean) => void;
+  availableToolNames?: string[];
+  activeToolNames?: Set<string>;
+  onToggleToolName?: (toolName: string) => void;
+  onToggleAllTools?: (showAll: boolean) => void;
+  toolFilterEnabled?: boolean;
+  onToolFilterEnabledChange?: (enabled: boolean) => void;
+  toolErrorsOnly?: boolean;
+  onToolErrorsOnlyChange?: (enabled: boolean) => void;
   searchQuery?: string;
   onSearchChange?: (query: string) => void;
   searchMatchCount?: number;
@@ -27,6 +35,14 @@ export const FrameTypeFilters: React.FC<FrameTypeFiltersProps> = ({
   activeFrameTypes,
   onToggleFrameType,
   onToggleAll,
+  availableToolNames = [],
+  activeToolNames = new Set<string>(),
+  onToggleToolName,
+  onToggleAllTools,
+  toolFilterEnabled = false,
+  onToolFilterEnabledChange,
+  toolErrorsOnly = false,
+  onToolErrorsOnlyChange,
   searchQuery = '',
   onSearchChange,
   searchMatchCount = 0,
@@ -56,6 +72,8 @@ export const FrameTypeFilters: React.FC<FrameTypeFiltersProps> = ({
   // Check if all types are active
   const allActive = activeFrameTypes.size === 4;
   const activeFilterCount = activeFrameTypes.size;
+  const allToolsActive =
+    availableToolNames.length > 0 && activeToolNames.size === availableToolNames.length;
 
   // Frame type metadata (agent-agnostic labels)
   const frameTypeMetadata: Record<FrameType, { label: string; icon: string; color: string }> = {
@@ -200,6 +218,89 @@ export const FrameTypeFilters: React.FC<FrameTypeFiltersProps> = ({
             );
           })}
         </div>
+
+        {/* Hierarchical Advanced Filters */}
+        {onToolFilterEnabledChange && onToolErrorsOnlyChange && (
+          <div className="mt-4 border-t border-gray-700 pt-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold tracking-wide text-gray-200">
+                ADVANCED FILTERS
+              </h3>
+              <span className="text-xs text-gray-400">Vertical hierarchy</span>
+            </div>
+
+            <div className="rounded-lg border border-gray-700 bg-gray-900/60 p-3">
+              <div className="flex items-center justify-between">
+                <div className="flex flex-col">
+                  <span className="text-sm text-gray-100 font-medium">Tool Executions</span>
+                  <span className="text-xs text-gray-400">
+                    Filter by tool name and result state
+                  </span>
+                </div>
+                <label className="flex items-center gap-2 text-sm cursor-pointer text-gray-200">
+                  <input
+                    type="checkbox"
+                    checked={toolFilterEnabled}
+                    onChange={(e) => onToolFilterEnabledChange(e.target.checked)}
+                    className="rounded"
+                  />
+                  Enable
+                </label>
+              </div>
+
+              {toolFilterEnabled && (
+                <div className="mt-3 pl-4 border-l border-gray-700 space-y-3">
+                  <label className="flex items-center gap-2 text-sm text-gray-200 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={toolErrorsOnly}
+                      onChange={(e) => onToolErrorsOnlyChange(e.target.checked)}
+                      className="rounded"
+                    />
+                    Errors only
+                  </label>
+
+                  {availableToolNames.length > 0 ? (
+                    <>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs uppercase tracking-wide text-gray-400">
+                          By tool name
+                        </span>
+                        {onToggleAllTools && (
+                          <button
+                            onClick={() => onToggleAllTools(!allToolsActive)}
+                            className="text-xs px-2 py-1 rounded bg-gray-700 hover:bg-gray-600 text-gray-100"
+                            title={allToolsActive ? 'Deselect all tools' : 'Select all tools'}
+                          >
+                            {allToolsActive ? 'Deselect all' : 'Select all'}
+                          </button>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        {availableToolNames.map((toolName) => (
+                          <label
+                            key={toolName}
+                            className="flex items-center gap-2 text-sm text-gray-200 cursor-pointer bg-gray-800/60 border border-gray-700 rounded px-2 py-1.5"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={activeToolNames.has(toolName)}
+                              onChange={() => onToggleToolName?.(toolName)}
+                              className="rounded"
+                            />
+                            <span className="font-mono text-xs">{toolName}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </>
+                  ) : (
+                    <p className="text-xs text-gray-500">No tool executions in this session.</p>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

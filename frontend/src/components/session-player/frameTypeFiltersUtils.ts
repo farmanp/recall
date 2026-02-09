@@ -7,10 +7,11 @@ import type { PlaybackFrame } from '../../types/transcript';
 export function findNextVisibleFrame(
   startIndex: number,
   frames: PlaybackFrame[],
-  activeTypes: Set<string>
+  activeTypes: Set<string>,
+  isFrameVisible?: (frame: PlaybackFrame) => boolean
 ): number {
   for (let i = startIndex; i < frames.length; i++) {
-    if (activeTypes.has(frames[i].type)) {
+    if (activeTypes.has(frames[i].type) && (!isFrameVisible || isFrameVisible(frames[i]))) {
       return i;
     }
   }
@@ -25,10 +26,11 @@ export function findNextVisibleFrame(
 export function findPrevVisibleFrame(
   startIndex: number,
   frames: PlaybackFrame[],
-  activeTypes: Set<string>
+  activeTypes: Set<string>,
+  isFrameVisible?: (frame: PlaybackFrame) => boolean
 ): number {
   for (let i = startIndex; i >= 0; i--) {
-    if (activeTypes.has(frames[i].type)) {
+    if (activeTypes.has(frames[i].type) && (!isFrameVisible || isFrameVisible(frames[i]))) {
       return i;
     }
   }
