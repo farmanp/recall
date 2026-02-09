@@ -29,6 +29,7 @@ import {
   Zap,
   Search as SearchIcon,
   Folder,
+  FolderOpen,
   Calendar,
   Hash,
   MessageSquare,
@@ -46,6 +47,7 @@ import {
 import { HelpPanel } from '../components/session-player/HelpPanel';
 import { StatsPanel } from '../components/session-player/StatsPanel';
 import { ClaudeMdPanel } from '../components/session-player/ClaudeMdPanel';
+import { ArtifactsPanel } from '../components/session-player/ArtifactsPanel';
 import { useSessionStats } from '../hooks/useSessionStats';
 import {
   findMatchingFrameIndices,
@@ -60,14 +62,19 @@ type FrameType = 'user_message' | 'claude_thinking' | 'claude_response' | 'tool_
 export const SessionPlayerPage: React.FC = () => {
   const { sessionId, frameIndex } = useParams<{ sessionId: string; frameIndex?: string }>();
   const navigate = useNavigate();
+  const mountedRef = useRef(false);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
 
+  // State tracks current position, initialized from URL via lazy initializer
   const [currentFrameIndex, setCurrentFrameIndex] = useState(() => {
-    // Restore from localStorage first
-    const saved = localStorage.getItem(`recall:playback:${sessionId}`);
-    if (saved) return parseInt(saved, 10);
-    // Otherwise use URL param
-    return frameIndex ? parseInt(frameIndex, 10) : 0;
+    // Read from URL at mount time
+    if (frameIndex !== undefined) {
+      const parsed = parseInt(frameIndex, 10);
+      if (!isNaN(parsed)) return parsed;
+    }
+    return 0;
   });
+
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [showCommentary, setShowCommentary] = useState(true);
@@ -79,9 +86,10 @@ export const SessionPlayerPage: React.FC = () => {
   const [showHelp, setShowHelp] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [showClaudeMd, setShowClaudeMd] = useState(false);
+  const [showArtifacts, setShowArtifacts] = useState(false);
+  const [artifactViewMode, setArtifactViewMode] = useState<'cumulative' | 'full'>('cumulative');
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'timeline' | 'chat'>('timeline');
-  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
 
   // Fetch session details and all frames
   const { data: sessionDetails, isLoading: loadingDetails } = useSessionDetails(sessionId);
@@ -95,6 +103,30 @@ export const SessionPlayerPage: React.FC = () => {
 
   const frames = useMemo(() => framesData?.frames ?? [], [framesData?.frames]);
   const currentFrame = useMemo(() => frames[currentFrameIndex], [frames, currentFrameIndex]);
+
+  // Mark as mounted after data has loaded
+  useEffect(() => {
+    // Only mark as mounted once frames have loaded
+    if (frames.length > 0 && !mountedRef.current) {
+      // Add a small delay after frames load to ensure stability
+      const timer = setTimeout(() => {
+        mountedRef.current = true;
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [frames.length]);
+
+  // Clear any stale localStorage on mount (legacy cleanup)
+  useEffect(() => {
+    if (sessionId) {
+      localStorage.removeItem(`recall:playback:${sessionId}`);
+    }
+  }, [sessionId]);
+
+  // Update frame index (URL sync removed - was causing refresh bugs)
+  const handleFrameChange = (newIndex: number) => {
+    setCurrentFrameIndex(newIndex);
+  };
 
   // Session statistics
   const stats = useSessionStats(frames);
@@ -128,7 +160,7 @@ export const SessionPlayerPage: React.FC = () => {
 
     timeoutRef.current = setTimeout(() => {
       const nextFrame = findNextVisibleFrame(currentFrameIndex + 1, frames, activeFrameTypes);
-      setCurrentFrameIndex(nextFrame);
+      handleFrameChange(nextFrame);
     }, duration);
 
     return () => {
@@ -147,16 +179,7 @@ export const SessionPlayerPage: React.FC = () => {
     compressionEnabled,
   ]);
 
-  // Sync currentFrameIndex with URL and localStorage
-  useEffect(() => {
-    if (sessionId && currentFrameIndex !== undefined) {
-      // Avoid infinite loop by checking if URL is already correct
-      if (frameIndex !== String(currentFrameIndex)) {
-        navigate(`/session/${sessionId}/${currentFrameIndex}`, { replace: true });
-      }
-      localStorage.setItem(`recall:playback:${sessionId}`, String(currentFrameIndex));
-    }
-  }, [currentFrameIndex, sessionId, navigate, frameIndex]);
+  // URL is updated directly in handleFrameChange, no sync effect needed
 
   // Keyboard shortcuts with frame filtering
   useEffect(() => {
@@ -176,26 +199,22 @@ export const SessionPlayerPage: React.FC = () => {
           break;
         case 'ArrowRight':
           e.preventDefault();
-          setCurrentFrameIndex(
-            findNextVisibleFrame(currentFrameIndex + 1, frames, activeFrameTypes)
-          );
+          handleFrameChange(findNextVisibleFrame(currentFrameIndex + 1, frames, activeFrameTypes));
           setIsPlaying(false);
           break;
         case 'ArrowLeft':
           e.preventDefault();
-          setCurrentFrameIndex(
-            findPrevVisibleFrame(currentFrameIndex - 1, frames, activeFrameTypes)
-          );
+          handleFrameChange(findPrevVisibleFrame(currentFrameIndex - 1, frames, activeFrameTypes));
           setIsPlaying(false);
           break;
         case 'Home':
           e.preventDefault();
-          setCurrentFrameIndex(findNextVisibleFrame(0, frames, activeFrameTypes));
+          handleFrameChange(findNextVisibleFrame(0, frames, activeFrameTypes));
           setIsPlaying(false);
           break;
         case 'End':
           e.preventDefault();
-          setCurrentFrameIndex(findPrevVisibleFrame(frames.length - 1, frames, activeFrameTypes));
+          handleFrameChange(findPrevVisibleFrame(frames.length - 1, frames, activeFrameTypes));
           setIsPlaying(false);
           break;
         case '?':
@@ -211,6 +230,11 @@ export const SessionPlayerPage: React.FC = () => {
         case 'S':
           e.preventDefault();
           setShowStats((prev) => !prev);
+          break;
+        case 'a':
+        case 'A':
+          e.preventDefault();
+          setShowArtifacts((prev) => !prev);
           break;
         case 'd':
         case 'D':
@@ -233,6 +257,8 @@ export const SessionPlayerPage: React.FC = () => {
             setShowStats(false);
           } else if (showClaudeMd) {
             setShowClaudeMd(false);
+          } else if (showArtifacts) {
+            setShowArtifacts(false);
           } else {
             navigate('/');
           }
@@ -242,28 +268,28 @@ export const SessionPlayerPage: React.FC = () => {
           const nextUser = frames.findIndex(
             (f, i) => i > currentFrameIndex && f.type === 'user_message'
           );
-          if (nextUser !== -1) setCurrentFrameIndex(nextUser);
+          if (nextUser !== -1) handleFrameChange(nextUser);
           break;
         case 't':
           // Jump to next tool execution
           const nextTool = frames.findIndex(
             (f, i) => i > currentFrameIndex && f.type === 'tool_execution'
           );
-          if (nextTool !== -1) setCurrentFrameIndex(nextTool);
+          if (nextTool !== -1) handleFrameChange(nextTool);
           break;
         case 'r':
           // Jump to next AI response
           const nextResp = frames.findIndex(
             (f, i) => i > currentFrameIndex && f.type === 'claude_response'
           );
-          if (nextResp !== -1) setCurrentFrameIndex(nextResp);
+          if (nextResp !== -1) handleFrameChange(nextResp);
           break;
         case 'm':
           // Jump to next thinking frame
           const nextThink = frames.findIndex(
             (f, i) => i > currentFrameIndex && f.type === 'claude_thinking'
           );
-          if (nextThink !== -1) setCurrentFrameIndex(nextThink);
+          if (nextThink !== -1) handleFrameChange(nextThink);
           break;
         case 'n':
           // Next search match
@@ -271,7 +297,7 @@ export const SessionPlayerPage: React.FC = () => {
             e.preventDefault();
             const nextIndex = findNextMatchIndex(currentFrameIndex, searchMatches);
             if (nextIndex !== -1) {
-              setCurrentFrameIndex(nextIndex);
+              handleFrameChange(nextIndex);
               setIsPlaying(false);
             }
           }
@@ -282,7 +308,7 @@ export const SessionPlayerPage: React.FC = () => {
             e.preventDefault();
             const prevIndex = findPrevMatchIndex(currentFrameIndex, searchMatches);
             if (prevIndex !== -1) {
-              setCurrentFrameIndex(prevIndex);
+              handleFrameChange(prevIndex);
               setIsPlaying(false);
             }
           }
@@ -302,6 +328,7 @@ export const SessionPlayerPage: React.FC = () => {
     showHelp,
     showStats,
     showClaudeMd,
+    showArtifacts,
   ]);
 
   if (loadingDetails || loadingFrames) {
@@ -437,6 +464,18 @@ export const SessionPlayerPage: React.FC = () => {
           </button>
 
           <button
+            onClick={() => setShowArtifacts(!showArtifacts)}
+            className={`p-2.5 rounded-xl transition-all border active:scale-95 ${
+              showArtifacts
+                ? 'bg-cyan-600 border-cyan-500 text-white'
+                : 'bg-gray-800 border-white/5 text-gray-400 hover:text-white'
+            }`}
+            title="File Artifacts (a)"
+          >
+            <FolderOpen className="w-5 h-5" />
+          </button>
+
+          <button
             onClick={() => setShowStats(!showStats)}
             className={`p-2.5 rounded-xl transition-all border active:scale-95 ${
               showStats
@@ -520,14 +559,14 @@ export const SessionPlayerPage: React.FC = () => {
           onNextMatch={() => {
             const nextIndex = findNextMatchIndex(currentFrameIndex, searchMatches);
             if (nextIndex !== -1) {
-              setCurrentFrameIndex(nextIndex);
+              handleFrameChange(nextIndex);
               setIsPlaying(false);
             }
           }}
           onPrevMatch={() => {
             const prevIndex = findPrevMatchIndex(currentFrameIndex, searchMatches);
             if (prevIndex !== -1) {
-              setCurrentFrameIndex(prevIndex);
+              handleFrameChange(prevIndex);
               setIsPlaying(false);
             }
           }}
@@ -536,7 +575,7 @@ export const SessionPlayerPage: React.FC = () => {
         <TimelineScrubber
           frames={frames}
           currentFrameIndex={currentFrameIndex}
-          onSeek={setCurrentFrameIndex}
+          onSeek={handleFrameChange}
           showCommentary={showCommentary}
           commentary={commentaryData?.commentary}
           activeFrameTypes={activeFrameTypes}
@@ -553,7 +592,7 @@ export const SessionPlayerPage: React.FC = () => {
                     frames,
                     activeFrameTypes
                   );
-                  setCurrentFrameIndex(prevFrame);
+                  handleFrameChange(prevFrame);
                   setIsPlaying(false);
                 }}
                 className="p-2.5 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white rounded-xl border border-white/5 transition-all disabled:opacity-20 active:scale-95"
@@ -586,7 +625,7 @@ export const SessionPlayerPage: React.FC = () => {
                     frames,
                     activeFrameTypes
                   );
-                  setCurrentFrameIndex(nextFrame);
+                  handleFrameChange(nextFrame);
                   setIsPlaying(false);
                 }}
                 className="p-2.5 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white rounded-xl border border-white/5 transition-all disabled:opacity-20 active:scale-95"
@@ -682,6 +721,19 @@ export const SessionPlayerPage: React.FC = () => {
         <ClaudeMdPanel
           claudeMdFiles={sessionDetails?.metadata?.claudeMdFiles || []}
           onClose={() => setShowClaudeMd(false)}
+        />
+      )}
+      {showArtifacts && (
+        <ArtifactsPanel
+          frames={frames}
+          currentFrameIndex={currentFrameIndex}
+          viewMode={artifactViewMode}
+          onViewModeChange={setArtifactViewMode}
+          onClose={() => setShowArtifacts(false)}
+          onNavigateToFrame={(index) => {
+            handleFrameChange(index);
+            setShowArtifacts(false);
+          }}
         />
       )}
     </div>

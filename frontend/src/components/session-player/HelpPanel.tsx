@@ -66,7 +66,9 @@ export const HelpPanel: React.FC<HelpPanelProps> = ({ onClose }) => {
     {
       title: 'Other',
       shortcuts: [
+        { key: 'a', description: 'Toggle file artifacts panel' },
         { key: 'c', description: 'Toggle compression (skip gaps)' },
+        { key: 'd', description: 'Toggle CLAUDE.md panel' },
         { key: 's', description: 'Toggle statistics panel' },
         { key: '?', description: 'Toggle this help panel' },
         { key: 'Esc', description: 'Close panels / Go back to list' },
