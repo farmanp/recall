@@ -1009,3 +1009,23 @@ export function getImportStats(): {
 
   return stats;
 }
+
+/**
+ * Delete all transcript data for a session.
+ * Used to ensure re-imports don't retain stale rows.
+ */
+export function deleteTranscriptSessionData(sessionId: string): void {
+  const db = getTranscriptDbInstance();
+
+  db.prepare(
+    `
+    DELETE FROM tool_executions
+    WHERE frame_id IN (
+      SELECT id FROM playback_frames WHERE session_id = ?
+    )
+  `
+  ).run(sessionId);
+
+  db.prepare('DELETE FROM playback_frames WHERE session_id = ?').run(sessionId);
+  db.prepare('DELETE FROM session_metadata WHERE session_id = ?').run(sessionId);
+}

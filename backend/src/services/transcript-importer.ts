@@ -21,6 +21,7 @@ import { ParserFactory } from '../parser/parser-factory';
 import { detectAgentFromPath, AgentType } from '../parser/agent-detector';
 import {
   initializeTranscriptSchema,
+  deleteTranscriptSessionData,
   insertSession,
   insertFrame,
   insertToolExecution,
@@ -28,6 +29,7 @@ import {
   updateParsingStatus,
   getTranscriptSessionById,
 } from '../db/transcript-queries';
+import { getTranscriptDbInstance } from '../db/transcript-connection';
 import { ClaudeMdStorage } from './claudemd-storage';
 import type { ImportJobConfig } from '../db/transcript-schema';
 import type { SessionMetadata } from '../types/transcript';
@@ -129,10 +131,26 @@ export async function importTranscript(filePath: string, agent?: AgentType): Pro
       firstUserMessage: extractFirstUserMessage(timeline.frames),
     };
 
-    // Insert session
-    insertSession(sessionMetadata);
+    // Persist transcript rows atomically so partial imports don't leak stale data.
+    const db = getTranscriptDbInstance();
+    const persistImport = db.transaction(() => {
+      deleteTranscriptSessionData(sessionId);
+      insertSession(sessionMetadata);
 
-    // Store CLAUDE.md snapshots if present (Phase 2: Evolution Tracking)
+      for (const frame of timeline.frames) {
+        insertFrame(sessionId, frame);
+
+        if (frame.toolExecution) {
+          insertToolExecution(frame.id, frame.toolExecution);
+        }
+      }
+
+      updateSessionFrameCount(sessionId);
+    });
+
+    persistImport();
+
+    // Store CLAUDE.md snapshots if present (best-effort, separate DB)
     if (timeline.metadata.claudeMdFiles && timeline.metadata.claudeMdFiles.length > 0) {
       try {
         ClaudeMdStorage.storeClaudeMdFiles(sessionId, timeline.metadata.claudeMdFiles);
@@ -145,28 +163,7 @@ export async function importTranscript(filePath: string, agent?: AgentType): Pro
       }
     }
 
-    // Insert frames
-    let framesInserted = 0;
-    for (const frame of timeline.frames) {
-      insertFrame(sessionId, frame);
-
-      // Insert tool execution if present
-      if (frame.toolExecution) {
-        insertToolExecution(frame.id, frame.toolExecution);
-      }
-
-      framesInserted++;
-
-      // Update progress every 100 frames
-      if (framesInserted % 100 === 0) {
-        updateParsingStatus(sessionId, {
-          frames_created: framesInserted,
-        });
-      }
-    }
-
-    // Update frame count
-    updateSessionFrameCount(sessionId);
+    const framesInserted = timeline.frames.length;
 
     // Mark as completed
     updateParsingStatus(sessionId, {
