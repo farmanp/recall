@@ -43,8 +43,8 @@ export const TimelineScrubber: React.FC<TimelineScrubberProps> = ({
   const [hoverInfo, setHoverInfo] = useState<{ frameIndex: number; x: number } | null>(null);
   const timelineRef = useRef<HTMLDivElement>(null);
 
-  // Calculate progress percentage
-  const progress = frames.length > 0 ? ((currentFrameIndex + 1) / frames.length) * 100 : 0;
+  // Calculate progress percentage (frame 0 = 0%, last frame = 100%)
+  const progress = frames.length > 1 ? (currentFrameIndex / (frames.length - 1)) * 100 : 0;
 
   // Calculate total duration for timestamp display
   const totalDurationMs =
@@ -72,7 +72,7 @@ export const TimelineScrubber: React.FC<TimelineScrubberProps> = ({
     const rect = timelineRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const percentage = x / rect.width;
-    const targetFrame = Math.floor(percentage * frames.length);
+    const targetFrame = Math.round(percentage * (frames.length - 1));
     const clampedFrame = Math.max(0, Math.min(targetFrame, frames.length - 1));
 
     onSeek(clampedFrame);
@@ -85,7 +85,7 @@ export const TimelineScrubber: React.FC<TimelineScrubberProps> = ({
     const rect = timelineRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const percentage = x / rect.width;
-    const frameIndex = Math.floor(percentage * frames.length);
+    const frameIndex = Math.round(percentage * (frames.length - 1));
     const clampedFrameIndex = Math.max(0, Math.min(frameIndex, frames.length - 1));
 
     setHoverInfo({ frameIndex: clampedFrameIndex, x });
@@ -100,7 +100,7 @@ export const TimelineScrubber: React.FC<TimelineScrubberProps> = ({
     () =>
       frames.map((frame, idx) => {
         if (!activeFrameTypes.has(frame.type)) return null;
-        const position = (idx / frames.length) * 100;
+        const position = frames.length > 1 ? (idx / (frames.length - 1)) * 100 : 0;
         const color = FRAME_TYPE_COLOR_MAP[frame.type] || 'bg-gray-500';
 
         return (
