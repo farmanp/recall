@@ -31,8 +31,24 @@ import { getSessionIndexer } from '../parser/session-indexer';
 
 const router = Router();
 
-// Initialize work unit schema on module load
-initializeWorkUnitSchema();
+// Track whether schema has been initialized (lazy initialization)
+let schemaInitialized = false;
+
+/**
+ * Ensure the work unit schema is initialized before handling requests
+ * Uses lazy initialization to defer DB access until first request,
+ * which allows the server to start even if the DB has issues.
+ */
+function ensureSchema(): void {
+  if (schemaInitialized) return;
+  try {
+    initializeWorkUnitSchema();
+    schemaInitialized = true;
+  } catch (err) {
+    console.error('[WorkUnits] Schema initialization failed:', err);
+    throw err;
+  }
+}
 
 /**
  * Helper to safely extract string query parameters
@@ -58,6 +74,7 @@ function getStringParam(value: unknown): string | undefined {
  */
 router.get('/', async (req: Request, res: Response) => {
   try {
+    ensureSchema();
     const offsetStr = getStringParam(req.query.offset);
     const limitStr = getStringParam(req.query.limit);
     const confidence = getStringParam(req.query.confidence) as WorkUnitConfidence | undefined;
@@ -92,6 +109,7 @@ router.get('/', async (req: Request, res: Response) => {
  */
 router.get('/stats', async (_req: Request, res: Response) => {
   try {
+    ensureSchema();
     const stats = getWorkUnitStats();
     res.json(stats);
   } catch (error) {
@@ -109,6 +127,7 @@ router.get('/stats', async (_req: Request, res: Response) => {
  */
 router.get('/:id', async (req: Request, res: Response) => {
   try {
+    ensureSchema();
     const workUnitId = req.params.id as string;
 
     if (!workUnitId) {
@@ -139,6 +158,7 @@ router.get('/:id', async (req: Request, res: Response) => {
  */
 router.get('/:id/sessions', async (req: Request, res: Response) => {
   try {
+    ensureSchema();
     const workUnitId = req.params.id as string;
     const offsetStr = getStringParam(req.query.offset);
     const limitStr = getStringParam(req.query.limit);
@@ -177,6 +197,7 @@ router.get('/:id/sessions', async (req: Request, res: Response) => {
  */
 router.post('/recompute', async (_req: Request, res: Response) => {
   try {
+    ensureSchema();
     const startTime = Date.now();
 
     // Compute work units
@@ -219,6 +240,7 @@ router.post('/recompute', async (_req: Request, res: Response) => {
  */
 router.patch('/:id', async (req: Request, res: Response) => {
   try {
+    ensureSchema();
     const workUnitId = req.params.id as string;
     const { action, sessionId } = req.body;
 
@@ -297,6 +319,7 @@ router.patch('/:id', async (req: Request, res: Response) => {
  */
 router.delete('/:id', async (req: Request, res: Response) => {
   try {
+    ensureSchema();
     const workUnitId = req.params.id as string;
 
     if (!workUnitId) {
@@ -327,6 +350,7 @@ router.delete('/:id', async (req: Request, res: Response) => {
  */
 export async function getSessionWorkUnit(req: Request, res: Response): Promise<void> {
   try {
+    ensureSchema();
     const sessionId = req.params.id as string;
 
     if (!sessionId) {

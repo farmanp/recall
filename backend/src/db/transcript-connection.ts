@@ -4,9 +4,78 @@ import fs from 'fs';
 
 /**
  * Default path to the transcript database
- * Located in user's home directory: ~/.claude/transcripts.db
+ * Located in user's home directory: ~/.recall-player/transcripts.db
+ *
+ * Note: Previously used ~/.claude/transcripts.db but moved to a stable
+ * location to avoid corruption issues when running via npx (volatile cache).
  */
-const TRANSCRIPT_DB_PATH = path.join(process.env.HOME || '', '.claude', 'transcripts.db');
+const TRANSCRIPT_DB_PATH = path.join(process.env.HOME || '', '.recall-player', 'transcripts.db');
+
+/**
+ * Initialize a SQLite database with auto-recovery for corrupted files
+ *
+ * On SQLITE_IOERR* errors (typically from corruption), automatically:
+ * 1. Delete the corrupted database file and associated WAL/SHM files
+ * 2. Retry initialization once with a fresh database
+ *
+ * @param dbPath - Path to the database file
+ * @param isRetry - Internal flag to prevent infinite retry loops
+ * @returns Configured SQLite database instance
+ * @throws Error if initialization fails after retry
+ */
+function initializeDatabase(dbPath: string, isRetry = false): Database.Database {
+  try {
+    const db = new Database(dbPath, {
+      readonly: false,
+      fileMustExist: false,
+    });
+
+    // Configure database with PRAGMA settings
+    // These can throw on corrupted databases
+    db.pragma('journal_mode = WAL');
+    db.pragma('foreign_keys = ON');
+    db.pragma('synchronous = NORMAL');
+    db.pragma('cache_size = -64000');
+
+    return db;
+  } catch (err: unknown) {
+    const sqliteErr = err as { code?: string };
+
+    // Check for SQLite corruption indicators:
+    // - SQLITE_IOERR*: I/O errors (often from truncated/corrupted files)
+    // - SQLITE_NOTADB: File exists but is not a valid SQLite database
+    // - SQLITE_CORRUPT: Database disk image is malformed
+    const isCorruptionError =
+      sqliteErr.code?.startsWith('SQLITE_IOERR') ||
+      sqliteErr.code === 'SQLITE_NOTADB' ||
+      sqliteErr.code === 'SQLITE_CORRUPT';
+
+    if (!isRetry && isCorruptionError) {
+      console.warn(`[DB] Corrupted database detected (${sqliteErr.code}), recreating: ${dbPath}`);
+
+      // Remove corrupted database file
+      if (fs.existsSync(dbPath)) {
+        fs.unlinkSync(dbPath);
+      }
+
+      // Also remove WAL and SHM files that accompany the database
+      const walPath = dbPath + '-wal';
+      const shmPath = dbPath + '-shm';
+      if (fs.existsSync(walPath)) {
+        fs.unlinkSync(walPath);
+      }
+      if (fs.existsSync(shmPath)) {
+        fs.unlinkSync(shmPath);
+      }
+
+      // Retry once with fresh database
+      return initializeDatabase(dbPath, true);
+    }
+
+    // Re-throw non-recoverable errors
+    throw err;
+  }
+}
 
 /**
  * Creates and configures a new SQLite database connection for transcripts
@@ -14,6 +83,7 @@ const TRANSCRIPT_DB_PATH = path.join(process.env.HOME || '', '.claude', 'transcr
  * Opens the transcript database in read-write mode.
  * Creates the database file if it doesn't exist.
  * Enables WAL mode for better concurrency (reads don't block writes).
+ * Includes auto-recovery for corrupted databases.
  *
  * @returns {Database.Database} Configured SQLite database instance
  *
@@ -22,30 +92,13 @@ const TRANSCRIPT_DB_PATH = path.join(process.env.HOME || '', '.claude', 'transcr
  * db.prepare('INSERT INTO session_metadata ...').run(...);
  */
 export function getTranscriptDatabase(): Database.Database {
-  // Ensure .claude directory exists
-  const claudeDir = path.dirname(TRANSCRIPT_DB_PATH);
-  if (!fs.existsSync(claudeDir)) {
-    fs.mkdirSync(claudeDir, { recursive: true });
+  // Ensure .recall-player directory exists
+  const recallDir = path.dirname(TRANSCRIPT_DB_PATH);
+  if (!fs.existsSync(recallDir)) {
+    fs.mkdirSync(recallDir, { recursive: true });
   }
 
-  const db = new Database(TRANSCRIPT_DB_PATH, {
-    // Read-write mode - we need to insert/update transcript data
-    readonly: false,
-    fileMustExist: false, // Create file if it doesn't exist
-  });
-
-  // Enable WAL mode for better concurrency
-  // Allows multiple readers while a writer is active
-  db.pragma('journal_mode = WAL');
-
-  // Enable foreign key constraints
-  db.pragma('foreign_keys = ON');
-
-  // Optimize performance
-  db.pragma('synchronous = NORMAL'); // Faster than FULL, still safe with WAL
-  db.pragma('cache_size = -64000'); // Use 64MB cache
-
-  return db;
+  return initializeDatabase(TRANSCRIPT_DB_PATH);
 }
 
 /**

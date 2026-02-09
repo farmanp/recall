@@ -29,7 +29,13 @@ import type {
  * console.log('Database schema initialized');
  */
 export function initializeTranscriptSchema(): void {
-  const db = getTranscriptDbInstance();
+  let db;
+  try {
+    db = getTranscriptDbInstance();
+  } catch (err) {
+    console.error('[DB] Failed to initialize transcript schema:', err);
+    throw err;
+  }
 
   // 1. SESSION_METADATA - create table first without agent_type for migration compatibility
   db.exec(`

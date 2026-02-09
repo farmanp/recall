@@ -29,8 +29,13 @@ import type { AgentType } from '../types/transcript';
  * Safe to call multiple times - uses IF NOT EXISTS
  */
 export function initializeWorkUnitSchema(): void {
-  const db = getTranscriptDbInstance();
-  initializeWorkUnitTables(db);
+  try {
+    const db = getTranscriptDbInstance();
+    initializeWorkUnitTables(db);
+  } catch (err) {
+    console.error('[WorkUnits] Failed to initialize schema:', err);
+    throw err;
+  }
 }
 
 /**
