@@ -1,9 +1,11 @@
 import { Router, Request, Response } from 'express';
-import { exec } from 'child_process';
+import { execFile } from 'child_process';
 import { promisify } from 'util';
+import { validateParams } from '../middleware/validation';
+import { sessionIdSchema } from '../validation/schemas';
 
 const router = Router();
-const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
 
 /**
  * Observation from claude-mem
@@ -50,40 +52,44 @@ export interface CommentaryBubble {
  * @example
  * GET /api/sessions/4b198fdf-b80d-4bbc-806f-2900282cdc56/commentary
  */
-router.get('/:id/commentary', async (req: Request, res: Response) => {
-  try {
-    const sessionId = req.params.id as string;
-    if (!sessionId) {
-      res.status(400).json({ error: 'Session ID is required' });
-      return;
+router.get(
+  '/:id/commentary',
+  validateParams(sessionIdSchema),
+  async (_req: Request, res: Response) => {
+    try {
+      const { id: sessionId } = res.locals.validatedParams;
+      if (!sessionId) {
+        res.status(400).json({ error: 'Session ID is required' });
+        return;
+      }
+
+      // Query claude-mem for observations matching this session ID
+      const observations = await queryClaudeMemObservations(sessionId);
+
+      // Map observations to commentary bubbles
+      const commentary: CommentaryBubble[] = observations.map((obs) => ({
+        id: obs.id,
+        timestamp: obs.timestamp,
+        type: obs.type,
+        title: obs.title,
+        content: obs.content,
+        metadata: obs.metadata,
+      }));
+
+      res.json({
+        commentary,
+        total: commentary.length,
+        sessionId,
+      });
+    } catch (error) {
+      console.error('Error fetching commentary:', error);
+      res.status(500).json({
+        error: 'Failed to fetch commentary',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
     }
-
-    // Query claude-mem for observations matching this session ID
-    const observations = await queryClaudeMemObservations(sessionId);
-
-    // Map observations to commentary bubbles
-    const commentary: CommentaryBubble[] = observations.map((obs) => ({
-      id: obs.id,
-      timestamp: obs.timestamp,
-      type: obs.type,
-      title: obs.title,
-      content: obs.content,
-      metadata: obs.metadata,
-    }));
-
-    res.json({
-      commentary,
-      total: commentary.length,
-      sessionId,
-    });
-  } catch (error) {
-    console.error('Error fetching commentary:', error);
-    res.status(500).json({
-      error: 'Failed to fetch commentary',
-      message: error instanceof Error ? error.message : 'Unknown error',
-    });
   }
-});
+);
 
 /**
  * Query claude-mem MCP server for observations
@@ -100,9 +106,11 @@ async function queryClaudeMemObservations(sessionId: string): Promise<MemObserva
 
     // Execute search via MCP server
     // Note: This assumes claude-mem MCP server is running and configured
-    const command = `claude mcp call claude-mem search '${query}'`;
-
-    const { stdout, stderr } = await execAsync(command);
+    const { stdout, stderr } = await execFileAsync(
+      'claude',
+      ['mcp', 'call', 'claude-mem', 'search', query],
+      { maxBuffer: 10 * 1024 * 1024 }
+    );
 
     if (stderr) {
       console.warn('claude-mem search warning:', stderr);
