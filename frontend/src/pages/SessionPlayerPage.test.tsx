@@ -81,7 +81,7 @@ describe('SessionPlayerPage', () => {
   it('renders session header details', () => {
     renderPlayer('/session/s1/0');
     expect(screen.getByText('alpha-session')).toBeInTheDocument();
-    expect(screen.getByText('Live Replay')).toBeInTheDocument();
+    expect(screen.getByText('Session Replay')).toBeInTheDocument();
   });
 
   it('switches to chat view and shows messages', async () => {

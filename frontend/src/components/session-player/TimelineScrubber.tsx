@@ -19,7 +19,7 @@ const FRAME_TYPE_COLOR_MAP: Record<string, string> = {
 const FRAME_TYPE_LABELS: Record<string, string> = {
   user_message: '👤 User',
   claude_thinking: '🧠 Thinking',
-  claude_response: '🤖 Claude',
+  claude_response: '🤖 Response',
   tool_execution: '🛠️ Tool',
 };
 
@@ -120,11 +120,11 @@ export const TimelineScrubber: React.FC<TimelineScrubberProps> = ({
   return (
     <div className="bg-gray-900/40 backdrop-blur-xl border-t border-white/5 px-6 py-4">
       <div className="max-w-6xl mx-auto">
-        <div className="flex items-center justify-between mb-3 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">
+        <div className="flex items-center justify-between mb-3 text-[10px] font-black uppercase tracking-[0.2em] text-gray-300">
           <div className="flex items-center gap-4">
             <span className="text-blue-400">{formatTimestamp(currentTimestampMs)}</span>
             <span className="text-gray-700">/</span>
-            <span>{formatTimestamp(totalDurationMs)}</span>
+            <span className="text-gray-300">{formatTimestamp(totalDurationMs)}</span>
           </div>
           <div className="flex items-center gap-1.5 bg-gray-800/50 px-2 py-1 rounded border border-white/5">
             <Hash className="w-3 h-3" />
@@ -140,13 +140,13 @@ export const TimelineScrubber: React.FC<TimelineScrubberProps> = ({
           <div
             ref={timelineRef}
             role="slider"
-            aria-label="Playback timeline"
+            aria-label="Playback timeline scrubber"
             aria-valuemin={0}
             aria-valuemax={frames.length - 1}
             aria-valuenow={currentFrameIndex}
             aria-valuetext={`Frame ${currentFrameIndex + 1} of ${frames.length}`}
             tabIndex={0}
-            className="relative h-2 bg-gray-800/80 rounded-full cursor-pointer overflow-hidden backdrop-blur-sm border border-white/5"
+            className="relative h-4 bg-gray-800/80 rounded-full cursor-pointer overflow-hidden backdrop-blur-sm border border-white/5"
             onClick={handleTimelineClick}
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
@@ -169,7 +169,7 @@ export const TimelineScrubber: React.FC<TimelineScrubberProps> = ({
 
             {/* Current Position Handle */}
             <div
-              className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full border-2 border-blue-600 shadow-lg transition-all"
+              className="absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-white rounded-full border-2 border-blue-600 shadow-lg transition-all"
               style={{
                 left: `${progress}%`,
                 transform: 'translate(-50%, -50%)',
@@ -190,10 +190,10 @@ export const TimelineScrubber: React.FC<TimelineScrubberProps> = ({
           {/* Hover Preview Tooltip */}
           {hoverInfo && timelineRef.current && (
             <div
-              className="absolute bg-gray-900 px-3 py-2 rounded shadow-lg text-xs z-10 pointer-events-none"
+              className="absolute bg-gray-900 px-3 py-2 rounded shadow-lg text-xs z-10 pointer-events-none border border-gray-700"
               style={{
                 left: `${hoverInfo.x}px`,
-                top: '-3rem',
+                top: '-4rem',
                 transform: 'translateX(-50%)',
               }}
             >

@@ -61,7 +61,7 @@ describe('TimelineScrubber', () => {
       />
     );
 
-    const slider = screen.getByRole('slider', { name: 'Playback timeline' });
+    const slider = screen.getByRole('slider', { name: 'Playback timeline scrubber' });
     vi.spyOn(slider, 'getBoundingClientRect').mockReturnValue({
       left: 0,
       width: 100,
@@ -92,7 +92,7 @@ describe('TimelineScrubber', () => {
       />
     );
 
-    const slider = screen.getByRole('slider', { name: 'Playback timeline' });
+    const slider = screen.getByRole('slider', { name: 'Playback timeline scrubber' });
     fireEvent.keyDown(slider, { key: 'ArrowRight' });
     fireEvent.keyDown(slider, { key: 'ArrowLeft' });
 

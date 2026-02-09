@@ -55,6 +55,7 @@ export const FrameTypeFilters: React.FC<FrameTypeFiltersProps> = ({
 
   // Check if all types are active
   const allActive = activeFrameTypes.size === 4;
+  const activeFilterCount = activeFrameTypes.size;
 
   // Frame type metadata (agent-agnostic labels)
   const frameTypeMetadata: Record<FrameType, { label: string; icon: string; color: string }> = {
@@ -81,7 +82,7 @@ export const FrameTypeFilters: React.FC<FrameTypeFiltersProps> = ({
   };
 
   return (
-    <div className="bg-gray-800 border-b border-gray-700 px-6 py-3">
+    <div className="bg-gray-800/95 border-b border-gray-700 px-6 py-3">
       <div className="max-w-4xl mx-auto">
         {/* Search Input */}
         {onSearchChange && (
@@ -93,7 +94,7 @@ export const FrameTypeFilters: React.FC<FrameTypeFiltersProps> = ({
                   value={searchQuery}
                   onChange={(e) => onSearchChange(e.target.value)}
                   placeholder="Search frames... (n/p to navigate)"
-                  className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
+                  className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded text-sm text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
                 />
                 {searchQuery && (
                   <button
@@ -107,15 +108,15 @@ export const FrameTypeFilters: React.FC<FrameTypeFiltersProps> = ({
               </div>
               {searchQuery && (
                 <>
-                  <span className="text-sm text-gray-400 whitespace-nowrap min-w-[80px] text-center">
+                  <span className="text-sm text-gray-300 whitespace-nowrap min-w-[110px] text-center">
                     {searchMatchCount > 0 ? (
                       <>
                         <span className="text-white font-bold">{currentMatchRank + 1}</span>
                         <span className="mx-1">/</span>
-                        <span>{searchMatchCount}</span>
+                        <span>{searchMatchCount} matches</span>
                       </>
                     ) : (
-                      '0 matches'
+                      'No matches'
                     )}
                   </span>
                   {searchMatchCount > 0 && (
@@ -144,7 +145,19 @@ export const FrameTypeFilters: React.FC<FrameTypeFiltersProps> = ({
 
         {/* Header with All Toggle */}
         <div className="flex items-center justify-between mb-3">
-          <span className="text-sm font-semibold text-gray-300">FRAME TYPES</span>
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-semibold tracking-wide text-gray-200">FRAME TYPES</span>
+            <span className="text-xs text-gray-300">{activeFilterCount}/4 active</span>
+            {activeFilterCount < 4 && (
+              <button
+                onClick={() => onToggleAll(true)}
+                className="text-xs px-2 py-1 rounded bg-gray-700 hover:bg-gray-600 text-gray-100"
+                title="Reset frame filters"
+              >
+                Reset filters
+              </button>
+            )}
+          </div>
           <label className="flex items-center gap-2 text-sm cursor-pointer">
             <input
               type="checkbox"
@@ -152,7 +165,7 @@ export const FrameTypeFilters: React.FC<FrameTypeFiltersProps> = ({
               onChange={(e) => onToggleAll(e.target.checked)}
               className="rounded"
             />
-            <span className="text-gray-300">All</span>
+            <span className="text-gray-200">All</span>
           </label>
         </div>
 
@@ -168,8 +181,8 @@ export const FrameTypeFilters: React.FC<FrameTypeFiltersProps> = ({
                 key={type}
                 className={`flex items-center gap-2 px-3 py-2 rounded border transition-all cursor-pointer ${
                   isActive
-                    ? 'bg-gray-700 border-gray-600'
-                    : 'bg-gray-900 border-gray-800 opacity-50'
+                    ? 'bg-gray-700 border-gray-500 shadow-[0_0_0_1px_rgba(148,163,184,0.35)]'
+                    : 'bg-gray-900 border-gray-800 opacity-60'
                 }`}
               >
                 <input
@@ -180,8 +193,8 @@ export const FrameTypeFilters: React.FC<FrameTypeFiltersProps> = ({
                 />
                 <span className={`text-lg ${metadata.color}`}>{metadata.icon}</span>
                 <div className="flex-1">
-                  <div className="text-xs text-gray-300">{metadata.label}</div>
-                  <div className="text-xs text-gray-500">({count})</div>
+                  <div className="text-xs text-gray-200">{metadata.label}</div>
+                  <div className="text-xs text-gray-400">({count})</div>
                 </div>
               </label>
             );

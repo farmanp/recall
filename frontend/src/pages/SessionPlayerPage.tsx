@@ -103,6 +103,8 @@ export const SessionPlayerPage: React.FC = () => {
 
   const frames = useMemo(() => framesData?.frames ?? [], [framesData?.frames]);
   const currentFrame = useMemo(() => frames[currentFrameIndex], [frames, currentFrameIndex]);
+  const isEndOfSession = frames.length > 0 && currentFrameIndex >= frames.length - 1;
+  const activeFrameCount = activeFrameTypes.size;
 
   // Mark as mounted after data has loaded
   useEffect(() => {
@@ -379,11 +381,11 @@ export const SessionPlayerPage: React.FC = () => {
               {sessionDetails && (
                 <div className="flex items-center gap-2 px-2 py-0.5 bg-blue-500/10 text-blue-400 text-[10px] font-black uppercase tracking-widest rounded-full border border-blue-500/20">
                   <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
-                  Live Replay
+                  Session Replay
                 </div>
               )}
             </div>
-            <div className="flex items-center gap-2 text-xs text-gray-500 font-mono">
+            <div className="flex items-center gap-2 text-xs text-gray-300 font-mono">
               <Folder className="w-3 h-3" />
               <span>{sessionDetails?.project.split('/').pop()}</span>
               <span className="opacity-30">•</span>
@@ -426,65 +428,77 @@ export const SessionPlayerPage: React.FC = () => {
                 downloadFile(`${sessionDetails.slug}.md`, markdown);
               }
             }}
-            className="p-2.5 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white rounded-xl border border-white/5 transition-all active:scale-95"
+            className="inline-flex items-center gap-2 px-3 py-2.5 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white rounded-xl border border-white/5 transition-all active:scale-95"
             title="Export session to Markdown"
+            aria-label="Export session to Markdown"
           >
             <Download className="w-5 h-5" />
+            <span className="hidden xl:inline text-xs font-semibold">Export</span>
           </button>
 
           <button
             onClick={() => setViewMode(viewMode === 'timeline' ? 'chat' : 'timeline')}
-            className={`p-2.5 rounded-xl transition-all border active:scale-95 ${
+            className={`inline-flex items-center gap-2 px-3 py-2.5 rounded-xl transition-all border active:scale-95 ${
               viewMode === 'chat'
                 ? 'bg-purple-600 border-purple-500 text-white'
-                : 'bg-gray-800 border-white/5 text-gray-400 hover:text-white'
+                : 'bg-gray-800 border-white/5 text-gray-300 hover:text-white'
             }`}
             title={`Switch to ${viewMode === 'timeline' ? 'Chat' : 'Timeline'} View`}
+            aria-label={`Switch to ${viewMode === 'timeline' ? 'Chat' : 'Timeline'} View`}
           >
             {viewMode === 'timeline' ? (
               <MessageSquare className="w-5 h-5" />
             ) : (
               <Layout className="w-5 h-5" />
             )}
+            <span className="hidden xl:inline text-xs font-semibold">
+              {viewMode === 'timeline' ? 'Chat' : 'Timeline'}
+            </span>
           </button>
 
           <button
             onClick={() => setShowClaudeMd(!showClaudeMd)}
-            className={`p-2.5 rounded-xl transition-all border active:scale-95 ${
+            className={`inline-flex items-center gap-2 px-3 py-2.5 rounded-xl transition-all border active:scale-95 ${
               showClaudeMd
                 ? 'bg-emerald-600 border-emerald-500 text-white'
                 : sessionDetails?.metadata?.claudeMdFiles?.length
-                  ? 'bg-gray-800 border-white/5 text-gray-400 hover:text-white'
+                  ? 'bg-gray-800 border-white/5 text-gray-300 hover:text-white'
                   : 'bg-gray-800 border-white/5 text-gray-600 cursor-not-allowed'
             }`}
             title={`Project instructions (d) - ${sessionDetails?.metadata?.claudeMdFiles?.length || 0} CLAUDE.md files`}
             disabled={!sessionDetails?.metadata?.claudeMdFiles?.length}
+            aria-label="Open project instructions"
           >
             <FileText className="w-5 h-5" />
+            <span className="hidden xl:inline text-xs font-semibold">Instructions</span>
           </button>
 
           <button
             onClick={() => setShowArtifacts(!showArtifacts)}
-            className={`p-2.5 rounded-xl transition-all border active:scale-95 ${
+            className={`inline-flex items-center gap-2 px-3 py-2.5 rounded-xl transition-all border active:scale-95 ${
               showArtifacts
                 ? 'bg-cyan-600 border-cyan-500 text-white'
-                : 'bg-gray-800 border-white/5 text-gray-400 hover:text-white'
+                : 'bg-gray-800 border-white/5 text-gray-300 hover:text-white'
             }`}
             title="File Artifacts (a)"
+            aria-label="Open file artifacts"
           >
             <FolderOpen className="w-5 h-5" />
+            <span className="hidden xl:inline text-xs font-semibold">Artifacts</span>
           </button>
 
           <button
             onClick={() => setShowStats(!showStats)}
-            className={`p-2.5 rounded-xl transition-all border active:scale-95 ${
+            className={`inline-flex items-center gap-2 px-3 py-2.5 rounded-xl transition-all border active:scale-95 ${
               showStats
                 ? 'bg-blue-600 border-blue-500 text-white'
-                : 'bg-gray-800 border-white/5 text-gray-400 hover:text-white'
+                : 'bg-gray-800 border-white/5 text-gray-300 hover:text-white'
             }`}
             title="Toggle statistics panel (s)"
+            aria-label="Toggle statistics panel"
           >
             <Settings className="w-5 h-5 shadow-lg" />
+            <span className="hidden xl:inline text-xs font-semibold">Stats</span>
           </button>
         </div>
       </div>
@@ -572,6 +586,19 @@ export const SessionPlayerPage: React.FC = () => {
           }}
         />
 
+        <div className="bg-gray-900/70 border-t border-white/5 px-6 py-2">
+          <div className="max-w-6xl mx-auto flex items-center justify-between text-xs text-gray-300">
+            <span>
+              {searchQuery.trim().length > 0
+                ? searchMatches.length > 0
+                  ? `Search: ${searchMatches.length} matches`
+                  : 'Search: no matches'
+                : 'Search: off'}
+            </span>
+            <span>Filters: {activeFrameCount}/4 active</span>
+          </div>
+        </div>
+
         <TimelineScrubber
           frames={frames}
           currentFrameIndex={currentFrameIndex}
@@ -617,6 +644,14 @@ export const SessionPlayerPage: React.FC = () => {
                 )}
                 {isPlaying ? 'Pause' : 'Play'}
               </button>
+
+              <div className="ml-2 text-xs text-gray-300">
+                {isPlaying
+                  ? `Playing at ${playbackSpeed}x`
+                  : isEndOfSession
+                    ? 'End reached'
+                    : 'Paused'}
+              </div>
 
               <button
                 onClick={() => {
