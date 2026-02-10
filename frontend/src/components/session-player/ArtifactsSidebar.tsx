@@ -115,7 +115,7 @@ export const ArtifactsSidebar: React.FC<ArtifactsSidebarProps> = ({
   };
 
   return (
-    <aside className="w-[400px] min-w-[300px] max-w-[600px] bg-forensic-bg-secondary border-l border-forensic-border flex flex-col overflow-hidden transition-all duration-200">
+    <aside className="w-[500px] min-w-[400px] max-w-[700px] bg-forensic-bg-secondary border-l border-forensic-border flex flex-col overflow-hidden transition-all duration-200">
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-forensic-border bg-forensic-bg-secondary shrink-0">
         <div className="flex items-center gap-2">
