@@ -1,11 +1,9 @@
 import { Router, Request, Response } from 'express';
-import { execFile } from 'child_process';
-import { promisify } from 'util';
 import { validateParams } from '../middleware/validation';
 import { sessionIdSchema } from '../validation/schemas';
+import { getDbInstance, isClaudeMemAvailable } from '../db/connection';
 
 const router = Router();
-const execFileAsync = promisify(execFile);
 
 /**
  * Observation from claude-mem
@@ -52,149 +50,126 @@ export interface CommentaryBubble {
  * @example
  * GET /api/sessions/4b198fdf-b80d-4bbc-806f-2900282cdc56/commentary
  */
-router.get(
-  '/:id/commentary',
-  validateParams(sessionIdSchema),
-  async (_req: Request, res: Response) => {
-    try {
-      const { id: sessionId } = res.locals.validatedParams;
-      if (!sessionId) {
-        res.status(400).json({ error: 'Session ID is required' });
-        return;
-      }
-
-      // Query claude-mem for observations matching this session ID
-      const observations = await queryClaudeMemObservations(sessionId);
-
-      // Map observations to commentary bubbles
-      const commentary: CommentaryBubble[] = observations.map((obs) => ({
-        id: obs.id,
-        timestamp: obs.timestamp,
-        type: obs.type,
-        title: obs.title,
-        content: obs.content,
-        metadata: obs.metadata,
-      }));
-
-      res.json({
-        commentary,
-        total: commentary.length,
-        sessionId,
-      });
-    } catch (error) {
-      console.error('Error fetching commentary:', error);
-      res.status(500).json({
-        error: 'Failed to fetch commentary',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      });
+router.get('/:id/commentary', validateParams(sessionIdSchema), (_req: Request, res: Response) => {
+  try {
+    const { id: sessionId } = res.locals.validatedParams;
+    if (!sessionId) {
+      res.status(400).json({ error: 'Session ID is required' });
+      return;
     }
+
+    // Query claude-mem for observations matching this session ID
+    const observations = queryClaudeMemObservations(sessionId);
+
+    // Map observations to commentary bubbles
+    const commentary: CommentaryBubble[] = observations.map((obs) => ({
+      id: obs.id,
+      timestamp: obs.timestamp,
+      type: obs.type,
+      title: obs.title,
+      content: obs.content,
+      metadata: obs.metadata,
+    }));
+
+    res.json({
+      commentary,
+      total: commentary.length,
+      sessionId,
+    });
+  } catch (error) {
+    console.error('Error fetching commentary:', error);
+    res.status(500).json({
+      error: 'Failed to fetch commentary',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
   }
-);
+});
 
 /**
- * Query claude-mem MCP server for observations
- * Uses the claude CLI with MCP integration
+ * Query claude-mem database directly for observations
+ * Uses the existing database connection from connection.ts
  */
-async function queryClaudeMemObservations(sessionId: string): Promise<MemObservation[]> {
+function queryClaudeMemObservations(sessionId: string): MemObservation[] {
+  // Check if claude-mem is available
+  if (!isClaudeMemAvailable()) {
+    return [];
+  }
+
+  const db = getDbInstance();
+  if (!db) {
+    return [];
+  }
+
   try {
-    // Use the claude-mem MCP search to find observations for this session
-    // The search command queries the claude-mem sqlite database
-    const query = JSON.stringify({
-      session_id: sessionId,
-      limit: 100,
-    });
+    // Query observations by joining sdk_sessions to match the content_session_id
+    // The sessionId from recall is stored as content_session_id in sdk_sessions
+    const rows = db
+      .prepare(
+        `
+      SELECT
+        o.id,
+        o.created_at_epoch as timestamp,
+        o.memory_session_id as session_id,
+        o.type,
+        o.title,
+        o.text,
+        o.narrative,
+        o.subtitle,
+        o.facts,
+        o.concepts,
+        o.files_read,
+        o.files_modified
+      FROM observations o
+      INNER JOIN sdk_sessions s ON o.memory_session_id = s.memory_session_id
+      WHERE s.content_session_id = ?
+      ORDER BY o.created_at_epoch ASC
+      LIMIT 100
+    `
+      )
+      .all(sessionId) as Array<{
+      id: number;
+      timestamp: number;
+      session_id: string;
+      type: string;
+      title: string | null;
+      text: string | null;
+      narrative: string | null;
+      subtitle: string | null;
+      facts: string | null;
+      concepts: string | null;
+      files_read: string | null;
+      files_modified: string | null;
+    }>;
 
-    // Execute search via MCP server
-    // Note: This assumes claude-mem MCP server is running and configured
-    const { stdout, stderr } = await execFileAsync(
-      'claude',
-      ['mcp', 'call', 'claude-mem', 'search', query],
-      { maxBuffer: 10 * 1024 * 1024 }
-    );
-
-    if (stderr) {
-      console.warn('claude-mem search warning:', stderr);
-    }
-
-    // Parse the MCP response
-    const response = JSON.parse(stdout);
-
-    // Extract observations from the response
-    // The exact format depends on claude-mem's response structure
-    const observations: MemObservation[] = [];
-
-    if (response && response.results) {
-      for (const result of response.results) {
-        observations.push({
-          id: result.id,
-          timestamp: result.timestamp || Date.now(),
-          session_id: sessionId,
-          type: result.type || 'observation',
-          title: result.title || result.summary || 'Observation',
-          content: result.content || result.text || '',
-          metadata: result.metadata,
-        });
-      }
-    }
-
-    return observations;
+    // Map to MemObservation format
+    return rows.map((row) => ({
+      id: row.id,
+      timestamp: row.timestamp,
+      session_id: row.session_id,
+      type: row.type || 'observation',
+      title: row.title || row.subtitle || 'Observation',
+      content: row.narrative || row.text || '',
+      metadata: {
+        facts: row.facts ? tryParseJSON(row.facts) : undefined,
+        concepts: row.concepts ? tryParseJSON(row.concepts) : undefined,
+        files_read: row.files_read ? tryParseJSON(row.files_read) : undefined,
+        files_modified: row.files_modified ? tryParseJSON(row.files_modified) : undefined,
+      },
+    }));
   } catch (error) {
-    console.error('Error querying claude-mem:', error);
-    // Return empty array if claude-mem is not available
-    // This allows the app to work without claude-mem installed
+    console.error('Error querying claude-mem observations:', error);
     return [];
   }
 }
 
 /**
- * Alternative implementation using direct sqlite access
- * This is a fallback if MCP server is not available
- * Exported for potential future use or testing
+ * Helper to safely parse JSON fields
  */
-export async function queryClaudeMemDirect(sessionId: string): Promise<MemObservation[]> {
+function tryParseJSON(jsonString: string): unknown {
   try {
-    // Import better-sqlite3
-    const Database = require('better-sqlite3');
-    const os = require('os');
-    const path = require('path');
-
-    // claude-mem stores data in ~/.claude-mem/memory.db
-    const dbPath = path.join(os.homedir(), '.claude-mem', 'memory.db');
-
-    const db = new Database(dbPath, { readonly: true });
-
-    // Query observations for this session
-    const stmt = db.prepare(`
-      SELECT
-        id,
-        timestamp,
-        session_id,
-        type,
-        title,
-        content,
-        metadata
-      FROM observations
-      WHERE session_id = ?
-      ORDER BY timestamp ASC
-    `);
-
-    const rows = stmt.all(sessionId);
-
-    db.close();
-
-    // Map to MemObservation format
-    return rows.map((row: any) => ({
-      id: row.id,
-      timestamp: row.timestamp,
-      session_id: row.session_id,
-      type: row.type || 'observation',
-      title: row.title || 'Observation',
-      content: row.content || '',
-      metadata: row.metadata ? JSON.parse(row.metadata) : undefined,
-    }));
-  } catch (error) {
-    console.error('Error querying claude-mem database directly:', error);
-    return [];
+    return JSON.parse(jsonString);
+  } catch {
+    return undefined;
   }
 }
 
