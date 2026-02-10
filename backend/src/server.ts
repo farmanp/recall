@@ -116,6 +116,13 @@ export function createServer(): Application {
   // Note: This will only work when frontend is built and deployed
   app.use((req: Request, res: Response, next: NextFunction) => {
     if (!req.url.startsWith('/api')) {
+      // If it looks like a static asset request (has file extension), return 404
+      // This prevents serving index.html for missing assets like /vite.svg
+      if (req.path.match(/\.\w+$/)) {
+        res.status(404).end();
+        return;
+      }
+
       const indexPath = path.join(publicDir, 'index.html');
       // Only serve index.html if it exists (frontend is built)
       if (require('fs').existsSync(indexPath)) {
