@@ -79,6 +79,8 @@ npm run dev          # Development server (port 5173)
 npm run build        # Build for production
 npm run lint         # Run ESLint
 npm run preview      # Preview production build
+npm test             # Run Vitest tests
+npm run test:e2e     # Run Playwright E2E tests
 ```
 
 ### Full Build & Publish
@@ -236,6 +238,30 @@ File Path → AgentDetector → ParserFactory → AgentParser → PlaybackFrames
   - `/work-units/:workUnitId` - Work unit player
 - **Components**: `src/components/` with specialized viewers (DiffViewer, SyntaxHighlighter, TimelineScrubber)
 - **Pages**: SessionListPage, SessionPlayerPage, WorkUnitListPage, WorkUnitPlayerPage
+- **Utilities**: `src/utils/` with shared helpers (tool-normalization)
+
+### Tool Name Normalization
+
+The `frontend/src/utils/tool-normalization.ts` utility maps agent-specific tool names to canonical categories, enabling consistent artifact detection across all agents:
+
+| Category  | Claude Code                            | Gemini CLI                            | Codex CLI       |
+| --------- | -------------------------------------- | ------------------------------------- | --------------- |
+| **read**  | `Read`, `Glob`, `Grep`, `NotebookRead` | `read_file`, `glob`, `list_directory` | —               |
+| **write** | `Write`, `NotebookEdit`                | `write_file`, `create_file`           | —               |
+| **edit**  | `Edit`                                 | `replace`                             | —               |
+| **shell** | `Bash`                                 | `shell`, `run_shell_command`          | `shell_command` |
+
+Usage:
+
+```typescript
+import { isReadTool, isWriteTool, isEditTool } from '../utils/tool-normalization';
+
+if (isReadTool(toolName)) {
+  /* handle read */
+}
+```
+
+The backend (`base-parser.ts`) has equivalent methods for server-side normalization.
 
 ### Session File Formats
 
@@ -313,6 +339,51 @@ GET /api/sessions/:id/work-unit      # Get work unit for a session
 GET /api/sessions/:id/commentary     # Get claude-mem observations for session
 ```
 
+## Keyboard Shortcuts
+
+### Session Player
+
+| Key            | Action                 |
+| -------------- | ---------------------- |
+| `Space`        | Play/Pause             |
+| `←` / `→`      | Previous/Next frame    |
+| `Home` / `End` | First/Last frame       |
+| `a`            | Toggle Artifacts panel |
+| `f`            | Toggle Filters popup   |
+| `Escape`       | Close panel/popup      |
+| `1-9`          | Set playback speed     |
+
+## Testing
+
+### Unit Tests (Vitest)
+
+```bash
+# Backend
+cd backend && npm test
+cd backend && npm run test:coverage
+
+# Frontend
+cd frontend && npm test
+cd frontend && npm run test:ui
+```
+
+### E2E Tests (Playwright)
+
+```bash
+cd frontend && npm run test:e2e        # Run all E2E tests
+cd frontend && npm run test:e2e:ui     # Run with Playwright UI
+```
+
+E2E test files:
+
+- `frontend/e2e/session-list.spec.ts` - Session list page tests
+- `frontend/e2e/session-player.spec.ts` - Session player and artifacts panel tests
+
+**Prerequisites for E2E tests:**
+
+- Backend running on `localhost:3001`
+- At least one session exists in `~/.claude/projects/`
+
 ## Key Constraints
 
 - **Read-only file access**: Never modify session files
@@ -327,3 +398,5 @@ GET /api/sessions/:id/commentary     # Get claude-mem observations for session
 3. Register parser in `ParserFactory`
 4. Add directory scanning in `SessionIndexer`
 5. Add filter tab in `frontend/src/pages/SessionListPage.tsx`
+6. Add tool names to `frontend/src/utils/tool-normalization.ts` for artifact detection
+7. Add tool detection methods in `backend/src/parser/base-parser.ts`
