@@ -5,7 +5,7 @@ import sessionsRouter from './routes/sessions';
 import commentaryRouter from './routes/commentary';
 import importRouter from './routes/import';
 import workUnitsRouter, { getSessionWorkUnit } from './routes/work-units';
-import { getDbInstance } from './db/connection';
+import { getDbInstance, isClaudeMemAvailable } from './db/connection';
 import { getTranscriptDbInstance } from './db/transcript-connection';
 import { initializeTranscriptSchema } from './db/transcript-queries';
 
@@ -66,18 +66,26 @@ export function createServer(): Application {
   // Health check with DB status
   app.get('/api/health', (_req: Request, res: Response) => {
     try {
-      const db = getDbInstance();
       const transcriptDb = getTranscriptDbInstance();
 
-      // Test queries to ensure actual connectivity
-      db.prepare('SELECT 1').get();
+      // Test transcript DB connectivity (required)
       transcriptDb.prepare('SELECT 1').get();
+
+      // Test claude-mem DB connectivity (optional)
+      let claudeMemStatus: 'connected' | 'unavailable' = 'unavailable';
+      if (isClaudeMemAvailable()) {
+        const db = getDbInstance();
+        if (db) {
+          db.prepare('SELECT 1').get();
+          claudeMemStatus = 'connected';
+        }
+      }
 
       res.json({
         status: 'ok',
         timestamp: new Date().toISOString(),
         databases: {
-          claude_mem: 'connected',
+          claude_mem: claudeMemStatus,
           transcripts: 'connected',
         },
       });
@@ -108,6 +116,13 @@ export function createServer(): Application {
   // Note: This will only work when frontend is built and deployed
   app.use((req: Request, res: Response, next: NextFunction) => {
     if (!req.url.startsWith('/api')) {
+      // If it looks like a static asset request (has file extension), return 404
+      // This prevents serving index.html for missing assets like /vite.svg
+      if (req.path.match(/\.\w+$/)) {
+        res.status(404).end();
+        return;
+      }
+
       const indexPath = path.join(publicDir, 'index.html');
       // Only serve index.html if it exists (frontend is built)
       if (require('fs').existsSync(indexPath)) {

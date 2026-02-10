@@ -11,6 +11,9 @@ import type {
  */
 export function getClaudeMdSnapshot(snapshotId: number): ClaudeMdSnapshot | null {
   const db = getDbInstance();
+  if (!db) {
+    return null;
+  }
 
   const snapshot = db.prepare('SELECT * FROM claudemd_snapshots WHERE id = ?').get(snapshotId) as
     | ClaudeMdSnapshot
@@ -24,6 +27,9 @@ export function getClaudeMdSnapshot(snapshotId: number): ClaudeMdSnapshot | null
  */
 export function getClaudeMdSnapshotByHash(contentHash: string): ClaudeMdSnapshot | null {
   const db = getDbInstance();
+  if (!db) {
+    return null;
+  }
 
   const snapshot = db
     .prepare('SELECT * FROM claudemd_snapshots WHERE content_hash = ?')
@@ -34,14 +40,18 @@ export function getClaudeMdSnapshotByHash(contentHash: string): ClaudeMdSnapshot
 
 /**
  * Create a new CLAUDE.md snapshot
+ * Returns null if claude-mem is unavailable
  */
 export function createClaudeMdSnapshot(
   contentHash: string,
   filePath: string,
   content: string,
   firstSeenAt: string
-): ClaudeMdSnapshot {
+): ClaudeMdSnapshot | null {
   const db = getDbInstance();
+  if (!db) {
+    return null;
+  }
 
   const now = new Date().toISOString();
   const nowEpoch = Date.now();
@@ -75,6 +85,7 @@ export function createClaudeMdSnapshot(
 
 /**
  * Link a session to a CLAUDE.md snapshot
+ * No-op if claude-mem is unavailable
  */
 export function linkSessionToClaudeMd(
   sessionId: string,
@@ -83,6 +94,9 @@ export function linkSessionToClaudeMd(
   loadedAt: string
 ): void {
   const db = getDbInstance();
+  if (!db) {
+    return;
+  }
 
   const loadedAtEpoch = new Date(loadedAt).getTime();
 
@@ -108,9 +122,13 @@ export function linkSessionToClaudeMd(
 /**
  * Get CLAUDE.md history for a project
  * Returns all versions used across sessions for the given project
+ * Returns empty versions array if claude-mem is unavailable
  */
 export function getClaudeMdHistory(project: string): ClaudeMdHistoryResponse {
   const db = getDbInstance();
+  if (!db) {
+    return { project, versions: [] };
+  }
 
   const versions = db
     .prepare(
@@ -187,9 +205,13 @@ export function compareClaudeMdSnapshots(
 
 /**
  * Get CLAUDE.md snapshots for a specific session
+ * Returns empty array if claude-mem is unavailable
  */
 export function getSessionClaudeMdSnapshots(sessionId: string): ClaudeMdSnapshot[] {
   const db = getDbInstance();
+  if (!db) {
+    return [];
+  }
 
   const snapshots = db
     .prepare(

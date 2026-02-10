@@ -26,6 +26,7 @@ import {
   ClaudeMdCompareParams,
   ClaudeMdPathParams,
 } from '../validation/schemas';
+import { isClaudeMemAvailable } from '../db/connection';
 
 const router = Router();
 
@@ -510,6 +511,12 @@ router.post('/:id/refresh', async (req: Request, res: Response) => {
  */
 router.get('/:id/claudemd-history', async (req: Request, res: Response) => {
   try {
+    // Check if claude-mem is available
+    if (!isClaudeMemAvailable()) {
+      res.json({ project: '', versions: [], unavailable: true });
+      return;
+    }
+
     const sessionId = req.params.id as string;
 
     const { getSessionById } = await import('../db/queries');
@@ -555,6 +562,12 @@ router.get(
   validateQuery(claudeMdCompareSchema),
   async (_req: Request, res: Response) => {
     try {
+      // Check if claude-mem is available
+      if (!isClaudeMemAvailable()) {
+        res.json({ from: null, to: null, unavailable: true });
+        return;
+      }
+
       const { from: fromId, to: toId } = res.locals.validatedQuery as ClaudeMdCompareParams;
 
       const { compareClaudeMdSnapshots } = await import('../db/claudemd-queries');
@@ -592,6 +605,12 @@ router.get(
  */
 router.get('/:id/claudemd-snapshots', async (req: Request, res: Response) => {
   try {
+    // Check if claude-mem is available
+    if (!isClaudeMemAvailable()) {
+      res.json({ snapshots: [], unavailable: true });
+      return;
+    }
+
     const sessionId = req.params.id as string;
 
     const { getSessionClaudeMdSnapshots } = await import('../db/claudemd-queries');

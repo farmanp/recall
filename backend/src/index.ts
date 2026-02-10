@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 import { createServer } from './server';
-import { getDbInstance, closeDatabase } from './db/connection';
+import { getDbInstance, closeDatabase, isClaudeMemAvailable } from './db/connection';
 import {
   getTranscriptDbInstance,
   closeTranscriptDatabase,
@@ -46,13 +46,19 @@ const STARTUP_CWD = getProjectRoot();
  */
 function start(): void {
   try {
-    // Test claude-mem database connection
-    console.log('Testing claude-mem database connection...');
-    const db = getDbInstance();
-    const result = db.prepare('SELECT COUNT(*) as count FROM sdk_sessions').get() as {
-      count: number;
-    };
-    console.log(`✅ Claude-mem database: ${result.count} sessions found`);
+    // Test claude-mem database connection (optional)
+    if (isClaudeMemAvailable()) {
+      console.log('Testing claude-mem database connection...');
+      const db = getDbInstance();
+      if (db) {
+        const result = db.prepare('SELECT COUNT(*) as count FROM sdk_sessions').get() as {
+          count: number;
+        };
+        console.log(`✅ Claude-mem database: ${result.count} sessions found`);
+      }
+    } else {
+      console.log('⚠️  Claude-mem database not found - commentary features disabled');
+    }
 
     // Initialize transcript database
     console.log('Initializing transcript database...');
@@ -90,7 +96,11 @@ function start(): void {
     const server = app.listen(Number(PORT), HOST, () => {
       console.log(`\n🚀 Recall Server`);
       console.log(`📡 Server running on http://${HOST}:${PORT}`);
-      console.log(`💾 Claude-mem DB: ~/.claude-mem/claude-mem.db`);
+      if (isClaudeMemAvailable()) {
+        console.log(`💾 Claude-mem DB: ~/.claude-mem/claude-mem.db`);
+      } else {
+        console.log(`💾 Claude-mem DB: not available (commentary disabled)`);
+      }
       console.log(`💾 Transcript DB: ${getTranscriptDbPath()}`);
       console.log(`\nAPI Endpoints:`);
       console.log(`  GET  /api/health`);
@@ -117,8 +127,10 @@ function start(): void {
         }
 
         // Close database connections
-        closeDatabase();
-        console.log('✅ Claude-mem database closed');
+        if (isClaudeMemAvailable()) {
+          closeDatabase();
+          console.log('✅ Claude-mem database closed');
+        }
 
         closeTranscriptDatabase();
         console.log('✅ Transcript database closed');

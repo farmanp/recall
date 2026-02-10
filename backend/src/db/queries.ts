@@ -49,6 +49,9 @@ interface RawSessionEvent extends Omit<
  */
 export function getSessions(query: SessionListQuery): { sessions: Session[]; total: number } {
   const db = getDbInstance();
+  if (!db) {
+    return { sessions: [], total: 0 };
+  }
 
   const { offset = 0, limit = 20, project, dateStart, dateEnd } = query;
 
@@ -114,6 +117,9 @@ export function getSessions(query: SessionListQuery): { sessions: Session[]; tot
  */
 export function getSessionById(sessionId: string): Session | null {
   const db = getDbInstance();
+  if (!db) {
+    return null;
+  }
 
   const session = db
     .prepare(
@@ -152,6 +158,9 @@ export function getSessionStats(sessionId: string): {
   observationCount: number;
 } | null {
   const db = getDbInstance();
+  if (!db) {
+    return null;
+  }
 
   // Get prompt count
   const promptCountResult = db
@@ -244,6 +253,9 @@ export function getSessionEvents(
   query: SessionEventsQuery
 ): { events: SessionEvent[]; total: number } {
   const db = getDbInstance();
+  if (!db) {
+    return { events: [], total: 0 };
+  }
 
   const { offset = 0, limit = 100, types, afterTs } = query;
 
@@ -393,6 +405,9 @@ export function getEventById(
   eventId: number
 ): SessionEvent | null {
   const db = getDbInstance();
+  if (!db) {
+    return null;
+  }
 
   if (eventType === 'prompt') {
     const prompt = db
@@ -468,6 +483,9 @@ export function getEventById(
  */
 export function getProjects(): string[] {
   const db = getDbInstance();
+  if (!db) {
+    return [];
+  }
 
   const results = db
     .prepare(

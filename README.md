@@ -426,23 +426,33 @@ All data stays on your machine.
 
 ## Troubleshooting
 
-### No sessions showing up?
+For detailed troubleshooting, see the [**Troubleshooting Guide**](docs/TROUBLESHOOTING.md).
 
-1. Make sure you have session files in one of the supported directories
-2. Check the backend console for any errors
-3. Try the API directly: `curl http://localhost:3001/api/agents`
+### Quick Fixes
 
-### Backend won't start?
+**Sessions not appearing?**
 
-1. Make sure you're in the `backend` directory
-2. Run `npm install` to install dependencies
-3. Check that port 3001 is available
+```bash
+# Clear the database cache and restart
+rm -f ~/.recall-player/transcripts.db*
+npx recall-player
+```
 
-### Frontend won't start?
+**SQLite corruption errors?**
 
-1. Make sure you're in the `frontend` directory
-2. Run `npm install` to install dependencies
-3. The frontend will automatically find an available port if 5173 is taken
+```bash
+# The transcript DB is just a cache - safe to delete
+rm -f ~/.recall-player/transcripts.db*
+npx recall-player
+```
+
+**Stale npx cache?**
+
+```bash
+npx clear-npx-cache && npx recall-player
+```
+
+See the [full troubleshooting guide](docs/TROUBLESHOOTING.md) for more solutions
 
 ---
 

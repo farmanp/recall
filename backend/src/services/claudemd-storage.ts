@@ -24,6 +24,7 @@ export class ClaudeMdStorage {
    * - Deduplicates content via SHA-256 hash
    * - Creates snapshots only for new content
    * - Links session to snapshots via junction table
+   * - No-op if claude-mem is unavailable
    *
    * @param sessionId - Claude session UUID
    * @param files - Array of CLAUDE.md file info with content
@@ -34,6 +35,10 @@ export class ClaudeMdStorage {
     }
 
     const db = getDbInstance();
+    if (!db) {
+      // Claude-mem unavailable, skip CLAUDE.md storage silently
+      return;
+    }
 
     // Use transaction for atomicity
     const storeTransaction = db.transaction((filesToStore: ClaudeMdInfo[]) => {
@@ -55,8 +60,10 @@ export class ClaudeMdStorage {
           snapshot = createClaudeMdSnapshot(contentHash, file.path, file.content, file.loadedAt);
         }
 
-        // Link session to snapshot
-        linkSessionToClaudeMd(sessionId, snapshot.id, file.path, file.loadedAt);
+        // Link session to snapshot (only if we have a valid snapshot)
+        if (snapshot) {
+          linkSessionToClaudeMd(sessionId, snapshot.id, file.path, file.loadedAt);
+        }
       }
     });
 
