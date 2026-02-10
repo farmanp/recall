@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.1] - 2026-02-10
+
+### Security
+
+- **Fixed XSS vulnerability** - Search snippets now escape HTML entities before highlighting, and regex special characters in search queries are properly escaped
+
+### Added
+
+- **CODE_OF_CONDUCT.md** - Added Contributor Covenant 2.1
+
+### Changed
+
+- **Updated README and landing page** - Refreshed documentation and project homepage
+- **Updated SECURITY.md** - Version support table now reflects 2.x release
+
+### Fixed
+
+- **Removed sensitive data from git** - `validation_report.json` (containing session UUIDs) removed from tracking and added to `.gitignore`
+
+---
+
 ## [2.1.0] - 2026-02-10
 
 ### Added
