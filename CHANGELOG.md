@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.0] - 2026-02-09
+
+### Added
+
+- **Multi-Agent Artifact Support**: Artifacts panel now detects and displays file operations from Gemini CLI and Codex CLI sessions, not just Claude Code
+- **Tool Name Normalization**: Centralized utility maps agent-specific tool names (e.g., `read_file`, `replace`, `shell`) to canonical categories
+- **E2E Tests for Session Player**: Added Playwright tests for artifacts panel functionality
+
+### Changed
+
+- **Backend Parser**: Updated `base-parser.ts` to extract file paths from multiple input formats across agents
+- **useArtifacts Hook**: Refactored to use normalization utility instead of hardcoded Claude tool names
+
 ## [1.6.0] - 2026-02-09
 
 ### Added

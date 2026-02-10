@@ -427,11 +427,60 @@ export abstract class AgentParser {
 
       case 'tool_execution':
         const toolName = frame.toolExecution?.tool || '';
-        return toolName === 'Bash' ? 2000 : 1000;
+        // Shell commands across all agents get longer default duration
+        return this.isShellTool(toolName) ? 2000 : 1000;
 
       default:
         return 2000;
     }
+  }
+
+  /**
+   * Check if a tool is a read operation (across all agents)
+   */
+  protected isReadTool(toolName: string): boolean {
+    const READ_TOOLS = [
+      'Read',
+      'Glob',
+      'Grep',
+      'NotebookRead',
+      'read_file',
+      'glob',
+      'list_directory',
+    ];
+    return READ_TOOLS.includes(toolName);
+  }
+
+  /**
+   * Check if a tool is a write operation (across all agents)
+   */
+  protected isWriteTool(toolName: string): boolean {
+    const WRITE_TOOLS = ['Write', 'NotebookEdit', 'write_file', 'create_file'];
+    return WRITE_TOOLS.includes(toolName);
+  }
+
+  /**
+   * Check if a tool is an edit operation (across all agents)
+   */
+  protected isEditTool(toolName: string): boolean {
+    const EDIT_TOOLS = ['Edit', 'replace'];
+    return EDIT_TOOLS.includes(toolName);
+  }
+
+  /**
+   * Check if a tool is a shell operation (across all agents)
+   */
+  protected isShellTool(toolName: string): boolean {
+    const SHELL_TOOLS = ['Bash', 'shell', 'run_shell_command', 'shell_command'];
+    return SHELL_TOOLS.includes(toolName);
+  }
+
+  /**
+   * Extract file path from tool input (across all agents)
+   * Handles different parameter names used by Claude, Gemini, and Codex.
+   */
+  protected extractFilePathFromInput(input: Record<string, any>): string | undefined {
+    return input.file_path || input.path || input.file || input.filename || input.filePath;
   }
 
   /**
@@ -475,49 +524,74 @@ export abstract class AgentParser {
   }
 
   /**
-   * Extract file diff for file operations (Write, Edit)
+   * Extract file diff for file operations (Write, Edit, write_file, replace, etc.)
+   * Supports Claude, Gemini, and Codex tool formats.
    */
   protected extractFileDiff(
     toolUse: ToolUseBlock,
     _toolResult: ToolResultBlock | undefined
   ): FileDiff | undefined {
     const input = toolUse.input;
+    const filePath = this.extractFilePathFromInput(input);
 
-    if (toolUse.name === 'Write' && input.file_path && input.content) {
-      return {
-        filePath: input.file_path,
-        newContent: input.content,
-        language: this.inferLanguage(input.file_path),
-      };
+    // Handle write operations (Claude: Write, Gemini: write_file/create_file)
+    if (this.isWriteTool(toolUse.name) && filePath) {
+      const content = input.content || input.contents;
+      if (content) {
+        return {
+          filePath,
+          newContent: content,
+          language: this.inferLanguage(filePath),
+        };
+      }
     }
 
-    if (toolUse.name === 'Edit' && input.file_path && input.old_string && input.new_string) {
-      return {
-        filePath: input.file_path,
-        oldContent: input.old_string,
-        newContent: input.new_string,
-        language: this.inferLanguage(input.file_path),
-      };
+    // Handle edit operations (Claude: Edit, Gemini: replace)
+    if (this.isEditTool(toolUse.name) && filePath) {
+      // Claude format: old_string, new_string
+      if (input.old_string && input.new_string) {
+        return {
+          filePath,
+          oldContent: input.old_string,
+          newContent: input.new_string,
+          language: this.inferLanguage(filePath),
+        };
+      }
+      // Gemini format: old_text, new_text or similar
+      if (input.old_text && input.new_text) {
+        return {
+          filePath,
+          oldContent: input.old_text,
+          newContent: input.new_text,
+          language: this.inferLanguage(filePath),
+        };
+      }
     }
 
     return undefined;
   }
 
   /**
-   * Extract file context from tool use
+   * Extract file context from tool use.
+   * Supports Claude, Gemini, and Codex tool formats.
    */
   protected extractFileContext(toolUse: ToolUseBlock): {
     filesRead?: string[];
     filesModified?: string[];
   } {
     const context: { filesRead?: string[]; filesModified?: string[] } = {};
+    const filePath = this.extractFilePathFromInput(toolUse.input);
 
-    if (toolUse.name === 'Read' && toolUse.input.file_path) {
-      context.filesRead = [toolUse.input.file_path];
+    if (!filePath) {
+      return context;
     }
 
-    if ((toolUse.name === 'Write' || toolUse.name === 'Edit') && toolUse.input.file_path) {
-      context.filesModified = [toolUse.input.file_path];
+    if (this.isReadTool(toolUse.name)) {
+      context.filesRead = [filePath];
+    }
+
+    if (this.isWriteTool(toolUse.name) || this.isEditTool(toolUse.name)) {
+      context.filesModified = [filePath];
     }
 
     return context;

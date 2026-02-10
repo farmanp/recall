@@ -15,6 +15,7 @@ import type {
   ArtifactSortOption,
   ArtifactFilters,
 } from '../types/artifacts';
+import { isReadTool, isWriteTool, isEditTool } from '../utils/tool-normalization';
 
 /**
  * Detect language from file path extension
@@ -139,29 +140,19 @@ function determineStatus(operations: ArtifactOperation[]): ArtifactStatus {
 }
 
 /**
- * Tools that read files
+ * Extract file path from tool execution.
+ * Handles different parameter names used by Claude, Gemini, and Codex.
  */
-const READ_TOOLS = ['Read', 'Glob', 'Grep', 'NotebookRead'];
-
-/**
- * Tools that write/create files
- */
-const WRITE_TOOLS = ['Write', 'NotebookEdit'];
-
-/**
- * Tools that edit files
- */
-const EDIT_TOOLS = ['Edit'];
-
-/**
- * Extract file path from tool execution
- */
-function extractFilePath(tool: string, input: Record<string, any>): string | null {
-  // Common patterns for file path parameters
+function extractFilePath(_tool: string, input: Record<string, any>): string | null {
+  // Common patterns for file path parameters across agents
   if (input.file_path) return input.file_path;
   if (input.filePath) return input.filePath;
   if (input.path) return input.path;
   if (input.notebook_path) return input.notebook_path;
+  // Gemini uses 'file' for some operations
+  if (input.file) return input.file;
+  // Gemini uses 'filename' for some operations
+  if (input.filename) return input.filename;
 
   return null;
 }
@@ -185,13 +176,13 @@ function processFrame(
     return;
   }
 
-  // Determine operation type
+  // Determine operation type using centralized tool normalization
   let operationType: 'read' | 'write' | 'edit' | null = null;
-  if (READ_TOOLS.includes(tool)) {
+  if (isReadTool(tool)) {
     operationType = 'read';
-  } else if (WRITE_TOOLS.includes(tool)) {
+  } else if (isWriteTool(tool)) {
     operationType = 'write';
-  } else if (EDIT_TOOLS.includes(tool)) {
+  } else if (isEditTool(tool)) {
     operationType = 'edit';
   }
 
