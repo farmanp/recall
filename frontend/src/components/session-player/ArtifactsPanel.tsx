@@ -129,41 +129,47 @@ export const ArtifactsPanel: React.FC<ArtifactsPanelProps> = ({
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
       onClick={(e) => {
         if (e.target === e.currentTarget) {
           onClose();
         }
       }}
     >
-      <div className="bg-gray-800 border-2 border-gray-600 rounded-lg max-w-3xl w-full max-h-[85vh] overflow-hidden shadow-2xl flex flex-col">
+      <div className="bg-forensic-bg-secondary border border-forensic-border max-w-3xl w-full max-h-[85vh] overflow-hidden shadow-2xl flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-700">
+        <div className="flex items-center justify-between p-6 border-b border-forensic-border">
           <div className="flex items-center gap-3">
-            <FolderOpen className="w-6 h-6 text-cyan-400" />
+            <FolderOpen className="w-6 h-6 text-accent-cyan" />
             <div>
-              <h2 className="text-xl font-bold text-white">File Artifacts</h2>
-              <p className="text-sm text-gray-400 mt-0.5">Files accessed during this session</p>
+              <h2 className="text-xl font-mono font-bold text-forensic-text-primary uppercase tracking-wide">
+                File Artifacts
+              </h2>
+              <p className="text-sm font-mono text-forensic-text-secondary mt-0.5">
+                Files accessed during this session
+              </p>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
             {/* View mode toggle */}
-            <div className="flex bg-gray-700 rounded-lg p-1">
+            <div className="flex bg-forensic-bg-tertiary p-1">
               <button
                 onClick={() => onViewModeChange('cumulative')}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                className={`px-3 py-1.5 text-xs font-mono font-medium uppercase tracking-wide transition-colors ${
                   viewMode === 'cumulative'
-                    ? 'bg-cyan-600 text-white'
-                    : 'text-gray-400 hover:text-white'
+                    ? 'bg-accent-cyan text-forensic-bg-primary'
+                    : 'text-forensic-text-secondary hover:text-forensic-text-primary'
                 }`}
               >
                 Cumulative
               </button>
               <button
                 onClick={() => onViewModeChange('full')}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                  viewMode === 'full' ? 'bg-cyan-600 text-white' : 'text-gray-400 hover:text-white'
+                className={`px-3 py-1.5 text-xs font-mono font-medium uppercase tracking-wide transition-colors ${
+                  viewMode === 'full'
+                    ? 'bg-accent-cyan text-forensic-bg-primary'
+                    : 'text-forensic-text-secondary hover:text-forensic-text-primary'
                 }`}
               >
                 Full Session
@@ -172,7 +178,7 @@ export const ArtifactsPanel: React.FC<ArtifactsPanelProps> = ({
 
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-white text-2xl font-bold leading-none"
+              className="text-forensic-text-secondary hover:text-forensic-text-primary text-2xl font-bold leading-none"
             >
               &times;
             </button>
@@ -199,15 +205,15 @@ export const ArtifactsPanel: React.FC<ArtifactsPanelProps> = ({
         />
 
         {/* File List */}
-        <div ref={parentRef} className="flex-1 overflow-auto p-4">
+        <div ref={parentRef} className="flex-1 overflow-auto p-4 bg-forensic-bg-primary">
           {displayArtifacts.length === 0 ? (
             <div className="text-center py-12">
-              <FolderOpen className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-              <p className="text-gray-400">
+              <FolderOpen className="w-12 h-12 text-forensic-text-muted mx-auto mb-4" />
+              <p className="text-forensic-text-secondary font-mono">
                 {searchQuery ? 'No files match your search' : 'No file operations recorded yet'}
               </p>
               {viewMode === 'cumulative' && currentFrameIndex < frames.length - 1 && (
-                <p className="text-gray-500 text-sm mt-2">
+                <p className="text-forensic-text-muted text-sm font-mono mt-2">
                   Try switching to "Full Session" to see all files
                 </p>
               )}
@@ -262,15 +268,21 @@ export const ArtifactsPanel: React.FC<ArtifactsPanelProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-gray-700 flex items-center justify-between bg-gray-800/80">
-          <div className="text-xs text-gray-500">
-            Press <kbd className="px-1.5 py-0.5 bg-gray-700 rounded text-gray-300">a</kbd> to
-            toggle, <kbd className="px-1.5 py-0.5 bg-gray-700 rounded text-gray-300">Esc</kbd> to
-            close
+        <div className="p-4 border-t border-forensic-border flex items-center justify-between bg-forensic-bg-secondary">
+          <div className="text-xs font-mono text-forensic-text-muted">
+            Press{' '}
+            <kbd className="px-1.5 py-0.5 bg-forensic-bg-tertiary border border-forensic-border text-forensic-text-secondary">
+              a
+            </kbd>{' '}
+            to toggle,{' '}
+            <kbd className="px-1.5 py-0.5 bg-forensic-bg-tertiary border border-forensic-border text-forensic-text-secondary">
+              Esc
+            </kbd>{' '}
+            to close
           </div>
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded transition-colors"
+            className="px-4 py-2 bg-forensic-bg-tertiary hover:bg-forensic-border border border-forensic-border text-forensic-text-primary font-mono uppercase tracking-wide text-sm transition-colors"
           >
             Close
           </button>

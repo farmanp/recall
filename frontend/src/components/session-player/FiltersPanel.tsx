@@ -70,21 +70,23 @@ export const FiltersPanel: React.FC<FiltersPanelProps> = ({
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
       onClick={(e) => {
         if (e.target === e.currentTarget) {
           onClose();
         }
       }}
     >
-      <div className="bg-gray-800 border-2 border-gray-600 rounded-lg max-w-xl w-full max-h-[85vh] overflow-hidden shadow-2xl flex flex-col">
+      <div className="bg-forensic-bg-secondary border border-forensic-border max-w-xl w-full max-h-[85vh] overflow-hidden shadow-2xl flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-700">
+        <div className="flex items-center justify-between p-6 border-b border-forensic-border">
           <div className="flex items-center gap-3">
-            <SlidersHorizontal className="w-6 h-6 text-blue-400" />
+            <SlidersHorizontal className="w-6 h-6 text-accent-purple" />
             <div>
-              <h2 className="text-xl font-bold text-white">Frame Filters</h2>
-              <p className="text-sm text-gray-400 mt-0.5">
+              <h2 className="text-xl font-mono font-bold text-forensic-text-primary uppercase tracking-wide">
+                Frame Filters
+              </h2>
+              <p className="text-sm font-mono text-forensic-text-secondary mt-0.5">
                 {activeFrameTypes.size}/4 frame types active
               </p>
             </div>
@@ -92,14 +94,14 @@ export const FiltersPanel: React.FC<FiltersPanelProps> = ({
 
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-white text-2xl font-bold leading-none"
+            className="text-forensic-text-secondary hover:text-forensic-text-primary text-2xl font-bold leading-none"
           >
             &times;
           </button>
         </div>
 
         {/* Content - FrameTypeFilters */}
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 overflow-y-auto p-4 bg-forensic-bg-primary">
           <FrameTypeFilters
             frames={frames}
             activeFrameTypes={activeFrameTypes}
@@ -123,15 +125,21 @@ export const FiltersPanel: React.FC<FiltersPanelProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-gray-700 flex items-center justify-between bg-gray-800/80">
-          <div className="text-xs text-gray-500">
-            Press <kbd className="px-1.5 py-0.5 bg-gray-700 rounded text-gray-300">f</kbd> to
-            toggle, <kbd className="px-1.5 py-0.5 bg-gray-700 rounded text-gray-300">Esc</kbd> to
-            close
+        <div className="p-4 border-t border-forensic-border flex items-center justify-between bg-forensic-bg-secondary">
+          <div className="text-xs font-mono text-forensic-text-muted">
+            Press{' '}
+            <kbd className="px-1.5 py-0.5 bg-forensic-bg-tertiary border border-forensic-border text-forensic-text-secondary">
+              f
+            </kbd>{' '}
+            to toggle,{' '}
+            <kbd className="px-1.5 py-0.5 bg-forensic-bg-tertiary border border-forensic-border text-forensic-text-secondary">
+              Esc
+            </kbd>{' '}
+            to close
           </div>
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded transition-colors"
+            className="px-4 py-2 bg-forensic-bg-tertiary hover:bg-forensic-border border border-forensic-border text-forensic-text-primary font-mono uppercase tracking-wide text-sm transition-colors"
           >
             Close
           </button>

@@ -1,24 +1,81 @@
-# Recall
+<div align="center">
 
-![Project Status: Beta](https://img.shields.io/badge/status-beta-yellow)
+# 🎬 Recall
+
+**Replay your AI coding sessions like a video player**
+
 [![npm version](https://img.shields.io/npm/v/recall-player.svg)](https://www.npmjs.com/package/recall-player)
 [![npm downloads](https://img.shields.io/npm/dm/recall-player.svg)](https://www.npmjs.com/package/recall-player)
+![Project Status: Beta](https://img.shields.io/badge/status-beta-yellow)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-A local-first web application that lets you **replay AI coding sessions** like a video player. Watch how features were built, decisions made, and problems solved across multiple AI coding agents.
+**Watch how features were built · Review decisions made · Debug what went wrong**
 
-**Supported Agents:**
+A local-first web application that visualizes AI coding sessions from Claude Code, Codex CLI, and Gemini CLI. Navigate through your coding history frame-by-frame with video-player controls, search across sessions, and group related work into units.
 
-- **Claude Code** - Anthropic's CLI coding assistant
-- **Codex CLI** - OpenAI's command-line coding tool
-- **Gemini CLI** - Google's terminal-based AI assistant
+[Quick Start](#quick-start) · [Features](#features) · [Screenshots](#screenshots) · [Documentation](#development)
+
+</div>
+
+---
+
+## Why Recall?
+
+Ever wondered **"How did the AI build this feature?"** or **"What changed between yesterday and today?"**
+
+When working with AI coding assistants, it's easy to lose track of:
+
+- 🤔 **What decisions were made** and why
+- 🔧 **What approaches were tried** before settling on the final solution
+- 🐛 **When bugs were introduced** during rapid iteration
+- 📝 **How file changes evolved** across multiple sessions
+
+**Recall solves this** by giving you a "DVR for your coding sessions" — replay any session frame-by-frame, search across all your work, and visualize the evolution of your codebase.
+
+---
 
 ## Screenshots
 
-<!-- TODO: Add screenshots -->
+### Session List
 
-_Screenshots coming soon - showing session list, playback controls, and Work Units dashboard_
+![Session List](docs/assets/session-list.png)
+_Browse all your coding sessions across Claude, Codex, and Gemini with powerful filtering and search_
+
+### Session Player
+
+![Session Player](docs/assets/session-player.png)
+_Replay sessions frame-by-frame with timeline scrubber, playback controls, and syntax-highlighted code diffs_
+
+### Chat View
+
+![Chat View](docs/assets/chat-view.png)
+_Toggle between technical view and conversational chat view for easier reading_
+
+### Work Units
+
+![Work Units](docs/assets/work-units.png)
+_Group related sessions into atomic work units to track features and bug fixes across multiple coding sessions_
 
 ---
+
+## Supported Agents
+
+<table>
+<tr>
+<td align="center">
+<img src="https://img.shields.io/badge/Claude_Code-8B5CF6?style=for-the-badge" alt="Claude Code"/>
+<br/>Anthropic's CLI coding assistant
+</td>
+<td align="center">
+<img src="https://img.shields.io/badge/Codex_CLI-10B981?style=for-the-badge" alt="Codex CLI"/>
+<br/>OpenAI's command-line tool
+</td>
+<td align="center">
+<img src="https://img.shields.io/badge/Gemini_CLI-3B82F6?style=for-the-badge" alt="Gemini CLI"/>
+<br/>Google's terminal assistant
+</td>
+</tr>
+</table>
 
 ## Quick Start
 
@@ -74,36 +131,98 @@ npm start
 
 ## Features
 
-### Session Browser
+### 🎥 Video Player Experience
 
-- View all sessions across Claude, Codex, and Gemini
-- Filter by agent type, date range, and duration
-- Search sessions by project name or content
-- See session metadata (duration, event count, first message)
+- **Frame-by-frame playback** with play/pause and variable speed (0.5x to 10x)
+- **Timeline scrubber** with visual event markers and chapter navigation
+- **Keyboard shortcuts** for efficient navigation (Space, arrows, Home/End)
+- **Search** within sessions to jump to specific content
+- **Frame filtering** to show/hide message types (User, AI, Thinking, Tools)
 
-### Session Player
+### 🔍 Multi-Agent Session Browser
 
-- **Frame-by-frame playback** of coding sessions
-- **Frame types:** User messages, AI responses, AI thinking, Tool executions
-- **Filter controls** to show/hide specific frame types
-- **Keyboard shortcuts** for navigation (arrow keys, space, etc.)
-- **Search** within sessions to find specific content
+- **Unified view** of all sessions across Claude Code, Codex CLI, and Gemini CLI
+- **Smart filtering** by agent type, project path, date range, and duration
+- **Full-text search** across all session transcripts (powered by SQLite FTS5)
+- **CWD filtering** - automatically shows only sessions from your current directory
+- **Session metadata** - duration, frame count, AI model, first message preview
 
-### Multi-Agent Support
+### 📦 Work Units (NEW!)
 
-- Automatically detects and parses sessions from all supported agents
-- Agent-specific badges and colors in the UI
-- Normalized frame format for consistent playback experience
+- **Auto-grouping** of related sessions into logical work units
+- **Manual management** - add/remove sessions from work units
+- **Multi-session playback** - replay entire features or bug fixes
+- **Progress tracking** - see all work related to a specific task
 
-### Work Units
+### 🎨 Beautiful UI
 
-Work Units are atomic units of work that span across sessions. They help you:
+- **Dark theme** optimized for long viewing sessions
+- **Syntax highlighting** with Prism.js for 100+ languages
+- **Inline diffs** with side-by-side and unified views
+- **Framer Motion** animations for smooth transitions
+- **Responsive design** for various screen sizes
 
-- Track progress on specific tasks across multiple coding sessions
-- Review all work related to a feature or bug fix in one place
-- Navigate between related sessions easily
+### 🔒 Privacy & Security
 
-Access Work Units from the `/work-units` route in the web interface.
+- **100% local** - no cloud, no analytics, no external requests
+- **Read-only** - session files are never modified
+- **Offline-first** - works without internet connection
+- **SQLite caching** - fast performance with local database
+
+---
+
+## Use Cases
+
+### 📚 Learning & Knowledge Sharing
+
+**"Show the team how I implemented OAuth"**  
+Record and replay your Claude Code session to demonstrate architectural decisions, debugging steps, and final implementation.
+
+### 🐛 Debugging What Went Wrong
+
+**"When did this bug get introduced?"**  
+Scrub through timeline to find the exact moment a file change caused unexpected behavior.
+
+### 📊 Session Analytics
+
+**"How much time did I spend on this feature?"**  
+Review session duration, frame counts, and tool executions to understand productivity patterns.
+
+### 🔄 Resuming Interrupted Work
+
+**"What was I working on yesterday?"**  
+Quickly review your last session's work to pick up where you left off.
+
+---
+
+## Configuration
+
+### Environment Variables
+
+#### `RECALL_FILTER_CWD`
+
+Controls automatic directory-based session filtering (default: `true`).
+
+```bash
+# Show only sessions from current directory (default)
+cd /Users/me/projects/myapp
+npx recall-player
+
+# Disable filtering to see ALL sessions
+RECALL_FILTER_CWD=false npx recall-player
+```
+
+#### `RECALL_EXCLUDE_PATTERNS`
+
+Comma-separated glob patterns to exclude directories from session scanning.
+
+```bash
+# Exclude specific directories
+RECALL_EXCLUDE_PATTERNS="archived,thedotmack" npx recall-player
+
+# Exclude with glob patterns
+RECALL_EXCLUDE_PATTERNS="**/test-data/**,**/plugins/**" npx recall-player
+```
 
 ---
 
@@ -237,6 +356,76 @@ Recall automatically scans these directories for sessions:
 | Claude Code | `~/.claude/projects/{project}/` | `*.jsonl`                     |
 | Codex CLI   | `~/.codex/sessions/`            | `*.jsonl` (with date subdirs) |
 | Gemini CLI  | `~/.gemini/tmp/{hash}/chats/`   | `session-*.json`              |
+
+---
+
+## FAQ
+
+### How do I capture screenshots for GitHub/docs?
+
+We provide an automated screenshot script:
+
+```bash
+# 1. Install Playwright (if needed)
+npm install -D playwright
+
+# 2. Start Recall
+npm start
+
+# 3. In another terminal, run the script
+node scripts/capture-screenshots.js
+```
+
+Screenshots will be saved to `docs/assets/`.
+
+### Can I export or share sessions?
+
+Currently, Recall is **view-only** and designed for local use. Sessions contain potentially sensitive code and credentials, so we don't support exporting or cloud sync. You can:
+
+- Take screenshots of specific frames
+- Use screen recording software to capture playback
+- Share the session `.jsonl` files manually (with caution)
+
+### Why isn't my agent showing up?
+
+Recall scans these directories automatically:
+
+- Claude Code: `~/.claude/projects/`
+- Codex CLI: `~/.codex/sessions/`
+- Gemini CLI: `~/.gemini/tmp/`
+
+If you don't see sessions:
+
+1. Verify you have session files in one of these directories
+2. Check the backend logs for parsing errors
+3. Try: `curl http://localhost:3001/api/agents` to see detected agents
+
+### Can I filter sessions by project?
+
+Yes! Use the **CWD filter** feature:
+
+```bash
+# Run Recall from your project directory
+cd /Users/me/projects/myapp
+npx recall-player
+```
+
+Only sessions from `/Users/me/projects/myapp` will be shown. Disable with `RECALL_FILTER_CWD=false`.
+
+### Does Recall modify my session files?
+
+**No.** All session files are opened in **read-only mode**. Recall never writes to or modifies your original `.jsonl` or `.json` files.
+
+### Is my data sent to the cloud?
+
+**Absolutely not.** Recall is 100% local-first with:
+
+- No analytics
+- No external API calls
+- No telemetry
+- No cloud storage
+
+All data stays on your machine.
 
 ---
 

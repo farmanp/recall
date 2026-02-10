@@ -115,79 +115,104 @@ export const ClaudeMdPanel: React.FC<ClaudeMdPanelProps> = ({ claudeMdFiles, onC
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
       onClick={(e) => {
         if (e.target === e.currentTarget) {
           onClose();
         }
       }}
     >
-      <div className="bg-gray-800 border-2 border-gray-600 rounded-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto shadow-2xl">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-700">
-          <div>
-            <h2 className="text-xl font-bold text-white flex items-center gap-2">
-              <span className="text-lg">📋</span>
-              Project Instructions
-            </h2>
-            <p className="text-sm text-gray-400 mt-1">CLAUDE.md files loaded during this session</p>
+      <div className="bg-forensic-bg-secondary border border-forensic-border max-w-2xl w-full max-h-[80vh] overflow-hidden shadow-2xl flex flex-col">
+        {/* Terminal Header */}
+        <div className="flex items-center justify-between px-4 py-3 bg-forensic-bg-tertiary border-b border-forensic-border">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-accent-red"></div>
+            <div className="w-3 h-3 rounded-full bg-accent-amber"></div>
+            <div className="w-3 h-3 rounded-full bg-accent-green"></div>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-white text-2xl font-bold">
+          <div className="flex items-center gap-2 font-mono text-xs text-forensic-text-secondary uppercase tracking-wide">
+            Project Instructions
+          </div>
+          <button
+            onClick={onClose}
+            className="text-forensic-text-muted hover:text-forensic-text-primary text-xl font-bold"
+          >
             ×
           </button>
         </div>
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-forensic-border">
+          <div>
+            <h2 className="text-xl font-mono font-bold text-forensic-text-primary uppercase tracking-wide">
+              CLAUDE.md Files
+            </h2>
+            <p className="text-sm font-mono text-forensic-text-secondary mt-1">
+              Context loaded during this session
+            </p>
+          </div>
+        </div>
 
         {/* Content */}
-        <div className="p-6">
+        <div className="flex-1 overflow-y-auto p-6 bg-forensic-bg-primary">
           {claudeMdFiles.length === 0 ? (
             <div className="text-center py-8">
-              <div className="text-4xl mb-4">📄</div>
-              <p className="text-gray-400">No CLAUDE.md files were loaded during this session.</p>
-              <p className="text-gray-500 text-sm mt-2">
+              <div className="text-accent-amber text-4xl mb-4 font-mono">//</div>
+              <p className="text-forensic-text-secondary font-mono">
+                No CLAUDE.md files were loaded during this session.
+              </p>
+              <p className="text-forensic-text-muted text-sm font-mono mt-2">
                 CLAUDE.md files provide project-specific instructions to the AI.
               </p>
             </div>
           ) : (
             <div className="space-y-3">
               {claudeMdFiles.map((file, index) => (
-                <div key={file.path} className="border border-gray-700 rounded-lg overflow-hidden">
+                <div key={file.path} className="border border-forensic-border overflow-hidden">
                   {/* File Header - Clickable */}
                   <button
                     onClick={() => toggleExpand(index)}
-                    className="w-full flex items-center justify-between p-4 bg-gray-750 hover:bg-gray-700 transition-colors text-left"
+                    className="w-full flex items-center justify-between p-4 bg-forensic-bg-tertiary hover:bg-forensic-border transition-colors text-left"
                   >
                     <div className="flex items-center gap-3">
-                      <span className="text-lg">📄</span>
+                      <span className="text-accent-green font-mono text-lg">$</span>
                       <div>
-                        <div className="text-white font-medium">{getDirectoryLabel(file.path)}</div>
-                        <div className="text-xs text-gray-500 font-mono mt-0.5">
+                        <div className="text-forensic-text-primary font-mono font-medium">
+                          {getDirectoryLabel(file.path)}
+                        </div>
+                        <div className="text-xs text-forensic-text-muted font-mono mt-0.5">
                           {getShortPath(file.path)}
                         </div>
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="text-xs text-gray-500">
-                        Loaded at {formatTime(file.loadedAt)}
+                      <span className="text-xs text-forensic-text-muted font-mono">
+                        {formatTime(file.loadedAt)}
                       </span>
-                      <span className="text-gray-400">{expandedIndex === index ? '▼' : '▶'}</span>
+                      <span className="text-accent-green">
+                        {expandedIndex === index ? '▼' : '▶'}
+                      </span>
                     </div>
                   </button>
 
                   {/* Expanded Content */}
                   {expandedIndex === index && (
-                    <div className="border-t border-gray-700 p-4 bg-gray-900">
+                    <div className="border-t border-forensic-border p-4 bg-forensic-bg-primary">
                       {loadingPaths.has(file.path) ? (
-                        <p className="text-gray-400 text-sm">Loading content...</p>
+                        <p className="text-forensic-text-secondary text-sm font-mono">
+                          Loading content...
+                        </p>
                       ) : fileContents[file.path] ? (
-                        <pre className="text-sm text-gray-300 font-mono whitespace-pre-wrap overflow-x-auto max-h-96 overflow-y-auto">
+                        <pre className="text-sm text-forensic-text-secondary font-mono whitespace-pre-wrap overflow-x-auto max-h-96 overflow-y-auto">
                           {fileContents[file.path]}
                         </pre>
                       ) : fileContents[file.path] === null ? (
-                        <p className="text-gray-500 text-sm italic">
+                        <p className="text-forensic-text-muted text-sm font-mono italic">
                           File not found. The file may have been moved or deleted since the session.
                         </p>
                       ) : (
-                        <p className="text-gray-400 text-sm">Click to load content...</p>
+                        <p className="text-forensic-text-secondary text-sm font-mono">
+                          Click to load content...
+                        </p>
                       )}
                     </div>
                   )}
@@ -198,14 +223,21 @@ export const ClaudeMdPanel: React.FC<ClaudeMdPanelProps> = ({ claudeMdFiles, onC
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t border-gray-700 flex items-center justify-between">
-          <div className="text-xs text-gray-500">
-            Press <kbd className="px-1 py-0.5 bg-gray-700 rounded text-gray-300">d</kbd> to toggle,{' '}
-            <kbd className="px-1 py-0.5 bg-gray-700 rounded text-gray-300">Esc</kbd> to close
+        <div className="p-4 border-t border-forensic-border flex items-center justify-between bg-forensic-bg-secondary">
+          <div className="text-xs font-mono text-forensic-text-muted">
+            Press{' '}
+            <kbd className="px-1.5 py-0.5 bg-forensic-bg-tertiary border border-forensic-border text-forensic-text-secondary">
+              d
+            </kbd>{' '}
+            to toggle,{' '}
+            <kbd className="px-1.5 py-0.5 bg-forensic-bg-tertiary border border-forensic-border text-forensic-text-secondary">
+              Esc
+            </kbd>{' '}
+            to close
           </div>
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded"
+            className="px-4 py-2 bg-forensic-bg-tertiary hover:bg-forensic-border border border-forensic-border text-forensic-text-primary font-mono uppercase tracking-wide text-sm transition-colors"
           >
             Close
           </button>

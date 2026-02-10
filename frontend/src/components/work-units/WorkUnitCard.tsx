@@ -1,11 +1,13 @@
 /**
  * WorkUnitCard - Displays a work unit as a card in the list view
+ * Forensic/terminal aesthetic design
  */
 
 import { Link } from 'react-router-dom';
 import type { WorkUnit, WorkUnitConfidence } from '../../types/work-unit';
 import type { AgentType } from '../../types/transcript';
 import { AgentBadge } from '../AgentBadge';
+import { Clock, FileText, Layers, Activity } from 'lucide-react';
 
 interface WorkUnitCardProps {
   workUnit: WorkUnit;
@@ -16,22 +18,22 @@ const confidenceConfig: Record<
   { label: string; color: string; bgColor: string; borderColor: string }
 > = {
   high: {
-    label: 'High',
-    color: 'text-green-400',
-    bgColor: 'bg-green-600/20',
-    borderColor: 'border-green-500/30',
+    label: 'HIGH',
+    color: 'text-accent-green',
+    bgColor: 'bg-accent-green/10',
+    borderColor: 'border-accent-green/30',
   },
   medium: {
-    label: 'Medium',
-    color: 'text-yellow-400',
-    bgColor: 'bg-yellow-600/20',
-    borderColor: 'border-yellow-500/30',
+    label: 'MED',
+    color: 'text-accent-amber',
+    bgColor: 'bg-accent-amber/10',
+    borderColor: 'border-accent-amber/30',
   },
   low: {
-    label: 'Low',
-    color: 'text-gray-400',
-    bgColor: 'bg-gray-600/20',
-    borderColor: 'border-gray-500/30',
+    label: 'LOW',
+    color: 'text-forensic-text-muted',
+    bgColor: 'bg-forensic-bg-tertiary',
+    borderColor: 'border-forensic-border',
   },
 };
 
@@ -63,7 +65,7 @@ function ConfidenceBadge({ confidence }: { confidence: WorkUnitConfidence }) {
   const config = confidenceConfig[confidence];
   return (
     <span
-      className={`${config.bgColor} ${config.color} px-2.5 py-1 text-xs rounded font-medium border ${config.borderColor}`}
+      className={`${config.bgColor} ${config.color} px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide border ${config.borderColor}`}
     >
       {config.label}
     </span>
@@ -80,69 +82,81 @@ export function WorkUnitCard({ workUnit }: WorkUnitCardProps) {
   return (
     <Link
       to={`/work-units/${workUnit.id}`}
-      className="group block bg-gray-900/40 backdrop-blur-xl rounded-2xl p-6 hover:bg-gray-800/50 transition-all duration-500 border border-blue-500/20 hover:border-blue-500/40 hover:shadow-2xl hover:shadow-blue-500/10"
+      className="group block bg-forensic-bg-secondary border border-forensic-border hover:border-accent-purple/50 transition-all overflow-hidden"
     >
-      {/* Header */}
-      <div className="flex items-start justify-between gap-4 mb-3">
-        <div className="flex-1 min-w-0">
-          <h3 className="text-gray-100 font-bold text-lg truncate" title={workUnit.name}>
-            {workUnit.name}
-          </h3>
-          <p className="text-gray-400 text-sm truncate mt-1" title={workUnit.projectPath}>
-            {workUnit.projectPath}
-          </p>
+      {/* Terminal Header */}
+      <div className="flex items-center justify-between px-4 py-3 bg-forensic-bg-tertiary border-b border-forensic-border">
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 rounded-full bg-accent-red"></div>
+          <div className="w-3 h-3 rounded-full bg-accent-amber"></div>
+          <div className="w-3 h-3 rounded-full bg-accent-green"></div>
         </div>
-        <ConfidenceBadge confidence={workUnit.confidence} />
-      </div>
-
-      {/* Preview */}
-      <p className="text-gray-300 text-sm mb-4 line-clamp-2 leading-relaxed">{truncatedPreview}</p>
-
-      {/* Stats row */}
-      <div className="flex items-center gap-4 text-sm text-gray-400 mb-3">
-        <span className="flex items-center gap-1">
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-            />
-          </svg>
-          {sessions.length} session{sessions.length !== 1 ? 's' : ''}
-        </span>
-        <span className="flex items-center gap-1">
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-          {formatDuration(workUnit.totalDuration)}
-        </span>
-        <span className="flex items-center gap-1">
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"
-            />
-          </svg>
-          {workUnit.totalFrames} frames
-        </span>
-      </div>
-
-      {/* Footer: Agents and time */}
-      <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           {agents.map((agent) => (
             <AgentBadge key={agent} agent={agent} size="sm" />
           ))}
         </div>
-        <span className="text-gray-500 text-sm">{formatRelativeTime(workUnit.startTime)}</span>
+        <ConfidenceBadge confidence={workUnit.confidence} />
+      </div>
+
+      {/* Card Body */}
+      <div className="p-5">
+        {/* Work Unit ID & Name */}
+        <div className="flex items-start gap-3 mb-3">
+          <span className="font-mono text-xs text-accent-amber bg-accent-amber/10 border border-accent-amber/30 px-2 py-0.5 shrink-0">
+            WU-{workUnit.id.slice(0, 6).toUpperCase()}
+          </span>
+          <h3
+            className="font-mono text-base text-forensic-text-primary group-hover:text-accent-purple transition-colors truncate leading-tight"
+            title={workUnit.name}
+          >
+            {workUnit.name}
+          </h3>
+        </div>
+
+        {/* Project Path */}
+        <p
+          className="font-mono text-xs text-forensic-text-muted truncate mb-4"
+          title={workUnit.projectPath}
+        >
+          {workUnit.projectPath}
+        </p>
+
+        {/* Preview - Command Style */}
+        <div className="bg-forensic-bg-primary border border-forensic-border p-3 mb-4">
+          <div className="flex items-start gap-2 font-mono text-xs">
+            <span className="text-accent-green shrink-0">$</span>
+            <p className="text-forensic-text-secondary line-clamp-2 leading-relaxed">
+              {truncatedPreview}
+            </p>
+          </div>
+        </div>
+
+        {/* Stats row */}
+        <div className="flex items-center gap-4 font-mono text-[10px] text-forensic-text-muted uppercase tracking-wide mb-4">
+          <span className="flex items-center gap-1">
+            <FileText className="w-3 h-3" />
+            {sessions.length} session{sessions.length !== 1 ? 's' : ''}
+          </span>
+          <span className="flex items-center gap-1">
+            <Clock className="w-3 h-3" />
+            {formatDuration(workUnit.totalDuration)}
+          </span>
+          <span className="flex items-center gap-1">
+            <Activity className="w-3 h-3" />
+            {workUnit.totalFrames} frames
+          </span>
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-between pt-3 border-t border-forensic-border">
+          <span className="font-mono text-[10px] text-forensic-text-muted uppercase tracking-wide">
+            {formatRelativeTime(workUnit.startTime)}
+          </span>
+          <span className="font-mono text-xs text-forensic-text-muted group-hover:text-accent-purple transition-colors">
+            &gt;
+          </span>
+        </div>
       </div>
     </Link>
   );
