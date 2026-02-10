@@ -54,3 +54,6 @@ coverage/
 # Built frontend in backend (copied during build)
 backend/public/*
 !backend/public/.gitkeep
+
+# Validation output (contains session-specific data)
+validation_report.json

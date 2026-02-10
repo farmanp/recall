@@ -626,11 +626,26 @@ const SearchResultCard: React.FC<SearchResultCardProps> = ({
           <div
             className="line-clamp-3 leading-relaxed"
             dangerouslySetInnerHTML={{
-              __html: result.snippet.replace(
-                new RegExp(searchQuery, 'gi'),
-                (match) =>
-                  `<mark class="bg-accent-green text-forensic-bg-primary px-0.5">${match}</mark>`
-              ),
+              __html: (() => {
+                // Escape HTML entities in the snippet first
+                const escapeHtml = (str: string) =>
+                  str.replace(
+                    /[&<>"']/g,
+                    (c) =>
+                      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[
+                        c
+                      ] || c
+                  );
+                // Escape regex special characters in search query
+                const escapeRegex = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const safeSnippet = escapeHtml(result.snippet);
+                const safeQuery = escapeRegex(searchQuery);
+                return safeSnippet.replace(
+                  new RegExp(safeQuery, 'gi'),
+                  (match) =>
+                    `<mark class="bg-accent-green text-forensic-bg-primary px-0.5">${match}</mark>`
+                );
+              })(),
             }}
           />
         </div>

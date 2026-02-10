@@ -1,17 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Recall - AI Coding Agent Forensics</title>
-  <meta name="description" content="Forensic analysis for AI coding sessions. Investigate what happened, track file operations, replay the evidence. Supports Claude Code, Codex CLI, Gemini CLI.">
+  <title>Recall - The Forensic DVR for AI Coding Agents</title>
+  <meta name="description"
+    content="Forensic analysis for AI coding sessions. Investigate what happened, track file operations, replay the evidence. Supports Claude Code, Codex CLI, Gemini CLI.">
   <meta property="og:title" content="Recall - AI Coding Agent Forensics">
-  <meta property="og:description" content="Investigate your AI coding sessions. Replay frame-by-frame, track file operations, analyze agent behavior.">
+  <meta property="og:description"
+    content="Investigate your AI coding sessions. Replay frame-by-frame, track file operations, analyze agent behavior.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://farmanp.github.io/recall">
-  <meta name="twitter:card" content="summary_large_image">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔍</text></svg>">
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔍</text></svg>">
+  <link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
   <style>
     :root {
       --bg-primary: #0a0a0a;
@@ -42,7 +48,8 @@
       line-height: 1.6;
     }
 
-    code, .mono {
+    code,
+    .mono {
       font-family: 'JetBrains Mono', 'SF Mono', Monaco, monospace;
     }
 
@@ -69,13 +76,11 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: repeating-linear-gradient(
-        0deg,
-        rgba(0, 0, 0, 0.15),
-        rgba(0, 0, 0, 0.15) 1px,
-        transparent 1px,
-        transparent 2px
-      );
+      background: repeating-linear-gradient(0deg,
+          rgba(0, 0, 0, 0.15),
+          rgba(0, 0, 0, 0.15) 1px,
+          transparent 1px,
+          transparent 2px);
       pointer-events: none;
       z-index: 1000;
       opacity: 0.3;
@@ -205,9 +210,17 @@
       background: var(--border);
     }
 
-    .terminal-dot.red { background: var(--red); }
-    .terminal-dot.amber { background: var(--amber); }
-    .terminal-dot.green { background: var(--green); }
+    .terminal-dot.red {
+      background: var(--red);
+    }
+
+    .terminal-dot.amber {
+      background: var(--amber);
+    }
+
+    .terminal-dot.green {
+      background: var(--green);
+    }
 
     .terminal-body {
       padding: 20px;
@@ -241,8 +254,16 @@
     }
 
     @keyframes blink {
-      0%, 50% { opacity: 1; }
-      51%, 100% { opacity: 0; }
+
+      0%,
+      50% {
+        opacity: 1;
+      }
+
+      51%,
+      100% {
+        opacity: 0;
+      }
     }
 
     /* Case file section */
@@ -413,9 +434,17 @@
       margin-bottom: 4px;
     }
 
-    .agent-name.claude { color: #f97316; }
-    .agent-name.gemini { color: #22c55e; }
-    .agent-name.codex { color: #a855f7; }
+    .agent-name.claude {
+      color: #f97316;
+    }
+
+    .agent-name.gemini {
+      color: #22c55e;
+    }
+
+    .agent-name.codex {
+      color: #a855f7;
+    }
 
     .agent-path {
       font-family: 'JetBrains Mono', monospace;
@@ -564,6 +593,7 @@
     }
   </style>
 </head>
+
 <body class="scanlines">
   <nav>
     <div class="container">
@@ -579,12 +609,11 @@
 
   <section class="hero">
     <div class="container">
-      <div class="badge">v1.7.0 · Local-First · Open Source</div>
-      <h1>AI Coding Agent<br><span class="highlight">Forensic Analysis</span></h1>
+      <div class="badge">v2.1.0 · Forensic Grade · Local-First</div>
+      <h1>The Forensic DVR for<br><span class="highlight">AI-Driven Development</span></h1>
       <p class="tagline">
-        Investigate what your AI coding agents have been doing.
-        Replay sessions frame-by-frame. Track every file operation.
-        Analyze agent behavior across Claude, Gemini, and Codex.
+        Clear the "AI Fog of War". Investigate exactly how your agents built your features.
+        Replay every thought, every prompt, and every file operation with sub-second precision.
       </p>
       <div class="terminal">
         <div class="terminal-header">
@@ -600,10 +629,10 @@
             Scanning sessions...
           </div>
           <div class="terminal-line terminal-output">
-            Found 47 sessions across 3 agents
+            Found 156 sessions across 3 agents
           </div>
           <div class="terminal-line terminal-output">
-            Server running at http://localhost:3001
+            Server running at http://localhost:3001 // Forensic Dashboard Active
           </div>
           <div class="terminal-line">
             <span class="terminal-prompt">$</span> <span class="cursor"></span>
@@ -616,29 +645,89 @@
   <section class="case-file" id="evidence">
     <div class="container">
       <div class="case-header">
-        <span class="case-id">CASE-001</span>
-        <span class="case-title">The Problem</span>
+        <span class="case-id">ANALYSIS</span>
+        <span class="case-title">Clearing the AI "Fog of War"</span>
       </div>
       <div class="evidence-grid">
         <div class="evidence-card" data-id="EV-001">
-          <div class="icon">🔍</div>
-          <h3>Lost Context</h3>
-          <p>What decisions did the AI make? Why did it choose one approach over another? The evidence disappears with your terminal.</p>
+          <div class="icon">😶‍🌫️</div>
+          <h3>Invisible Decisions</h3>
+          <p>Why did it choose this library? The rationale often disappears with your terminal scrollback. Recall
+            persists the logic.</p>
         </div>
         <div class="evidence-card" data-id="EV-002">
-          <div class="icon">📂</div>
-          <h3>File Chaos</h3>
-          <p>Which files were touched? What was written vs edited vs just read? The trail goes cold without proper tracking.</p>
+          <div class="icon">👻</div>
+          <h3>Ghost Changes</h3>
+          <p>Small edits in distant files you might have missed. Recall isolates and highlights every single file
+            operation.</p>
         </div>
         <div class="evidence-card" data-id="EV-003">
-          <div class="icon">🕐</div>
-          <h3>Timeline Gaps</h3>
-          <p>When was this bug introduced? What happened in yesterday's session? Reconstructing events is nearly impossible.</p>
+          <div class="icon">📉</div>
+          <h3>Knowledge Decay</h3>
+          <p>Looking back at code a week later and forgetting how the AI reached that solution. Replay the history to
+            regain context.</p>
         </div>
         <div class="evidence-card" data-id="EV-004">
-          <div class="icon">🔀</div>
-          <h3>Multi-Agent Blindspot</h3>
-          <p>Using Claude, Gemini, and Codex across projects? No unified view. Each agent's history is siloed and incompatible.</p>
+          <div class="icon">🧩</div>
+          <h3>Fragmented Work</h3>
+          <p>Using Claude, Gemini, and Codex across projects? Recall correlates all agent activities into unified Work
+            Units.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <style>
+    .screenshot-gallery {
+      padding: 100px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 64px;
+    }
+
+    .gallery-item {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      padding: 16px;
+      border-radius: 4px;
+    }
+
+    .gallery-item img {
+      width: 100%;
+      height: auto;
+      border: 1px solid var(--border);
+      display: block;
+      border-radius: 2px;
+    }
+
+    .gallery-item .label {
+      display: block;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-top: 12px;
+    }
+  </style>
+
+  <section class="screenshot-gallery">
+    <div class="container">
+      <div class="case-header">
+        <span class="case-id">FORENSIC ASSETS</span>
+        <span class="case-title">Visual Evidence</span>
+      </div>
+      <div class="gallery-grid">
+        <div class="gallery-item">
+          <img src="assets/session-list.png" alt="Recall Session List Dashboard">
+          <span class="label">// Session List - Unified dashboard with deep search and agent filtering.</span>
+        </div>
+        <div class="gallery-item">
+          <img src="assets/session-player.png" alt="Recall Replay Player">
+          <span class="label">// Replay Player - Frame-by-frame playback with precise timeline scrubbing.</span>
         </div>
       </div>
     </div>
@@ -646,38 +735,38 @@
 
   <section class="capabilities" id="capabilities">
     <div class="container">
-      <h2>// Investigation Toolkit</h2>
-      <p class="subtitle">Everything you need to conduct thorough forensic analysis of AI coding sessions</p>
+      <h2>// The Forensic Toolbox</h2>
+      <p class="subtitle">Mission-critical tools to audit and analyze agent behavior</p>
       <div class="cap-grid">
         <div class="cap-item">
-          <div class="cap-icon">⏯️</div>
-          <h3>Timeline Replay</h3>
-          <p>Scrub through sessions frame-by-frame. Play, pause, jump to any moment in the investigation.</p>
+          <div class="cap-icon">📹</div>
+          <h3>Mission Control</h3>
+          <p>Scrub through sessions with variable speeds (0.5x to 20x). Automated dead-air compression.</p>
         </div>
         <div class="cap-item">
-          <div class="cap-icon">📁</div>
+          <div class="cap-icon">📂</div>
           <h3>Artifact Tracking</h3>
-          <p>Every file read, written, edited. View diffs inline. Complete chain of custody for all operations.</p>
+          <p>Binary-level tracking of every file operation. Inline syntax-highlighted diffs for every write.</p>
         </div>
         <div class="cap-item">
           <div class="cap-icon">🔍</div>
-          <h3>Cross-Reference Search</h3>
-          <p>Search across all sessions. Find where that function was discussed. Connect the dots.</p>
+          <h3>Signal Intelligence</h3>
+          <p>Deep search across all session transcripts via SQLite FTS5. Find discussion points in milliseconds.</p>
         </div>
         <div class="cap-item">
           <div class="cap-icon">📦</div>
-          <h3>Work Units</h3>
-          <p>Group related sessions into case files. Track features and fixes across multiple coding sessions.</p>
+          <h3>Work Logistics</h3>
+          <p>Correlate disparate sessions into "Work Units" for a holistic view of feature evolution.</p>
         </div>
         <div class="cap-item">
           <div class="cap-icon">🔒</div>
-          <h3>Local Evidence</h3>
-          <p>Your data never leaves your machine. No cloud sync, no accounts. Air-gapped by design.</p>
+          <h3>OpSec First</h3>
+          <p>100% local operation. Read-only ingestion ensures no modification of original session evidence.</p>
         </div>
         <div class="cap-item">
           <div class="cap-icon">⌨️</div>
-          <h3>Keyboard Control</h3>
-          <p>Navigate with shortcuts. Space for play/pause. Arrows to step. 'A' for artifacts. 'F' for filters.</p>
+          <h3>Hotkeys</h3>
+          <p>Full keyboard navigation for investigators. Space, Arrows, Home/End, and specialized filters.</p>
         </div>
       </div>
     </div>
@@ -685,7 +774,7 @@
 
   <section class="agents" id="agents">
     <div class="container">
-      <h2>// Supported Agents</h2>
+      <h2>// Verified Evidence Sources</h2>
       <div class="agents-list">
         <div class="agent">
           <div class="agent-name claude">Claude Code</div>
@@ -736,9 +825,9 @@
 
   <section class="cta">
     <div class="container">
-      <h2>Ready to investigate?</h2>
-      <p>Start analyzing your AI coding sessions in seconds.</p>
-      <a href="#install" class="btn">Begin Analysis</a>
+      <h2>Begin the Investigation</h2>
+      <p>Analyze your AI coding sessions in sub-second speed.</p>
+      <a href="https://github.com/farmanp/recall" class="btn">Star on GitHub</a>
     </div>
   </section>
 
@@ -755,4 +844,5 @@
     </div>
   </footer>
 </body>
+
 </html>

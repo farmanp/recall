@@ -1,73 +1,93 @@
 <div align="center">
 
-# 🎬 Recall
+# 🎬 Recall v2.1.0
 
-**Replay your AI coding sessions like a video player**
+**The Forensic DVR for AI-Driven Development**
 
-[![npm version](https://img.shields.io/npm/v/recall-player.svg)](https://www.npmjs.com/package/recall-player)
-[![npm downloads](https://img.shields.io/npm/dm/recall-player.svg)](https://www.npmjs.com/package/recall-player)
-![Project Status: Beta](https://img.shields.io/badge/status-beta-yellow)
+[![npm version](https://img.shields.io/npm/v/recall-player.svg?color=22c55e)](https://www.npmjs.com/package/recall-player)
+[![Project Status: Active](https://img.shields.io/badge/status-active-22c55e)](https://github.com/farmanp/recall)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-**Watch how features were built · Review decisions made · Debug what went wrong**
+**Watch how features were built · Analyze AI logic · Audit codebase evolution**
 
-A local-first web application that visualizes AI coding sessions from Claude Code, Codex CLI, and Gemini CLI. Navigate through your coding history frame-by-frame with video-player controls, search across sessions, and group related work into units.
+Recall is a high-performance, **forensic replay tool** for AI coding sessions. It treats AI coding logs as evidence, allowing you to replay history frame-by-frame with syntax-highlighted diffs, deep search, and project-based grouping.
 
-[Quick Start](#quick-start) · [Features](#features) · [Screenshots](#screenshots) · [Documentation](#development)
+[Quick Start](#quick-start) · [Screenshots](#forensic-evidence) · [Features](#the-forensic-toolbox) · [Documentation](#development)
 
 </div>
 
 ---
 
-## Why Recall?
+## 🛡️ How It Works
 
-Ever wondered **"How did the AI build this feature?"** or **"What changed between yesterday and today?"**
+Recall creates a **read-only intelligence layer** over your AI coding logs:
 
-When working with AI coding assistants, it's easy to lose track of:
-
-- 🤔 **What decisions were made** and why
-- 🔧 **What approaches were tried** before settling on the final solution
-- 🐛 **When bugs were introduced** during rapid iteration
-- 📝 **How file changes evolved** across multiple sessions
-
-**Recall solves this** by giving you a "DVR for your coding sessions" — replay any session frame-by-frame, search across all your work, and visualize the evolution of your codebase.
+1.  **Ingest**: Automatically scans `~/.claude`, `~/.codex`, and `~/.gemini` for session data.
+2.  **Index**: Builds a high-speed SQLite FTS5 index of every thought and code change.
+3.  **Visualize**: Serves a React-based "DVR" interface to replay sessions with sub-second precision.
+4.  **Correlate**: Groups disparate sessions into "Work Units" for a holistic view of feature evolution.
 
 ---
 
-## Screenshots
+## The AI "Fog of War"
+
+Ever asked **"How did the AI build this feature?"** or **"What did it change while I wasn't looking?"**
+
+When working with AI coding assistants, you often face a loss of context:
+
+- 😶‍🌫️ **Invisible Decisions**: Why did it choose this library over that one?
+- � **Ghost Changes**: Small edits in distant files you might have missed.
+- � **Knowledge Decay**: Looking back at code a week later and forgetting how the AI reached that solution.
+- 🧩 **Fragmented Work**: Related work spread across a dozen disconnected sessions.
+
+**Recall clears the fog.** It treats AI coding sessions as **evidence to be analyzed**, giving you a high-fidelity replay of every prompt, every thought, and every file write.
+
+---
+
+## Forensic Evidence
 
 ### Session List
 
 ![Session List](docs/assets/session-list.png)
-_Browse all your coding sessions across Claude, Codex, and Gemini with powerful filtering and search_
+_Unified forensic dashboard with deep search and agent filtering._
 
-### Session Player
+### Replay Player
 
 ![Session Player](docs/assets/session-player.png)
-_Replay sessions frame-by-frame with timeline scrubber, playback controls, and syntax-highlighted code diffs_
+_Frame-by-frame playback with precise timeline scrubbing and diffing._
 
-### Chat View
+### Conversational View
 
 ![Chat View](docs/assets/chat-view.png)
-_Toggle between technical view and conversational chat view for easier reading_
+_Toggle between technical evidence and a clean chat interface for easier reading._
+
+### Work Units
+
+![Work Units](docs/assets/work-units.png)
+_Group related sessions into atomic work units to track complex features._
 
 ---
 
-## Supported Agents
+## Verified Evidence Sources
+
+Recall currently supports high-fidelity ingestion from three primary agents:
 
 <table>
 <tr>
 <td align="center">
 <img src="https://img.shields.io/badge/Claude_Code-8B5CF6?style=for-the-badge" alt="Claude Code"/>
-<br/>Anthropic's CLI coding assistant
+<br/><b>Anthropic's Forensic Log</b>
+<br/>Full support for termly-based <code>.jsonl</code> logs.
 </td>
 <td align="center">
 <img src="https://img.shields.io/badge/Codex_CLI-10B981?style=for-the-badge" alt="Codex CLI"/>
-<br/>OpenAI's command-line tool
+<br/><b>OpenAI's Session Vault</b>
+<br/>Deep parsing of CLI execution history.
 </td>
 <td align="center">
 <img src="https://img.shields.io/badge/Gemini_CLI-3B82F6?style=for-the-badge" alt="Gemini CLI"/>
-<br/>Google's terminal assistant
+<br/><b>Google's Execution Trace</b>
+<br/>Visualizing the Gemini terminal assistant workflow.
 </td>
 </tr>
 </table>
@@ -124,45 +144,34 @@ npm start
 
 ---
 
-## Features
+---
 
-### 🎥 Video Player Experience
+## The Forensic Toolbox
 
-- **Frame-by-frame playback** with play/pause and variable speed (0.5x to 10x)
-- **Timeline scrubber** with visual event markers and chapter navigation
-- **Keyboard shortcuts** for efficient navigation (Space, arrows, Home/End)
-- **Search** within sessions to jump to specific content
-- **Frame filtering** to show/hide message types (User, AI, Thinking, Tools)
+### 📹 Mission Control (Playback)
 
-### 🔍 Multi-Agent Session Browser
+- **Frame-by-Frame Precision**: Replay sessions at variable speeds (0.5x to 20x).
+- **Timeline Forensics**: Scrubber with event density markers and chapter navigation.
+- **Dead Air Compression**: Skip through long AI "thinking time" automatically.
+- **Keyboard Mastery**: Full navigation via hotkeys (Space, 1-5, Arrows, Home/End).
 
-- **Unified view** of all sessions across Claude Code, Codex CLI, and Gemini CLI
-- **Smart filtering** by agent type, project path, date range, and duration
-- **Full-text search** across all session transcripts (powered by SQLite FTS5)
-- **CWD filtering** - automatically shows only sessions from your current directory
-- **Session metadata** - duration, frame count, AI model, first message preview
+### 🔍 Intelligence (Session Browser)
 
-### 📦 Work Units (NEW!)
+- **Multi-Agent Support**: Native parsing for **Claude Code**, **Codex**, and **Gemini**.
+- **Deep Search**: Full-text search across all transcripts powered by SQLite FTS5.
+- **Context Awareness**: Auto-filter sessions based on your current project directory (CWD).
+- **Smart Metadata**: View model types, event counts, and first message previews at a glance.
 
-- **Auto-grouping** of related sessions into logical work units
-- **Manual management** - add/remove sessions from work units
-- **Multi-session playback** - replay entire features or bug fixes
-- **Progress tracking** - see all work related to a specific task
+### 📦 Logistics (Work Units)
 
-### 🎨 Beautiful UI
+- **Evolution Tracking**: Group fragmented sessions into a single "Work Unit" for a feature.
+- **Atomic History**: Replay the entire history of a bug fix or architectural change.
 
-- **Dark theme** optimized for long viewing sessions
-- **Syntax highlighting** with Prism.js for 100+ languages
-- **Inline diffs** with side-by-side and unified views
-- **Framer Motion** animations for smooth transitions
-- **Responsive design** for various screen sizes
+### 🔒 Operational Security (Privacy)
 
-### 🔒 Privacy & Security
-
-- **100% local** - no cloud, no analytics, no external requests
-- **Read-only** - session files are never modified
-- **Offline-first** - works without internet connection
-- **SQLite caching** - fast performance with local database
+- **Zero Cloud**: 100% local. Your code and sessions never leave your disk.
+- **Forensic Logs**: Read-only ingestion. Recall never modifies your original session files.
+- **Forensic Aesthetic**: High-contrast terminal design with JetBrains Mono.
 
 ---
 
@@ -478,3 +487,25 @@ Built with:
 - [React](https://react.dev/) + [Vite](https://vitejs.dev/)
 - [TypeScript](https://www.typescriptlang.org/)
 - [Tailwind CSS](https://tailwindcss.com/)
+
+---
+
+## 🚀 Decryption Roadmap
+
+- [ ] **Agent Decoders**: Support for GitHub Copilot CLI and Aider.
+- [ ] **Live Monitoring**: Real-time "Forensic Stream" as the AI types.
+- [ ] **Annotation Mode**: Export "Annotated Evidence" with team comments.
+- [ ] **Collaborative Units**: Share Work Unit files for team code reviews.
+
+## 🤝 Community & Support
+
+- **Bugs & Features**: Open a [GitHub Issue](https://github.com/farmanp/recall/issues)
+- **Discussions**: Join the conversation on [GitHub Discussions](https://github.com/farmanp/recall/discussions)
+- **Code of Conduct**: Please follow our [Community Protocol](CODE_OF_CONDUCT.md)
+- **Support**: If you find Recall useful, please [star the repository](https://github.com/farmanp/recall) to show your support!
+
+---
+
+<div align="center">
+Built with ❤️ for the AI-Augmented Developer
+</div>
