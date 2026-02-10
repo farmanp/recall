@@ -9,25 +9,49 @@ import fs from 'fs';
 const DB_PATH = path.join(process.env.HOME || '', '.claude-mem', 'claude-mem.db');
 
 /**
+ * Track if we've already logged the unavailability warning
+ */
+let hasLoggedUnavailableWarning = false;
+
+/**
+ * Check if claude-mem database is available
+ *
+ * Can be forced to false via RECALL_DISABLE_CLAUDE_MEM=true for testing.
+ *
+ * @returns {boolean} True if database file exists and not disabled, false otherwise
+ */
+export function isClaudeMemAvailable(): boolean {
+  if (process.env.RECALL_DISABLE_CLAUDE_MEM === 'true') {
+    return false;
+  }
+  return fs.existsSync(DB_PATH);
+}
+
+/**
  * Creates and configures a new SQLite database connection
  *
  * Opens the claude-mem database in read-write mode to support CLAUDE.md
  * snapshot storage. The database is still opened with caution flags to
  * prevent data corruption.
  *
- * @returns {Database.Database} Configured SQLite database instance
- * @throws {Error} If database file doesn't exist at DB_PATH
+ * @returns {Database.Database | null} Configured SQLite database instance, or null if unavailable
  *
  * @example
  * const db = getDatabase();
- * const result = db.prepare('SELECT COUNT(*) as count FROM sdk_sessions').get();
- * console.log(`Found ${result.count} sessions`);
+ * if (db) {
+ *   const result = db.prepare('SELECT COUNT(*) as count FROM sdk_sessions').get();
+ *   console.log(`Found ${result.count} sessions`);
+ * }
  */
-export function getDatabase(): Database.Database {
+export function getDatabase(): Database.Database | null {
   if (!fs.existsSync(DB_PATH)) {
-    throw new Error(
-      `Database not found at ${DB_PATH}. Make sure claude-mem is installed and has recorded sessions.`
-    );
+    if (!hasLoggedUnavailableWarning) {
+      console.warn(
+        `⚠️  Claude-mem database not found at ${DB_PATH}. Claude-mem features will be disabled.`
+      );
+      hasLoggedUnavailableWarning = true;
+    }
+    return null;
   }
 
   const db = new Database(DB_PATH, {
@@ -110,17 +134,23 @@ let dbInstance: Database.Database | null = null;
  * Get the singleton database instance
  *
  * Creates a new connection on first call, then reuses it for subsequent calls.
+ * Returns null if claude-mem database is not available.
  * This is safe because SQLite handles concurrent reads well.
  *
- * @returns {Database.Database} Singleton database instance
+ * @returns {Database.Database | null} Singleton database instance, or null if unavailable
  *
  * @example
  * import { getDbInstance } from './connection';
  *
  * const db = getDbInstance();
- * const sessions = db.prepare('SELECT * FROM sdk_sessions LIMIT 10').all();
+ * if (db) {
+ *   const sessions = db.prepare('SELECT * FROM sdk_sessions LIMIT 10').all();
+ * }
  */
-export function getDbInstance(): Database.Database {
+export function getDbInstance(): Database.Database | null {
+  if (dbInstance === null && !isClaudeMemAvailable()) {
+    return null;
+  }
   if (!dbInstance) {
     dbInstance = getDatabase();
   }

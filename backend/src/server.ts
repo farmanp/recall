@@ -5,7 +5,7 @@ import sessionsRouter from './routes/sessions';
 import commentaryRouter from './routes/commentary';
 import importRouter from './routes/import';
 import workUnitsRouter, { getSessionWorkUnit } from './routes/work-units';
-import { getDbInstance } from './db/connection';
+import { getDbInstance, isClaudeMemAvailable } from './db/connection';
 import { getTranscriptDbInstance } from './db/transcript-connection';
 import { initializeTranscriptSchema } from './db/transcript-queries';
 
@@ -66,18 +66,26 @@ export function createServer(): Application {
   // Health check with DB status
   app.get('/api/health', (_req: Request, res: Response) => {
     try {
-      const db = getDbInstance();
       const transcriptDb = getTranscriptDbInstance();
 
-      // Test queries to ensure actual connectivity
-      db.prepare('SELECT 1').get();
+      // Test transcript DB connectivity (required)
       transcriptDb.prepare('SELECT 1').get();
+
+      // Test claude-mem DB connectivity (optional)
+      let claudeMemStatus: 'connected' | 'unavailable' = 'unavailable';
+      if (isClaudeMemAvailable()) {
+        const db = getDbInstance();
+        if (db) {
+          db.prepare('SELECT 1').get();
+          claudeMemStatus = 'connected';
+        }
+      }
 
       res.json({
         status: 'ok',
         timestamp: new Date().toISOString(),
         databases: {
-          claude_mem: 'connected',
+          claude_mem: claudeMemStatus,
           transcripts: 'connected',
         },
       });
