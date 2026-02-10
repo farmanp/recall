@@ -43,7 +43,8 @@ describe('SessionSwitcher', () => {
     );
 
     expect(screen.getByText('Session 1 of 2')).toBeInTheDocument();
-    expect(screen.getByText('Frame 3 / 10')).toBeInTheDocument();
+    expect(screen.getByText('Frame 3')).toBeInTheDocument();
+    expect(screen.getByText('/ 10')).toBeInTheDocument();
 
     await user.click(screen.getByTitle('Next session'));
     expect(onSessionChange).toHaveBeenCalledWith('s2');

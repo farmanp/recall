@@ -49,7 +49,7 @@ describe('WorkUnitCard', () => {
 
     expect(screen.getByText('Alpha Work Unit')).toBeInTheDocument();
     expect(screen.getByText('/repo/alpha')).toBeInTheDocument();
-    expect(screen.getByText('High')).toBeInTheDocument();
+    expect(screen.getByText('HIGH')).toBeInTheDocument();
     expect(screen.getByText('1 session')).toBeInTheDocument();
     expect(screen.getByText('1h 1m')).toBeInTheDocument();
     expect(screen.getByText('42 frames')).toBeInTheDocument();

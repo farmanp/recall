@@ -13,7 +13,7 @@ describe('ErrorMessage', () => {
     const user = userEvent.setup();
     const onRetry = vi.fn();
     render(<ErrorMessage error="Oops" onRetry={onRetry} />);
-    await user.click(screen.getByRole('button', { name: /retry connection/i }));
+    await user.click(screen.getByRole('button', { name: /retry/i }));
     expect(onRetry).toHaveBeenCalledTimes(1);
   });
 });

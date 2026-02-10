@@ -82,7 +82,7 @@ describe('SessionListPage', () => {
     expect(screen.getByText('beta-session')).toBeInTheDocument();
 
     await user.type(
-      screen.getByPlaceholderText('Search sessions by project, slug, or title...'),
+      screen.getByPlaceholderText('Search sessions by project, slug, or message...'),
       'alpha'
     );
 

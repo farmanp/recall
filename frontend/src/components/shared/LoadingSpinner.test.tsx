@@ -11,6 +11,6 @@ describe('LoadingSpinner', () => {
   it('applies size classes', () => {
     render(<LoadingSpinner size="lg" />);
     const spinner = screen.getByLabelText('Loading');
-    expect(spinner).toHaveClass('h-12', 'w-12', 'border-4');
+    expect(spinner).toHaveClass('h-12', 'w-12', 'border-3');
   });
 });
