@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2026-02-10
+
+### Added
+
+- **Troubleshooting documentation** - New `docs/TROUBLESHOOTING.md` with database cleanup guidance and common issue resolution
+
+### Changed
+
+- **Claude-mem is now optional** - Recall starts and provides core session playback without claude-mem installed; claude-mem features (commentary, CLAUDE.md history) gracefully degrade to empty responses
+- **Health endpoint** reports claude-mem availability separately (`claude_mem: "connected" | "unavailable"`)
+
+### Fixed
+
+- **Static asset 404s** - Missing static files (e.g., `/vite.svg`) now return proper 404 instead of index.html
+- **Commentary endpoint** - Replaced broken `claude mcp call` shell-out with direct SQLite queries
+- **Frontend tests** - Fixed 8 test assertions to match actual component output (text casing, element structure)
+
+---
+
 ## [2.0.0] - 2026-02-09
 
 ### Added

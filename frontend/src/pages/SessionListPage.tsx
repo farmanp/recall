@@ -184,7 +184,7 @@ export const SessionListPage: React.FC = () => {
                 <span className="text-forensic-text-muted font-mono">&gt;</span>
                 <h1 className="font-mono text-xl font-bold text-accent-green">recall</h1>
               </div>
-              <span className="badge badge-green">v1.7.0</span>
+              <span className="badge badge-green">v{__APP_VERSION__}</span>
             </div>
             <div className="font-mono text-sm text-forensic-text-secondary">
               {filteredSessions.length} of {total} sessions
