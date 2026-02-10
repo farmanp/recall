@@ -4,103 +4,111 @@ This file provides context and guidance for Gemini agents working on the Recall 
 
 ## Project: Recall
 
-Recall is a local-first web application that visualizes Claude Code sessions like a video player. It reads from the `claude-mem` SQLite database (`~/.claude-mem/claude-mem.db`) in read-only mode to visualize how features were built, decisions made, and problems solved.
+Recall is a local-first web application that visualizes coding sessions from various AI agents (Claude Code, Codex, Gemini) like a video player. It enables developers to visualize how features were built, decisions made, and problems solved by replaying the session event-by-event.
 
-## 🎯 Current Status (Phase 2+ Completed)
+## 🎯 Current Status (Phase 4+ in Progress)
 
-- **Backend**: ✅ Complete. Express + TypeScript + SQLite API is functional. Includes transcript import services and file watching.
-- **Frontend**: ✅ Complete. React + Vite project with **Video Player UI** and **Chat View mode**. Features include timeline scrubber, playback controls, speed adjustment, color-coded event visualization, and conversational chat interface.
-- **Validation**: ✅ Phase 0 Timeline Validation passed all checks.
-- **New**: ✅ **Chat View Mode** - Toggle between Timeline View (technical) and Chat View (conversational messaging interface)
+- **Multi-Agent Support**: ✅ Complete. Supports Claude Code, Codex CLI, and Gemini CLI session formats with tool name normalization.
+- **Work Units**: ✅ Complete. Automatic and manual grouping of related sessions into logical work units.
+- **CLAUDE.md History**: ✅ Complete. Tracking and diffing the evolution of `CLAUDE.md` across sessions.
+- **Search**: ✅ Complete. FTS5 content-based search across all session transcripts.
+- **CWD Filter**: ✅ Complete. Intelligent session filtering based on the directory where the player was started.
+- **Backend**: ✅ Production-ready Express + TypeScript + SQLite architecture with dual-database system.
+- **Frontend**: ✅ Rich React + Vite UI with Video Player, Chat View, Work Unit dashboard, and Diff views.
 
 ## 🏗️ Architecture
 
 ### Tech Stack
 
-- **Backend**: Node.js, Express, TypeScript, better-sqlite3, Vitest (Testing), Chokidar (File Watching)
-- **Frontend**: React, Vite, TypeScript, Tailwind CSS v4
-  - **State**: Zustand (Global), TanStack Query (Server)
-  - **Routing**: React Router
-  - **UI**: TanStack Virtual (Performance), PrismJS (Syntax Highlighting), React Diff View, Framer Motion
+- **Backend**: Node.js, Express, TypeScript, `better-sqlite3`, `lru-cache`, `vitest` (Testing), `chokidar` (File Watching)
+- **Frontend**: React, Vite, TypeScript, Tailwind CSS v3
+  - **State**: `zustand` (Global State), `TanStack Query` (Server State)
+  - **Routing**: `react-router-dom` v7
+  - **UI**: `TanStack Virtual`, `PrismJS`, `react-diff-view`, `framer-motion`, `lucide-react`, `react-markdown`
 - **Database**:
-  - `claude-mem.db`: Main session data (read-only)
-  - `transcript-*.db`: Imported raw transcripts
+  - `claude-mem.db`: Read-only access to Claude-mem observations.
+  - `transcripts.db`: Read-write database for parsed frames and indexing. (Located in `~/.recall-player/`)
 
-### Key Components
+### Key Layers & Components
 
-- **Backend Services**:
-  - `TranscriptImporter`: Handles parsing and importing of raw session transcripts.
-  - `FileWatcher`: Monitors file changes during sessions.
-- **Frontend Components**:
-  - `SessionPlayer`: Main video-player-like interface.
-  - `TimelineVisualization`: Scrubber with chapter markers and event type indicators.
-  - `PlaybackControls`: Play/pause, speed (0.5x-10x), and navigation controls.
-  - `EventCard`: Color-coded display of session events with diff views.
-- **Timeline Ordering**: Events are sorted using a specific TIME-FIRST algorithm: `ts ASC -> prompt_number ASC -> kind_rank ASC -> row_id ASC`.
+- **Parser Layer**:
+  - `AgentDetector`: Identifies agent type (Claude, Codex, Gemini) from file structure.
+  - `ParserFactory`: Dispatches to specific `AgentParser` implementations (Claude, Codex, Gemini).
+  - `BaseParser`: Shared logic for timeline building and frame normalization.
+  - `TranscriptParser`: Handles the import into the optimized SQLite schema.
+- **Services Layer**:
+  - `WorkUnitCorrelator`: Automatically groups sessions by time, project, and context.
+  - `FileWatcher`: Monitors agent log directories for real-time indexing.
+  - `TranscriptImporter`: Robust bulk and single-file import logic with SQLite corruption recovery.
+- **Frontend Pages**:
+  - `SessionListPage`: Filterable list of all sessions with infinite scroll and CWD filter banner.
+  - `SessionPlayerPage`: The "Video Player" experience with timeline scrubber, artifacts panel, and chat/technical toggle.
+  - `WorkUnitListPage`: Dashboard for managing grouped coding tasks.
+  - `WorkUnitPlayerPage`: Multi-session playback experience.
 
 ## 🛠️ Commands
+
+### Root
+
+```bash
+npm install          # Install all dependencies (hoisted to root)
+npm run build        # Full build (Backend + Frontend)
+npm start            # Start production server
+npm publish          # Full release workflow
+```
 
 ### Backend
 
 ```bash
 cd backend
-npm install          # Install dependencies
-npm run dev          # Start dev server (port 3001)
-npm run build        # Compile TypeScript
-npm test             # Run Vitest tests
-npm run import       # Import transcripts CLI (using ts-node)
+npm run dev          # Start dev server with hot reload (port 3001)
+npm run build        # Compile TypeScript to dist/
+npm test             # Run Vitest suite
+npm run import       # CLI for manual transcript import
 ```
 
 ### Frontend
 
 ```bash
 cd frontend
-npm install          # Install dependencies
-npm run dev          # Start dev server (port 5173)
-npm run build        # Build for production
-npm run lint         # Run ESLint
+npm run dev          # Start Vite dev server (port 5173)
+npm run build        # Build React app
+npm run lint         # Run ESLint & Type check
 ```
 
-### Testing
+## ⚙️ Configuration
 
-```bash
-# Validate Timeline (Phase 0)
-node validate_timeline.js
+### Environment Variables
 
-# Test API Health
-curl http://localhost:3001/api/health
-```
+- `RECALL_FILTER_CWD`: Set to `false` to disable automatic directory filtering (default: `true`).
+- `RECALL_EXCLUDE_PATTERNS`: Comma-separated list of glob patterns to exclude from session scanning (e.g., `thedotmack,**/test-data/**`).
 
 ## 📜 Development Rules
 
-1.  **Read-Only Database**: NEVER modify `~/.claude-mem/claude-mem.db`. Open it in read-only mode.
-2.  **Local-Only**: This is a local tool. Do not add cloud deployment configurations.
-3.  **Strict TypeScript**: Manifest strict type safety. No `any` unless absolutely necessary and documented.
-4.  **Formatting**: Follow the existing code style.
+1.  **Read-Only Sources**: NEVER modify `~/.claude-mem/` or original agent `.jsonl` files.
+2.  **Local-Only**: Keep the app strictly local. Do not add cloud or analytics dependencies.
+3.  **Strict Typing**: Every new component or service must be fully typed. Avoid `any`.
+4.  **UI Aesthetics**: Maintain the "Cinematic Technical" aesthetic—vibrant colors for event types, smooth Framer Motion transitions, and dark-mode optimization.
+5.  **Pattern Persistence**: Follow the existing TIME-FIRST algorithm for event sorting: `ts ASC -> prompt_number ASC -> kind_rank ASC -> row_id ASC`.
 
 ## 📂 Directory Structure
 
-- `backend/`
-  - `src/db/`: Database connection and queries
-  - `src/routes/`: API routes (`sessions.ts`, `commentary.ts`, `import.ts`)
-  - `src/services/`: Core logic (`transcript-importer.ts`, `file-watcher.ts`)
-  - `src/parser/`: Parsing logic for transcripts
-- `frontend/`
-  - `src/api/`: API clients
-  - `src/components/`: Reusable UI components
-    - `player/`: Playback controls, timeline, and event cards
-    - `session-list/`: Session cards and listing
-  - `src/pages/`: Application pages / wrappers
-  - `src/stores/`: State management (Zustand)
-  - `src/hooks/`: Custom React hooks
-- `docs/`: Project documentation and progress summaries
-- `validate_timeline.js`: Validation script for session data
+- `backend/src/`
+  - `db/`: Database schemas and migrations.
+  - `parser/`: Multi-agent parsing logic (`claude`, `codex`, `gemini`).
+  - `routes/`: API endpoints (`sessions`, `work-units`, `commentary`, `import`).
+  - `services/`: Core logic for watchers, importers, and correlation.
+- `frontend/src/`
+  - `api/`: Type-safe API clients using TanStack Query.
+  - `components/`: UI components (Player, Timeline, Diff, Search).
+  - `pages/`: Main application views.
+  - `stores/`: Zustand state for player and UI preferences.
+- `shared/`: Shared types and constants between Frontend and Backend.
 
 ## 🚀 Roadmap
 
-1.  **Phase 0**: Validation ✅
-2.  **Phase 1**: Backend ✅ & Frontend ✅ (Video Player UI)
-3.  **Phase 2**: Playback Controls ✅ (Play, pause, speed, scrubber)
-4.  **Phase 3**: Search & Deep Links
-5.  **Phase 4**: File Diffs & Export
-6.  **Phase 5**: Production Polish
+1.  **Phase 0-2**: Core Playback & Controls ✅
+2.  **Phase 3**: Search, Filters & Agent Support ✅
+3.  **Phase 4**: Work Units & CLAUDE.md History ✅
+4.  **Phase 5**: Advanced Diffs & Export 🔄 (In Progress)
+5.  **Phase 6**: User Annotations & Production Polish ⏳

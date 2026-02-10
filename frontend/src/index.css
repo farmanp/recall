@@ -3,14 +3,31 @@
 @tailwind utilities;
 
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  /* Forensic theme colors */
+  --bg-primary: #0a0a0a;
+  --bg-secondary: #111111;
+  --bg-tertiary: #1a1a1a;
+  --border: #262626;
+  --text-primary: #e5e5e5;
+  --text-secondary: #737373;
+  --text-muted: #525252;
+  --green: #22c55e;
+  --green-dim: #166534;
+  --amber: #f59e0b;
+  --red: #ef4444;
+  --cyan: #06b6d4;
+  --purple: #a855f7;
+  --orange: #f97316;
+
+  /* Typography */
+  font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
-  /* Light mode defaults */
-  color-scheme: light;
-  color: #111827;
-  background-color: #ffffff;
+  /* Dark mode defaults */
+  color-scheme: dark;
+  color: var(--text-primary);
+  background-color: var(--bg-primary);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -22,10 +39,211 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background-color: #f9fafb;
+  background-color: var(--bg-primary);
 }
 
 #root {
   width: 100%;
   min-height: 100vh;
+}
+
+/* Monospace text */
+code,
+.mono,
+.font-mono {
+  font-family: 'JetBrains Mono', 'SF Mono', Monaco, monospace;
+}
+
+/* Links */
+a {
+  color: var(--green);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Scanline overlay effect */
+.scanlines::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.15),
+    rgba(0, 0, 0, 0.15) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  pointer-events: none;
+  z-index: 1000;
+  opacity: 0.3;
+}
+
+/* Terminal-style components */
+@layer components {
+  /* Terminal box */
+  .terminal {
+    @apply bg-forensic-bg-secondary border border-forensic-border rounded-lg overflow-hidden;
+  }
+
+  .terminal-header {
+    @apply bg-forensic-bg-tertiary px-4 py-3 flex items-center gap-2 border-b border-forensic-border;
+  }
+
+  .terminal-dot {
+    @apply w-3 h-3 rounded-full bg-forensic-border;
+  }
+
+  .terminal-dot-red {
+    @apply bg-accent-red;
+  }
+  .terminal-dot-amber {
+    @apply bg-accent-amber;
+  }
+  .terminal-dot-green {
+    @apply bg-accent-green;
+  }
+
+  .terminal-body {
+    @apply p-5 font-mono text-sm;
+  }
+
+  /* Evidence card */
+  .evidence-card {
+    @apply bg-forensic-bg-secondary border border-forensic-border p-6 relative;
+  }
+
+  .evidence-card::before {
+    content: attr(data-id);
+    @apply absolute top-3 right-3 font-mono text-xs text-forensic-text-muted;
+  }
+
+  /* Case file header */
+  .case-header {
+    @apply flex items-center gap-3 mb-6;
+  }
+
+  .case-id {
+    @apply font-mono text-xs text-accent-amber bg-accent-amber/10 border border-accent-amber/30 px-2.5 py-1;
+  }
+
+  .case-title {
+    @apply font-mono text-lg text-forensic-text-primary;
+  }
+
+  /* Badge base */
+  .badge {
+    @apply inline-block font-mono text-xs uppercase tracking-wider px-3 py-1.5 border;
+  }
+
+  .badge-green {
+    @apply text-accent-green border-accent-green-dim bg-accent-green/10;
+  }
+
+  .badge-amber {
+    @apply text-accent-amber border-accent-amber/30 bg-accent-amber/10;
+  }
+
+  .badge-red {
+    @apply text-accent-red border-accent-red/30 bg-accent-red/10;
+  }
+
+  .badge-purple {
+    @apply text-accent-purple border-accent-purple/30 bg-accent-purple/10;
+  }
+
+  .badge-cyan {
+    @apply text-accent-cyan border-accent-cyan/30 bg-accent-cyan/10;
+  }
+
+  /* Terminal prompt */
+  .prompt {
+    @apply text-accent-green;
+  }
+
+  .prompt::before {
+    content: '> ';
+    @apply text-forensic-text-muted;
+  }
+
+  /* Button */
+  .btn-primary {
+    @apply inline-block font-mono text-sm px-6 py-3 bg-accent-green text-forensic-bg-primary font-semibold uppercase tracking-wider border-none cursor-pointer transition-all;
+  }
+
+  .btn-primary:hover {
+    @apply bg-green-600 -translate-y-0.5;
+  }
+
+  /* Section divider */
+  .section-divider {
+    @apply border-t border-forensic-border;
+  }
+
+  /* Blinking cursor */
+  .cursor-blink {
+    @apply inline-block w-2 h-4 bg-accent-green animate-blink align-text-bottom;
+  }
+}
+
+/* Utility classes */
+@layer utilities {
+  .text-forensic-primary {
+    color: var(--text-primary);
+  }
+  .text-forensic-secondary {
+    color: var(--text-secondary);
+  }
+  .text-forensic-muted {
+    color: var(--text-muted);
+  }
+
+  .bg-forensic-primary {
+    background-color: var(--bg-primary);
+  }
+  .bg-forensic-secondary {
+    background-color: var(--bg-secondary);
+  }
+  .bg-forensic-tertiary {
+    background-color: var(--bg-tertiary);
+  }
+
+  .border-forensic {
+    border-color: var(--border);
+  }
+
+  /* Agent-specific text colors */
+  .text-agent-claude {
+    color: var(--orange);
+  }
+  .text-agent-gemini {
+    color: var(--green);
+  }
+  .text-agent-codex {
+    color: var(--purple);
+  }
 }

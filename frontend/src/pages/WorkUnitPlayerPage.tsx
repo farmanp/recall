@@ -3,6 +3,7 @@
  *
  * Video player-style interface for replaying work units across multiple sessions.
  * Automatically advances to next session when current one ends.
+ * Forensic/terminal aesthetic design.
  */
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
@@ -17,6 +18,7 @@ import { DiffViewer } from '../components/DiffViewer';
 import { AgentBadge } from '../components/AgentBadge';
 import { SessionSwitcher } from '../components/work-units/SessionSwitcher';
 import { WorkUnitTimeline } from '../components/work-units/WorkUnitTimeline';
+import { LoadingSpinner } from '../components/shared/LoadingSpinner';
 import { ChevronLeft, Play, Pause, FastForward, SkipForward, SkipBack, Layers } from 'lucide-react';
 
 export const WorkUnitPlayerPage: React.FC = () => {
@@ -179,35 +181,42 @@ export const WorkUnitPlayerPage: React.FC = () => {
 
   if (loadingWorkUnit || !workUnit) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gray-900">
+      <div className="flex items-center justify-center h-screen bg-forensic-bg-primary">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-400">Loading work unit...</p>
+          <LoadingSpinner size="lg" />
+          <p className="mt-4 font-mono text-sm text-forensic-text-secondary">
+            Loading work unit...
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="h-screen flex flex-col bg-gray-900 text-white overflow-hidden">
+    <div className="h-screen flex flex-col bg-forensic-bg-primary text-forensic-text-primary overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 bg-gray-800 border-b border-gray-700">
+      <header className="flex items-center justify-between px-4 py-3 bg-forensic-bg-secondary border-b border-forensic-border">
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate('/work-units')}
-            className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+            className="p-2 hover:bg-forensic-bg-tertiary border border-transparent hover:border-forensic-border transition-colors"
           >
-            <ChevronLeft className="w-5 h-5" />
+            <ChevronLeft className="w-5 h-5 text-forensic-text-secondary" />
           </button>
-          <div className="flex items-center gap-2">
-            <Layers className="w-5 h-5 text-blue-500" />
-            <h1 className="font-bold text-lg truncate max-w-md">{workUnit.name}</h1>
+          <div className="flex items-center gap-3">
+            <Layers className="w-5 h-5 text-accent-purple" />
+            <h1 className="font-mono font-bold text-lg text-forensic-text-primary truncate max-w-md">
+              {workUnit.name}
+            </h1>
+            <span className="font-mono text-xs text-accent-amber bg-accent-amber/10 border border-accent-amber/30 px-2 py-0.5">
+              WU-{workUnit.id.slice(0, 6).toUpperCase()}
+            </span>
           </div>
         </div>
 
         <div className="flex items-center gap-4">
           {/* Playback controls */}
-          <div className="flex items-center gap-2 bg-gray-700 rounded-lg p-1">
+          <div className="flex items-center gap-1 bg-forensic-bg-tertiary border border-forensic-border p-1">
             <button
               onClick={() => {
                 const idx = sessions.findIndex((s) => s.sessionId === currentSessionId);
@@ -216,17 +225,21 @@ export const WorkUnitPlayerPage: React.FC = () => {
                 }
               }}
               disabled={sessions.findIndex((s) => s.sessionId === currentSessionId) === 0}
-              className="p-2 hover:bg-gray-600 rounded disabled:opacity-30"
+              className="p-2 hover:bg-forensic-bg-secondary disabled:opacity-30 transition-colors"
               title="Previous session (P)"
             >
-              <SkipBack className="w-4 h-4" />
+              <SkipBack className="w-4 h-4 text-forensic-text-secondary" />
             </button>
             <button
               onClick={() => setIsPlaying(!isPlaying)}
-              className="p-2 hover:bg-gray-600 rounded"
+              className="p-2 hover:bg-forensic-bg-secondary transition-colors"
               title="Play/Pause (Space)"
             >
-              {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+              {isPlaying ? (
+                <Pause className="w-4 h-4 text-accent-green" />
+              ) : (
+                <Play className="w-4 h-4 text-accent-green" />
+              )}
             </button>
             <button
               onClick={() => {
@@ -238,20 +251,20 @@ export const WorkUnitPlayerPage: React.FC = () => {
               disabled={
                 sessions.findIndex((s) => s.sessionId === currentSessionId) === sessions.length - 1
               }
-              className="p-2 hover:bg-gray-600 rounded disabled:opacity-30"
+              className="p-2 hover:bg-forensic-bg-secondary disabled:opacity-30 transition-colors"
               title="Next session (N)"
             >
-              <SkipForward className="w-4 h-4" />
+              <SkipForward className="w-4 h-4 text-forensic-text-secondary" />
             </button>
           </div>
 
           {/* Speed control */}
           <div className="flex items-center gap-2">
-            <FastForward className="w-4 h-4 text-gray-400" />
+            <FastForward className="w-4 h-4 text-forensic-text-muted" />
             <select
               value={playbackSpeed}
               onChange={(e) => setPlaybackSpeed(Number(e.target.value))}
-              className="bg-gray-700 rounded px-2 py-1 text-sm"
+              className="bg-forensic-bg-tertiary border border-forensic-border px-2 py-1 font-mono text-xs text-forensic-text-secondary focus:outline-none focus:border-accent-green"
             >
               <option value={0.5}>0.5x</option>
               <option value={1}>1x</option>
@@ -261,17 +274,17 @@ export const WorkUnitPlayerPage: React.FC = () => {
           </div>
 
           {/* Auto-advance toggle */}
-          <label className="flex items-center gap-2 text-sm text-gray-400">
+          <label className="flex items-center gap-2 font-mono text-xs text-forensic-text-muted cursor-pointer">
             <input
               type="checkbox"
               checked={autoAdvance}
               onChange={(e) => setAutoAdvance(e.target.checked)}
-              className="rounded"
+              className="accent-accent-green"
             />
-            Auto-advance
+            <span className="uppercase tracking-wide">Auto-advance</span>
           </label>
         </div>
-      </div>
+      </header>
 
       {/* Session switcher */}
       {currentSessionId && (
@@ -285,28 +298,28 @@ export const WorkUnitPlayerPage: React.FC = () => {
       )}
 
       {/* Main content area */}
-      <div className="flex-1 overflow-auto p-6">
+      <div className="flex-1 overflow-auto p-6 bg-forensic-bg-primary">
         {loadingFrames ? (
           <div className="flex items-center justify-center h-full">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <LoadingSpinner size="md" />
           </div>
         ) : currentFrame ? (
           <div className="max-w-4xl mx-auto space-y-6">
             {/* Frame header */}
             <div className="flex items-center gap-4">
               <AgentBadge agent={currentFrame.agent} size="md" />
-              <span className="text-sm text-gray-500">
+              <span className="font-mono text-xs text-forensic-text-muted">
                 {new Date(currentFrame.timestamp).toLocaleTimeString()}
               </span>
               <span
-                className={`px-2 py-0.5 rounded text-xs ${
+                className={`px-2 py-0.5 font-mono text-xs uppercase tracking-wide ${
                   currentFrame.type === 'user_message'
-                    ? 'bg-blue-600 text-blue-100'
+                    ? 'bg-accent-cyan/10 text-accent-cyan border border-accent-cyan/30'
                     : currentFrame.type === 'claude_thinking'
-                      ? 'bg-purple-600 text-purple-100'
+                      ? 'bg-accent-purple/10 text-accent-purple border border-accent-purple/30'
                       : currentFrame.type === 'claude_response'
-                        ? 'bg-green-600 text-green-100'
-                        : 'bg-yellow-600 text-yellow-100'
+                        ? 'bg-accent-green/10 text-accent-green border border-accent-green/30'
+                        : 'bg-accent-amber/10 text-accent-amber border border-accent-amber/30'
                 }`}
               >
                 {currentFrame.type.replace('_', ' ')}
@@ -314,54 +327,71 @@ export const WorkUnitPlayerPage: React.FC = () => {
             </div>
 
             {/* Frame content */}
-            <div className="bg-gray-800 rounded-lg p-6">
-              {currentFrame.type === 'user_message' && currentFrame.userMessage && (
-                <div className="prose prose-invert prose-blue max-w-none">
-                  <ReactMarkdown>{currentFrame.userMessage.text}</ReactMarkdown>
-                </div>
-              )}
+            <div className="bg-forensic-bg-secondary border border-forensic-border">
+              {/* Terminal header */}
+              <div className="flex items-center gap-2 px-4 py-2 bg-forensic-bg-tertiary border-b border-forensic-border">
+                <div className="w-3 h-3 rounded-full bg-accent-red"></div>
+                <div className="w-3 h-3 rounded-full bg-accent-amber"></div>
+                <div className="w-3 h-3 rounded-full bg-accent-green"></div>
+                <span className="ml-auto font-mono text-xs text-forensic-text-muted">
+                  frame {currentFrameIndex + 1} of {frames.length}
+                </span>
+              </div>
 
-              {currentFrame.type === 'claude_thinking' && currentFrame.thinking && (
-                <div className="prose prose-invert prose-purple max-w-none">
-                  <div className="text-purple-300 italic">
-                    <ReactMarkdown>{currentFrame.thinking.text}</ReactMarkdown>
+              <div className="p-6">
+                {currentFrame.type === 'user_message' && currentFrame.userMessage && (
+                  <div className="prose prose-invert prose-green max-w-none font-mono">
+                    <div className="flex items-start gap-2">
+                      <span className="text-accent-green shrink-0">$</span>
+                      <ReactMarkdown>{currentFrame.userMessage.text}</ReactMarkdown>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {currentFrame.type === 'claude_response' && currentFrame.claudeResponse && (
-                <div className="prose prose-invert prose-green max-w-none">
-                  <ReactMarkdown>{currentFrame.claudeResponse.text}</ReactMarkdown>
-                </div>
-              )}
+                {currentFrame.type === 'claude_thinking' && currentFrame.thinking && (
+                  <div className="prose prose-invert prose-purple max-w-none font-mono">
+                    <div className="text-accent-purple/80 italic">
+                      <ReactMarkdown>{currentFrame.thinking.text}</ReactMarkdown>
+                    </div>
+                  </div>
+                )}
 
-              {currentFrame.type === 'tool_execution' && currentFrame.toolExecution && (
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2">
-                    <span className="text-yellow-400 font-mono font-bold">
-                      {currentFrame.toolExecution.tool}
-                    </span>
-                    {currentFrame.toolExecution.output.isError && (
-                      <span className="text-red-500 text-sm">Error</span>
+                {currentFrame.type === 'claude_response' && currentFrame.claudeResponse && (
+                  <div className="prose prose-invert prose-green max-w-none font-mono text-forensic-text-primary">
+                    <ReactMarkdown>{currentFrame.claudeResponse.text}</ReactMarkdown>
+                  </div>
+                )}
+
+                {currentFrame.type === 'tool_execution' && currentFrame.toolExecution && (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-sm text-accent-amber font-bold">
+                        {currentFrame.toolExecution.tool}
+                      </span>
+                      {currentFrame.toolExecution.output.isError && (
+                        <span className="font-mono text-xs text-accent-red uppercase tracking-wide">
+                          Error
+                        </span>
+                      )}
+                    </div>
+
+                    {currentFrame.toolExecution.fileDiff ? (
+                      <DiffViewer
+                        oldContent={currentFrame.toolExecution.fileDiff.oldContent}
+                        newContent={currentFrame.toolExecution.fileDiff.newContent}
+                        language={currentFrame.toolExecution.fileDiff.language}
+                        filePath={currentFrame.toolExecution.fileDiff.filePath}
+                      />
+                    ) : (
+                      <CodeBlock code={currentFrame.toolExecution.output.content} language="text" />
                     )}
                   </div>
-
-                  {currentFrame.toolExecution.fileDiff ? (
-                    <DiffViewer
-                      oldContent={currentFrame.toolExecution.fileDiff.oldContent}
-                      newContent={currentFrame.toolExecution.fileDiff.newContent}
-                      language={currentFrame.toolExecution.fileDiff.language}
-                      filePath={currentFrame.toolExecution.fileDiff.filePath}
-                    />
-                  ) : (
-                    <CodeBlock code={currentFrame.toolExecution.output.content} language="text" />
-                  )}
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
         ) : (
-          <div className="flex items-center justify-center h-full text-gray-500">
+          <div className="flex items-center justify-center h-full font-mono text-sm text-forensic-text-muted">
             No frames in this session
           </div>
         )}

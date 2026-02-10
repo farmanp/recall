@@ -3,6 +3,7 @@
  *
  * A unified timeline scrubber that spans multiple sessions in a work unit.
  * Shows session boundaries and allows navigation across all frames.
+ * Forensic/terminal aesthetic design.
  */
 
 import React, { useMemo } from 'react';
@@ -26,10 +27,10 @@ interface WorkUnitTimelineProps {
 }
 
 const agentColors: Record<string, string> = {
-  claude: 'bg-orange-600',
-  codex: 'bg-green-600',
-  gemini: 'bg-blue-600',
-  unknown: 'bg-gray-600',
+  claude: 'bg-agent-claude',
+  codex: 'bg-agent-codex',
+  gemini: 'bg-agent-gemini',
+  unknown: 'bg-forensic-text-muted',
 };
 
 export function WorkUnitTimeline({
@@ -99,10 +100,10 @@ export function WorkUnitTimeline({
   };
 
   return (
-    <div className="px-4 py-3 bg-gray-850">
+    <div className="px-4 py-3 bg-forensic-bg-tertiary border-t border-forensic-border">
       {/* Timeline bar */}
       <div
-        className="relative h-8 bg-gray-700 rounded-lg overflow-hidden cursor-pointer"
+        className="relative h-8 bg-forensic-bg-primary border border-forensic-border overflow-hidden cursor-pointer"
         onClick={handleClick}
       >
         {/* Session segments */}
@@ -111,16 +112,18 @@ export function WorkUnitTimeline({
             <div
               key={seg.sessionId}
               className={`relative ${agentColors[seg.agent]} opacity-60 hover:opacity-80 transition-opacity ${
-                seg.sessionId === currentSessionId ? 'ring-2 ring-white ring-inset' : ''
+                seg.sessionId === currentSessionId ? 'ring-2 ring-accent-green ring-inset' : ''
               }`}
               style={{ width: `${seg.widthPercent}%` }}
               title={`Session ${idx + 1} (${seg.agent}) - ${seg.frameCount} frames`}
             >
               {/* Session divider */}
-              {idx > 0 && <div className="absolute left-0 top-0 bottom-0 w-px bg-gray-900" />}
+              {idx > 0 && (
+                <div className="absolute left-0 top-0 bottom-0 w-px bg-forensic-bg-primary" />
+              )}
               {/* Session label */}
               {seg.widthPercent > 5 && (
-                <span className="absolute inset-0 flex items-center justify-center text-xs text-white font-medium">
+                <span className="absolute inset-0 flex items-center justify-center font-mono text-xs text-forensic-bg-primary font-medium">
                   {idx + 1}
                 </span>
               )}
@@ -130,17 +133,17 @@ export function WorkUnitTimeline({
 
         {/* Progress indicator */}
         <div
-          className="absolute top-0 bottom-0 w-1 bg-white shadow-lg"
+          className="absolute top-0 bottom-0 w-0.5 bg-accent-green shadow-[0_0_8px_rgba(34,197,94,0.5)]"
           style={{ left: `${progressPercent}%`, transform: 'translateX(-50%)' }}
         />
       </div>
 
       {/* Frame counter */}
-      <div className="flex items-center justify-between mt-2 text-xs text-gray-500">
-        <span>
-          Frame {currentGlobalFrame + 1} of {totalFrames}
+      <div className="flex items-center justify-between mt-2 font-mono text-xs">
+        <span className="text-forensic-text-muted uppercase tracking-wide">
+          Frame <span className="text-accent-green">{currentGlobalFrame + 1}</span> of {totalFrames}
         </span>
-        <span>
+        <span className="text-forensic-text-muted uppercase tracking-wide">
           {sessions.length} session{sessions.length !== 1 ? 's' : ''}
         </span>
       </div>

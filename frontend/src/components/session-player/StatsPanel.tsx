@@ -6,10 +6,13 @@
  * - Duration breakdown
  * - Tool usage
  * - Compression savings
+ *
+ * Forensic terminal aesthetic
  */
 
 import React from 'react';
 import type { SessionStats } from '../../hooks/useSessionStats';
+import { BarChart2, Clock, Wrench, X } from 'lucide-react';
 
 interface StatsPanelProps {
   stats: SessionStats;
@@ -34,48 +37,50 @@ function formatDuration(ms: number): string {
 }
 
 export const StatsPanel: React.FC<StatsPanelProps> = ({ stats, onClose }) => {
-  const frameTypeLabels: Record<string, { icon: string; label: string; color: string }> = {
-    user_message: { icon: '👤', label: 'User', color: 'text-blue-400' },
-    claude_thinking: { icon: '🧠', label: 'Thinking', color: 'text-purple-400' },
-    claude_response: { icon: '🤖', label: 'Claude', color: 'text-green-400' },
-    tool_execution: { icon: '🛠️', label: 'Tools', color: 'text-orange-400' },
+  const frameTypeLabels: Record<string, { label: string; color: string }> = {
+    user_message: { label: 'USER', color: 'text-accent-cyan' },
+    claude_thinking: { label: 'THINKING', color: 'text-accent-purple' },
+    claude_response: { label: 'RESPONSE', color: 'text-accent-green' },
+    tool_execution: { label: 'TOOL', color: 'text-accent-amber' },
   };
 
   const totalFrames = Object.values(stats.frameCounts).reduce((a, b) => a + b, 0);
 
   return (
-    <div className="bg-gray-800 border-b border-gray-700 px-6 py-4">
+    <div className="bg-forensic-bg-secondary border-b border-forensic-border px-6 py-4">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-semibold text-gray-300 uppercase">Session Statistics</h3>
+          <h3 className="font-mono text-sm text-accent-green uppercase tracking-wide flex items-center gap-2">
+            <BarChart2 className="w-4 h-4" />
+            // Session Statistics
+          </h3>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-white text-lg"
+            className="text-forensic-text-muted hover:text-forensic-text-primary transition-colors"
             title="Close statistics (s)"
           >
-            ×
+            <X className="w-5 h-5" />
           </button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Frame Counts */}
-          <div>
-            <h4 className="text-xs font-semibold text-gray-500 uppercase mb-2">
-              Frames ({totalFrames})
+          <div className="bg-forensic-bg-tertiary border border-forensic-border p-4">
+            <h4 className="font-mono text-xs text-forensic-text-muted uppercase tracking-wide mb-3 flex items-center gap-2">
+              Frames
+              <span className="text-accent-green">({totalFrames})</span>
             </h4>
-            <div className="space-y-1">
+            <div className="space-y-2">
               {Object.entries(stats.frameCounts).map(([type, count]) => {
                 const meta = frameTypeLabels[type];
                 if (!meta) return null;
                 const percentage = totalFrames > 0 ? Math.round((count / totalFrames) * 100) : 0;
                 return (
-                  <div key={type} className="flex items-center justify-between text-sm">
-                    <span className={meta.color}>
-                      {meta.icon} {meta.label}
-                    </span>
-                    <span className="text-gray-400">
-                      {count} <span className="text-gray-500">({percentage}%)</span>
+                  <div key={type} className="flex items-center justify-between font-mono text-sm">
+                    <span className={meta.color}>{meta.label}</span>
+                    <span className="text-forensic-text-secondary">
+                      {count} <span className="text-forensic-text-muted">({percentage}%)</span>
                     </span>
                   </div>
                 );
@@ -84,27 +89,28 @@ export const StatsPanel: React.FC<StatsPanelProps> = ({ stats, onClose }) => {
           </div>
 
           {/* Duration */}
-          <div>
-            <h4 className="text-xs font-semibold text-gray-500 uppercase mb-2">Duration</h4>
-            <div className="space-y-1 text-sm">
+          <div className="bg-forensic-bg-tertiary border border-forensic-border p-4">
+            <h4 className="font-mono text-xs text-forensic-text-muted uppercase tracking-wide mb-3 flex items-center gap-2">
+              <Clock className="w-3 h-3" />
+              Duration
+            </h4>
+            <div className="space-y-2 font-mono text-sm">
               <div className="flex items-center justify-between">
-                <span className="text-gray-300">Total</span>
-                <span className="text-gray-400 font-mono">
-                  {formatDuration(stats.totalDuration)}
-                </span>
+                <span className="text-forensic-text-secondary">Total</span>
+                <span className="text-accent-green">{formatDuration(stats.totalDuration)}</span>
               </div>
               {stats.compressionStats.compressedFrameCount > 0 && (
                 <>
                   <div className="flex items-center justify-between">
-                    <span className="text-amber-400">Time Saved</span>
-                    <span className="text-amber-400 font-mono">
+                    <span className="text-forensic-text-secondary">Time Saved</span>
+                    <span className="text-accent-amber">
                       {formatDuration(stats.compressionStats.timeSaved)}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-500">Compressed Frames</span>
-                    <span className="text-gray-500">
-                      {stats.compressionStats.compressedFrameCount}
+                    <span className="text-forensic-text-muted">Compressed</span>
+                    <span className="text-forensic-text-muted">
+                      {stats.compressionStats.compressedFrameCount} frames
                     </span>
                   </div>
                 </>
@@ -113,22 +119,25 @@ export const StatsPanel: React.FC<StatsPanelProps> = ({ stats, onClose }) => {
           </div>
 
           {/* Top Tools */}
-          <div>
-            <h4 className="text-xs font-semibold text-gray-500 uppercase mb-2">Top Tools</h4>
-            <div className="space-y-1 text-sm">
+          <div className="bg-forensic-bg-tertiary border border-forensic-border p-4">
+            <h4 className="font-mono text-xs text-forensic-text-muted uppercase tracking-wide mb-3 flex items-center gap-2">
+              <Wrench className="w-3 h-3" />
+              Top Tools
+            </h4>
+            <div className="space-y-2 font-mono text-sm">
               {stats.toolUsage.slice(0, 5).map((tool) => (
                 <div key={tool.tool} className="flex items-center justify-between">
-                  <span className="text-orange-400 font-mono">{tool.tool}</span>
-                  <span className="text-gray-400">
+                  <span className="text-accent-amber">{tool.tool}</span>
+                  <span className="text-forensic-text-secondary">
                     {tool.count}
                     {tool.errors > 0 && (
-                      <span className="text-red-400 ml-1">({tool.errors} err)</span>
+                      <span className="text-accent-red ml-1">({tool.errors} err)</span>
                     )}
                   </span>
                 </div>
               ))}
               {stats.toolUsage.length === 0 && (
-                <span className="text-gray-500 italic">No tool executions</span>
+                <span className="text-forensic-text-muted italic">// No tool executions</span>
               )}
             </div>
           </div>

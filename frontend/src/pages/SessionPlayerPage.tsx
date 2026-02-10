@@ -47,7 +47,7 @@ import {
 import { HelpPanel } from '../components/session-player/HelpPanel';
 import { StatsPanel } from '../components/session-player/StatsPanel';
 import { ClaudeMdPanel } from '../components/session-player/ClaudeMdPanel';
-import { ArtifactsPanel } from '../components/session-player/ArtifactsPanel';
+import { ArtifactsSidebar } from '../components/session-player/ArtifactsSidebar';
 import { FiltersPanel } from '../components/session-player/FiltersPanel';
 import { useSessionStats } from '../hooks/useSessionStats';
 import {
@@ -404,10 +404,26 @@ export const SessionPlayerPage: React.FC = () => {
 
   if (loadingDetails || loadingFrames) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gray-950">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="mt-4 text-gray-400">Loading session...</p>
+      <div className="flex items-center justify-center h-screen bg-forensic-bg-primary">
+        <div className="terminal max-w-md w-full mx-4">
+          <div className="terminal-header">
+            <div className="terminal-dot terminal-dot-red"></div>
+            <div className="terminal-dot terminal-dot-amber"></div>
+            <div className="terminal-dot terminal-dot-green"></div>
+          </div>
+          <div className="terminal-body">
+            <div className="flex items-center gap-3 font-mono text-sm">
+              <span className="text-accent-green">$</span>
+              <span className="text-forensic-text-primary">recall --session</span>
+              <div className="cursor-blink"></div>
+            </div>
+            <div className="mt-4 flex items-center gap-3">
+              <div className="animate-spin rounded-full h-4 w-4 border-2 border-accent-green border-t-transparent"></div>
+              <span className="text-forensic-text-secondary font-mono text-sm">
+                Loading session data...
+              </span>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -415,14 +431,17 @@ export const SessionPlayerPage: React.FC = () => {
 
   if (!sessionDetails || frames.length === 0) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gray-950">
-        <div className="text-center">
-          <p className="text-xl text-gray-400">Session not found</p>
+      <div className="flex items-center justify-center h-screen bg-forensic-bg-primary">
+        <div className="evidence-card max-w-md text-center" data-id="ERR-404">
+          <p className="font-mono text-xl text-accent-red mb-4">Session not found</p>
+          <p className="font-mono text-sm text-forensic-text-secondary mb-6">
+            The requested session could not be located in the database.
+          </p>
           <button
             onClick={() => navigate('/')}
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            className="px-6 py-2 bg-accent-green text-forensic-bg-primary font-mono text-sm font-semibold uppercase tracking-wider hover:bg-green-600 transition-colors"
           >
-            Back to Dashboard
+            Return to Dashboard
           </button>
         </div>
       </div>
@@ -430,13 +449,13 @@ export const SessionPlayerPage: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-gray-950 text-gray-100 overflow-hidden">
+    <div className="flex flex-col h-screen bg-forensic-bg-primary text-forensic-text-primary overflow-hidden">
       {/* Header */}
-      <div className="bg-gray-900/50 backdrop-blur-xl border-b border-white/5 px-6 py-4 flex items-center justify-between relative z-20">
+      <div className="bg-forensic-bg-secondary border-b border-forensic-border px-6 py-4 flex items-center justify-between relative z-20">
         <div className="flex items-center gap-6">
           <button
             onClick={() => navigate('/')}
-            className="p-2.5 hover:bg-gray-800 rounded-xl border border-white/5 transition-all text-gray-400 hover:text-white group"
+            className="p-2.5 hover:bg-forensic-bg-tertiary border border-forensic-border transition-all text-forensic-text-muted hover:text-accent-green group"
             title="Back to Dashboard"
           >
             <ChevronLeft className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" />
@@ -444,20 +463,20 @@ export const SessionPlayerPage: React.FC = () => {
 
           <div className="flex flex-col">
             <div className="flex items-center gap-3">
-              <h1 className="text-xl font-black tracking-tight text-white line-clamp-1">
+              <h1 className="font-mono text-xl font-bold text-forensic-text-primary line-clamp-1">
                 {sessionDetails?.slug || 'Loading session...'}
               </h1>
               {sessionDetails && (
-                <div className="flex items-center gap-2 px-2 py-0.5 bg-blue-500/10 text-blue-400 text-[10px] font-black uppercase tracking-widest rounded-full border border-blue-500/20">
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
-                  Session Replay
+                <div className="badge badge-green flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-accent-green animate-pulse" />
+                  Replay
                 </div>
               )}
             </div>
-            <div className="flex items-center gap-2 text-xs text-gray-300 font-mono">
-              <Folder className="w-3 h-3" />
+            <div className="flex items-center gap-2 text-xs text-forensic-text-secondary font-mono">
+              <Folder className="w-3 h-3 text-accent-amber" />
               <span>{sessionDetails?.project.split('/').pop()}</span>
-              <span className="opacity-30">•</span>
+              <span className="text-forensic-text-muted">//</span>
               <Calendar className="w-3 h-3" />
               <span>
                 {sessionDetails && new Date(sessionDetails.startedAt).toLocaleDateString()}
@@ -467,16 +486,16 @@ export const SessionPlayerPage: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-3 mr-4 px-4 py-2 bg-gray-800/50 rounded-2xl border border-white/5">
+          <div className="flex items-center gap-3 mr-4 px-4 py-2 bg-forensic-bg-tertiary border border-forensic-border">
             <div className="flex flex-col items-end">
-              <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">
-                Total Events
+              <span className="text-[10px] font-mono text-forensic-text-muted uppercase tracking-wide">
+                Events
               </span>
-              <span className="text-sm font-bold text-white">{frames.length}</span>
+              <span className="text-sm font-mono font-bold text-accent-green">{frames.length}</span>
             </div>
-            <div className="w-[1px] h-6 bg-gray-700" />
+            <div className="w-[1px] h-6 bg-forensic-border" />
             <div className="flex flex-col items-end">
-              <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">
+              <span className="text-[10px] font-mono text-forensic-text-muted uppercase tracking-wide">
                 Agent
               </span>
               <div className="mt-0.5 flex items-center gap-2">
@@ -497,155 +516,172 @@ export const SessionPlayerPage: React.FC = () => {
                 downloadFile(`${sessionDetails.slug}.md`, markdown);
               }
             }}
-            className="inline-flex items-center gap-2 px-3 py-2.5 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white rounded-xl border border-white/5 transition-all active:scale-95"
+            className="inline-flex items-center gap-2 px-3 py-2 bg-forensic-bg-tertiary hover:bg-forensic-border text-forensic-text-secondary hover:text-forensic-text-primary border border-forensic-border font-mono text-xs uppercase tracking-wide transition-all"
             title="Export session to Markdown"
             aria-label="Export session to Markdown"
           >
-            <Download className="w-5 h-5" />
-            <span className="hidden xl:inline text-xs font-semibold">Export</span>
+            <Download className="w-4 h-4" />
+            <span className="hidden xl:inline">Export</span>
           </button>
 
           <button
             onClick={() => setViewMode(viewMode === 'timeline' ? 'chat' : 'timeline')}
-            className={`inline-flex items-center gap-2 px-3 py-2.5 rounded-xl transition-all border active:scale-95 ${
+            className={`inline-flex items-center gap-2 px-3 py-2 font-mono text-xs uppercase tracking-wide transition-all border ${
               viewMode === 'chat'
-                ? 'bg-purple-600 border-purple-500 text-white'
-                : 'bg-gray-800 border-white/5 text-gray-300 hover:text-white'
+                ? 'bg-accent-purple/20 border-accent-purple/50 text-accent-purple'
+                : 'bg-forensic-bg-tertiary border-forensic-border text-forensic-text-secondary hover:text-forensic-text-primary'
             }`}
             title={`Switch to ${viewMode === 'timeline' ? 'Chat' : 'Timeline'} View`}
-            aria-label={`Switch to ${viewMode === 'timeline' ? 'Chat' : 'Timeline'} View`}
           >
             {viewMode === 'timeline' ? (
-              <MessageSquare className="w-5 h-5" />
+              <MessageSquare className="w-4 h-4" />
             ) : (
-              <Layout className="w-5 h-5" />
+              <Layout className="w-4 h-4" />
             )}
-            <span className="hidden xl:inline text-xs font-semibold">
+            <span className="hidden xl:inline">
               {viewMode === 'timeline' ? 'Chat' : 'Timeline'}
             </span>
           </button>
 
           <button
             onClick={() => setShowClaudeMd(!showClaudeMd)}
-            className={`inline-flex items-center gap-2 px-3 py-2.5 rounded-xl transition-all border active:scale-95 ${
+            className={`inline-flex items-center gap-2 px-3 py-2 font-mono text-xs uppercase tracking-wide transition-all border ${
               showClaudeMd
-                ? 'bg-emerald-600 border-emerald-500 text-white'
+                ? 'bg-accent-cyan/20 border-accent-cyan/50 text-accent-cyan'
                 : sessionDetails?.metadata?.claudeMdFiles?.length
-                  ? 'bg-gray-800 border-white/5 text-gray-300 hover:text-white'
-                  : 'bg-gray-800 border-white/5 text-gray-600 cursor-not-allowed'
+                  ? 'bg-forensic-bg-tertiary border-forensic-border text-forensic-text-secondary hover:text-forensic-text-primary'
+                  : 'bg-forensic-bg-tertiary border-forensic-border text-forensic-text-muted cursor-not-allowed'
             }`}
             title={`Project instructions (d) - ${sessionDetails?.metadata?.claudeMdFiles?.length || 0} CLAUDE.md files`}
             disabled={!sessionDetails?.metadata?.claudeMdFiles?.length}
-            aria-label="Open project instructions"
           >
-            <FileText className="w-5 h-5" />
-            <span className="hidden xl:inline text-xs font-semibold">Instructions</span>
+            <FileText className="w-4 h-4" />
+            <span className="hidden xl:inline">Docs</span>
           </button>
 
           <button
             onClick={() => setShowArtifacts(!showArtifacts)}
-            className={`inline-flex items-center gap-2 px-3 py-2.5 rounded-xl transition-all border active:scale-95 ${
+            className={`inline-flex items-center gap-2 px-3 py-2 font-mono text-xs uppercase tracking-wide transition-all border ${
               showArtifacts
-                ? 'bg-cyan-600 border-cyan-500 text-white'
-                : 'bg-gray-800 border-white/5 text-gray-300 hover:text-white'
+                ? 'bg-accent-amber/20 border-accent-amber/50 text-accent-amber'
+                : 'bg-forensic-bg-tertiary border-forensic-border text-forensic-text-secondary hover:text-forensic-text-primary'
             }`}
             title="File Artifacts (a)"
-            aria-label="Open file artifacts"
           >
-            <FolderOpen className="w-5 h-5" />
-            <span className="hidden xl:inline text-xs font-semibold">Artifacts</span>
+            <FolderOpen className="w-4 h-4" />
+            <span className="hidden xl:inline">Artifacts</span>
           </button>
 
           <button
             onClick={() => setShowFiltersPanel(!showFiltersPanel)}
-            className={`inline-flex items-center gap-2 px-3 py-2.5 rounded-xl transition-all border active:scale-95 ${
+            className={`inline-flex items-center gap-2 px-3 py-2 font-mono text-xs uppercase tracking-wide transition-all border ${
               showFiltersPanel
-                ? 'bg-indigo-600 border-indigo-500 text-white'
+                ? 'bg-accent-green/20 border-accent-green/50 text-accent-green'
                 : activeFrameCount < 4
-                  ? 'bg-indigo-900/50 border-indigo-500/30 text-indigo-300 hover:text-white'
-                  : 'bg-gray-800 border-white/5 text-gray-300 hover:text-white'
+                  ? 'bg-accent-green/10 border-accent-green/30 text-accent-green'
+                  : 'bg-forensic-bg-tertiary border-forensic-border text-forensic-text-secondary hover:text-forensic-text-primary'
             }`}
             title="Frame filters (f)"
-            aria-label="Toggle frame filters"
           >
-            <SlidersHorizontal className="w-5 h-5" />
-            <span className="hidden xl:inline text-xs font-semibold">
-              Filters{activeFrameCount < 4 ? `: ${activeFrameCount}/4` : ''}
+            <SlidersHorizontal className="w-4 h-4" />
+            <span className="hidden xl:inline">
+              Filters{activeFrameCount < 4 ? ` ${activeFrameCount}/4` : ''}
             </span>
           </button>
 
           <button
             onClick={() => setShowStats(!showStats)}
-            className={`inline-flex items-center gap-2 px-3 py-2.5 rounded-xl transition-all border active:scale-95 ${
+            className={`inline-flex items-center gap-2 px-3 py-2 font-mono text-xs uppercase tracking-wide transition-all border ${
               showStats
-                ? 'bg-blue-600 border-blue-500 text-white'
-                : 'bg-gray-800 border-white/5 text-gray-300 hover:text-white'
+                ? 'bg-accent-cyan/20 border-accent-cyan/50 text-accent-cyan'
+                : 'bg-forensic-bg-tertiary border-forensic-border text-forensic-text-secondary hover:text-forensic-text-primary'
             }`}
             title="Toggle statistics panel (s)"
-            aria-label="Toggle statistics panel"
           >
-            <Settings className="w-5 h-5 shadow-lg" />
-            <span className="hidden xl:inline text-xs font-semibold">Stats</span>
+            <Settings className="w-4 h-4" />
+            <span className="hidden xl:inline">Stats</span>
           </button>
         </div>
       </div>
 
-      {/* Main Content Area */}
-      {viewMode === 'chat' ? (
-        <ChatView
-          frames={frames}
-          currentFrameIndex={currentFrameIndex}
-          isPlaying={isPlaying}
-          searchQuery={searchQuery}
-          activeFrameTypes={activeFrameTypes}
-        />
-      ) : (
-        <div className="flex-1 overflow-y-auto px-6 py-8">
-          <div className="max-w-4xl mx-auto">
-            {/* Dead air compression indicator */}
-            {currentFrame?.isCompressed && compressionEnabled && (
-              <div className="mb-4 px-4 py-2 bg-amber-900/50 border border-amber-700 rounded-lg flex items-center gap-2 text-amber-300 text-sm">
-                <Zap className="w-4 h-4 fill-current" />
-                <span>
-                  Compressed Gap: {Math.round((currentFrame.originalDuration || 0) / 1000)}s
-                </span>
-                <span className="text-amber-500">→</span>
-                <span>{Math.round((currentFrame.duration || 0) / 1000)}s</span>
-              </div>
-            )}
-
-            {currentFrame && isFrameVisible(currentFrame) ? (
-              <FrameRenderer frame={currentFrame} searchQuery={searchQuery} />
-            ) : (
-              currentFrame && (
-                <div className="text-center py-24 text-gray-600">
-                  <div className="w-16 h-16 bg-gray-900 rounded-full flex items-center justify-center mx-auto mb-4 border border-white/5">
-                    <SearchIcon className="w-8 h-8 opacity-20" />
-                  </div>
-                  <p className="font-bold uppercase tracking-widest text-[10px]">Frame Filtered</p>
-                  <p className="text-sm mt-1 opacity-50">
-                    Enable "{currentFrame.type.replace('_', ' ')}" to view this part of the session.
-                  </p>
+      {/* Main Content Area with optional sidebar */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Content */}
+        {viewMode === 'chat' ? (
+          <ChatView
+            frames={frames}
+            currentFrameIndex={currentFrameIndex}
+            isPlaying={isPlaying}
+            searchQuery={searchQuery}
+            activeFrameTypes={activeFrameTypes}
+          />
+        ) : (
+          <div className="flex-1 overflow-y-auto px-6 py-8">
+            <div
+              className={`mx-auto transition-all duration-200 ${showArtifacts ? 'max-w-3xl' : 'max-w-4xl'}`}
+            >
+              {/* Dead air compression indicator */}
+              {currentFrame?.isCompressed && compressionEnabled && (
+                <div className="mb-4 px-4 py-2 bg-accent-amber/10 border border-accent-amber/30 flex items-center gap-2 text-accent-amber font-mono text-sm">
+                  <Zap className="w-4 h-4 fill-current" />
+                  <span>
+                    Compressed: {Math.round((currentFrame.originalDuration || 0) / 1000)}s
+                  </span>
+                  <span className="text-forensic-text-muted">&gt;</span>
+                  <span>{Math.round((currentFrame.duration || 0) / 1000)}s</span>
                 </div>
-              )
-            )}
+              )}
+
+              {currentFrame && isFrameVisible(currentFrame) ? (
+                <FrameRenderer frame={currentFrame} searchQuery={searchQuery} />
+              ) : (
+                currentFrame && (
+                  <div className="text-center py-24">
+                    <div className="w-16 h-16 bg-forensic-bg-secondary flex items-center justify-center mx-auto mb-4 border border-forensic-border">
+                      <SearchIcon className="w-8 h-8 text-forensic-text-muted" />
+                    </div>
+                    <p className="font-mono uppercase tracking-wide text-xs text-forensic-text-muted">
+                      Frame Filtered
+                    </p>
+                    <p className="font-mono text-sm mt-2 text-forensic-text-secondary">
+                      Enable "{currentFrame.type.replace('_', ' ')}" to view this frame.
+                    </p>
+                  </div>
+                )
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {/* Artifacts Sidebar */}
+        {showArtifacts && (
+          <ArtifactsSidebar
+            frames={frames}
+            currentFrameIndex={currentFrameIndex}
+            viewMode={artifactViewMode}
+            onViewModeChange={setArtifactViewMode}
+            onClose={() => setShowArtifacts(false)}
+            onNavigateToFrame={handleFrameChange}
+            onExpandToFullPage={() => {
+              navigate(`/session/${sessionId}/artifacts`);
+            }}
+          />
+        )}
+      </div>
 
       {/* Footer Area: Scrubber + Controls */}
-      <div className="relative z-30 border-t border-white/5 bg-gray-900/55 px-6 py-4">
+      <div className="relative z-30 border-t border-forensic-border bg-forensic-bg-secondary px-6 py-4">
         <div className="mx-auto max-w-6xl">
           <div className="min-w-0">
-            <div className="mb-2 flex items-center justify-between text-xs text-gray-300">
+            <div className="mb-2 flex items-center justify-between font-mono text-xs text-forensic-text-secondary">
               <span>
                 {searchQuery.trim().length > 0
                   ? searchMatches.length > 0
-                    ? `Search: ${searchMatches.length} matches`
-                    : 'Search: no matches'
-                  : 'Search: off'}
+                    ? `// Search: ${searchMatches.length} matches`
+                    : '// Search: no matches'
+                  : '// Search: off'}
               </span>
-              <span>Filters: {activeFrameCount}/4 active</span>
+              <span>// Filters: {activeFrameCount}/4 active</span>
             </div>
 
             <TimelineScrubber
@@ -659,7 +695,7 @@ export const SessionPlayerPage: React.FC = () => {
             />
 
             {/* Playback Controls Bar */}
-            <div className="bg-gray-900/60 backdrop-blur-md border-t border-white/5 px-6 py-6 transition-all duration-300">
+            <div className="bg-forensic-bg-tertiary border-t border-forensic-border px-6 py-5 transition-all duration-300">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <button
@@ -673,7 +709,7 @@ export const SessionPlayerPage: React.FC = () => {
                       handleFrameChange(prevFrame);
                       setIsPlaying(false);
                     }}
-                    className="p-2.5 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white rounded-xl border border-white/5 transition-all disabled:opacity-20 active:scale-95"
+                    className="p-2.5 bg-forensic-bg-secondary hover:bg-forensic-border text-forensic-text-muted hover:text-forensic-text-primary border border-forensic-border transition-all disabled:opacity-20"
                     disabled={currentFrameIndex === 0}
                     title="Previous Frame (Left Arrow)"
                   >
@@ -682,10 +718,10 @@ export const SessionPlayerPage: React.FC = () => {
 
                   <button
                     onClick={() => setIsPlaying(!isPlaying)}
-                    className={`px-8 py-2.5 rounded-2xl font-black uppercase tracking-widest text-sm flex items-center gap-3 transition-all active:scale-95 shadow-lg ${
+                    className={`px-6 py-2.5 font-mono font-semibold uppercase tracking-wider text-sm flex items-center gap-3 transition-all ${
                       isPlaying
-                        ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-amber-500/20'
-                        : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/20'
+                        ? 'bg-accent-amber text-forensic-bg-primary hover:bg-amber-600'
+                        : 'bg-accent-green text-forensic-bg-primary hover:bg-green-600'
                     }`}
                   >
                     {isPlaying ? (
@@ -696,12 +732,8 @@ export const SessionPlayerPage: React.FC = () => {
                     {isPlaying ? 'Pause' : 'Play'}
                   </button>
 
-                  <div className="ml-2 text-xs text-gray-300">
-                    {isPlaying
-                      ? `Playing at ${playbackSpeed}x`
-                      : isEndOfSession
-                        ? 'End reached'
-                        : 'Paused'}
+                  <div className="ml-2 font-mono text-xs text-forensic-text-secondary">
+                    {isPlaying ? `// ${playbackSpeed}x` : isEndOfSession ? '// End' : '// Paused'}
                   </div>
 
                   <button
@@ -715,7 +747,7 @@ export const SessionPlayerPage: React.FC = () => {
                       handleFrameChange(nextFrame);
                       setIsPlaying(false);
                     }}
-                    className="p-2.5 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white rounded-xl border border-white/5 transition-all disabled:opacity-20 active:scale-95"
+                    className="p-2.5 bg-forensic-bg-secondary hover:bg-forensic-border text-forensic-text-muted hover:text-forensic-text-primary border border-forensic-border transition-all disabled:opacity-20"
                     disabled={currentFrameIndex >= frames.length - 1}
                     title="Next Frame (Right Arrow)"
                   >
@@ -725,13 +757,13 @@ export const SessionPlayerPage: React.FC = () => {
                   </button>
                 </div>
 
-                <div className="flex items-center gap-6">
+                <div className="flex items-center gap-4">
                   <label className="flex items-center gap-3 cursor-pointer group select-none">
                     <div
-                      className={`w-10 h-6 rounded-full p-1 transition-all duration-300 ${showCommentary ? 'bg-blue-600' : 'bg-gray-700'}`}
+                      className={`w-10 h-5 p-0.5 transition-all duration-300 border ${showCommentary ? 'bg-accent-green/20 border-accent-green' : 'bg-forensic-bg-secondary border-forensic-border'}`}
                     >
                       <div
-                        className={`w-4 h-4 bg-white rounded-full transition-transform duration-300 ${showCommentary ? 'translate-x-4' : ''}`}
+                        className={`w-4 h-4 transition-transform duration-300 ${showCommentary ? 'translate-x-5 bg-accent-green' : 'bg-forensic-text-muted'}`}
                       />
                     </div>
                     <input
@@ -740,18 +772,18 @@ export const SessionPlayerPage: React.FC = () => {
                       onChange={(e) => setShowCommentary(e.target.checked)}
                       className="hidden"
                     />
-                    <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-white transition-colors">
+                    <span className="font-mono text-[10px] uppercase tracking-wide text-forensic-text-muted group-hover:text-forensic-text-primary transition-colors">
                       Commentary
                     </span>
                   </label>
 
-                  <div className="flex items-center gap-2 bg-gray-800/80 rounded-2xl p-1.5 border border-white/5">
+                  <div className="flex items-center gap-1 bg-forensic-bg-secondary p-1 border border-forensic-border">
                     <button
                       onClick={() => setCompressionEnabled(!compressionEnabled)}
-                      className={`p-2 rounded-xl transition-all ${
+                      className={`p-2 transition-all ${
                         compressionEnabled
-                          ? 'bg-amber-500/10 text-amber-500'
-                          : 'text-gray-500 hover:text-gray-300'
+                          ? 'bg-accent-amber/20 text-accent-amber'
+                          : 'text-forensic-text-muted hover:text-forensic-text-secondary'
                       }`}
                       title={
                         compressionEnabled
@@ -762,17 +794,17 @@ export const SessionPlayerPage: React.FC = () => {
                       <Zap className={`w-4 h-4 ${compressionEnabled ? 'fill-current' : ''}`} />
                     </button>
 
-                    <div className="w-[1px] h-4 bg-gray-700 mx-1" />
+                    <div className="w-[1px] h-4 bg-forensic-border mx-1" />
 
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center">
                       {[0.5, 1, 2, 5].map((speed) => (
                         <button
                           key={speed}
                           onClick={() => setPlaybackSpeed(speed)}
-                          className={`px-2.5 py-1 text-[10px] font-black rounded-lg transition-all ${
+                          className={`px-2 py-1 font-mono text-[10px] transition-all ${
                             playbackSpeed === speed
-                              ? 'bg-blue-600 text-white'
-                              : 'text-gray-500 hover:text-gray-300'
+                              ? 'bg-accent-green text-forensic-bg-primary font-semibold'
+                              : 'text-forensic-text-muted hover:text-forensic-text-secondary'
                           }`}
                         >
                           {speed}x
@@ -780,11 +812,11 @@ export const SessionPlayerPage: React.FC = () => {
                       ))}
                     </div>
 
-                    <div className="w-[1px] h-4 bg-gray-700 mx-1" />
+                    <div className="w-[1px] h-4 bg-forensic-border mx-1" />
 
                     <button
                       onClick={() => setShowHelp(true)}
-                      className="p-2 text-gray-500 hover:text-gray-300 rounded-xl transition-all"
+                      className="p-2 text-forensic-text-muted hover:text-accent-green transition-all"
                       title="Keyboard shortcuts (?)"
                     >
                       <Info className="w-4 h-4" />
@@ -810,19 +842,6 @@ export const SessionPlayerPage: React.FC = () => {
         <ClaudeMdPanel
           claudeMdFiles={sessionDetails?.metadata?.claudeMdFiles || []}
           onClose={() => setShowClaudeMd(false)}
-        />
-      )}
-      {showArtifacts && (
-        <ArtifactsPanel
-          frames={frames}
-          currentFrameIndex={currentFrameIndex}
-          viewMode={artifactViewMode}
-          onViewModeChange={setArtifactViewMode}
-          onClose={() => setShowArtifacts(false)}
-          onNavigateToFrame={(index) => {
-            handleFrameChange(index);
-            setShowArtifacts(false);
-          }}
         />
       )}
       {showFiltersPanel && (
@@ -900,8 +919,8 @@ const ToolOutputBlock: React.FC<{
 
   if (!output || output.trim() === '') {
     return (
-      <div className="bg-gray-950 rounded p-4 font-mono text-sm border border-gray-800">
-        <div className="text-gray-500 italic text-center">(no output)</div>
+      <div className="bg-forensic-bg-primary p-4 font-mono text-sm border border-forensic-border">
+        <div className="text-forensic-text-muted italic text-center">// no output</div>
       </div>
     );
   }
@@ -962,15 +981,15 @@ const ToolOutputBlock: React.FC<{
         {outputLines.length > SOFT_LIMIT && (
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="px-3 py-1 text-xs bg-blue-900/40 hover:bg-blue-800/60 text-blue-300 rounded border border-blue-700/50 transition-colors"
+            className="px-3 py-1 font-mono text-xs bg-accent-cyan/10 hover:bg-accent-cyan/20 text-accent-cyan border border-accent-cyan/30 transition-colors"
           >
-            {isExpanded ? 'Collapse' : `Show All (${outputLines.length} lines)`}
+            {isExpanded ? 'Collapse' : `Expand (${outputLines.length} lines)`}
           </button>
         )}
         {isJson && !isError && (
           <button
             onClick={() => setIsFormatted(!isFormatted)}
-            className="px-3 py-1 text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 rounded border border-gray-700 transition-colors"
+            className="px-3 py-1 font-mono text-xs bg-forensic-bg-tertiary hover:bg-forensic-border text-forensic-text-secondary border border-forensic-border transition-colors"
           >
             {isFormatted ? 'Raw' : 'Format'}
           </button>
@@ -985,32 +1004,31 @@ const ToolOutputBlock: React.FC<{
         />
       ) : (
         <div
-          className={`bg-gray-950 rounded p-4 font-mono text-sm overflow-x-auto border ${isError ? 'border-red-800' : 'border-gray-800'}`}
+          className={`bg-forensic-bg-primary p-4 font-mono text-sm overflow-x-auto border ${isError ? 'border-accent-red/50' : 'border-forensic-border'}`}
           style={{ maxHeight: isExpanded ? 'none' : '500px' }}
         >
-          <pre className={`whitespace-pre-wrap ${isError ? 'text-red-400' : 'text-gray-300'}`}>
+          <pre
+            className={`whitespace-pre-wrap ${isError ? 'text-accent-red' : 'text-forensic-text-secondary'}`}
+          >
             {displayOutput}
           </pre>
         </div>
       )}
       {(needsTruncation || truncatedFilePath) && (
-        <div className="mt-2 px-3 py-2 bg-gray-900 border border-gray-800 rounded text-xs">
+        <div className="mt-2 px-3 py-2 bg-forensic-bg-tertiary border border-forensic-border font-mono text-xs">
           {truncatedFilePath ? (
-            <div className="text-gray-400">
-              <span className="text-yellow-500 font-bold">
-                ⚠ Session data truncated by AI safely.
-              </span>{' '}
-              Full output at:
-              <code className="ml-2 text-gray-300">{truncatedFilePath}</code>
+            <div className="text-forensic-text-secondary">
+              <span className="text-accent-amber">// Truncated by agent</span> Full output:
+              <code className="ml-2 text-accent-green">{truncatedFilePath}</code>
             </div>
           ) : (
-            <div className="text-gray-500 text-center">
-              Showing first {SOFT_LIMIT} lines of {outputLines.length}.{' '}
+            <div className="text-forensic-text-muted text-center">
+              Showing {SOFT_LIMIT} / {outputLines.length} lines{' '}
               <button
                 onClick={() => setIsExpanded(true)}
-                className="text-blue-500 hover:underline font-bold"
+                className="text-accent-green hover:underline"
               >
-                Expand
+                [expand]
               </button>
             </div>
           )}
@@ -1025,70 +1043,79 @@ const FrameRenderer: React.FC<{ frame: PlaybackFrame; searchQuery?: string }> = 
   searchQuery = '',
 }) => {
   const frameTypeColors = {
-    user_message: 'bg-blue-950/40 border-blue-500/20 shadow-[0_0_20px_rgba(59,130,246,0.1)]',
-    claude_thinking: 'bg-purple-950/40 border-purple-500/20 shadow-[0_0_20px_rgba(168,85,247,0.1)]',
-    claude_response: 'bg-green-950/40 border-green-500/20 shadow-[0_0_20px_rgba(34,197,94,0.1)]',
-    tool_execution: 'bg-orange-950/40 border-orange-500/20 shadow-[0_0_20px_rgba(249,115,22,0.1)]',
+    user_message: 'bg-accent-cyan/5 border-accent-cyan/30',
+    claude_thinking: 'bg-accent-purple/5 border-accent-purple/30',
+    claude_response: 'bg-accent-green/5 border-accent-green/30',
+    tool_execution: 'bg-accent-amber/5 border-accent-amber/30',
   };
 
   const agentName = frame.agent ? frame.agent.charAt(0).toUpperCase() + frame.agent.slice(1) : 'AI';
 
   const frameTypeIcons = {
-    user_message: <Hash className="w-4 h-4 text-blue-400" />,
-    claude_thinking: <Zap className="w-4 h-4 text-purple-400" />,
-    claude_response: <Zap className="w-4 h-4 text-green-400" />,
-    tool_execution: <Settings className="w-4 h-4 text-orange-400" />,
+    user_message: <Hash className="w-4 h-4 text-accent-cyan" />,
+    claude_thinking: <Zap className="w-4 h-4 text-accent-purple" />,
+    claude_response: <Zap className="w-4 h-4 text-accent-green" />,
+    tool_execution: <Settings className="w-4 h-4 text-accent-amber" />,
   };
 
   const frameTypeLabels = {
-    user_message: 'User Message',
-    claude_thinking: `${agentName} Thinking`,
-    claude_response: agentName,
-    tool_execution: 'Tool Execution',
+    user_message: 'USER MESSAGE',
+    claude_thinking: `${agentName.toUpperCase()} THINKING`,
+    claude_response: `${agentName.toUpperCase()} RESPONSE`,
+    tool_execution: 'TOOL EXECUTION',
+  };
+
+  const frameTypeAccent = {
+    user_message: 'text-accent-cyan',
+    claude_thinking: 'text-accent-purple',
+    claude_response: 'text-accent-green',
+    tool_execution: 'text-accent-amber',
   };
 
   return (
     <div
-      className={`border rounded-2xl p-8 mb-6 transition-all duration-500 ${frameTypeColors[frame.type] || 'bg-gray-900 border-white/5'}`}
+      className={`border p-6 mb-6 transition-all duration-300 ${frameTypeColors[frame.type] || 'bg-forensic-bg-secondary border-forensic-border'}`}
     >
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-white/5 rounded-lg border border-white/10">
+          <div className="p-2 bg-forensic-bg-tertiary border border-forensic-border">
             {frameTypeIcons[frame.type]}
           </div>
           <div>
-            <span className="text-xs font-black uppercase tracking-widest text-gray-500 block mb-0.5">
+            <span className="font-mono text-[10px] uppercase tracking-wide text-forensic-text-muted block mb-0.5">
               Event Type
             </span>
-            <span className="text-sm font-bold text-white">{frameTypeLabels[frame.type]}</span>
+            <span className={`font-mono text-sm font-semibold ${frameTypeAccent[frame.type]}`}>
+              {frameTypeLabels[frame.type]}
+            </span>
           </div>
         </div>
         <div className="text-right">
-          <span className="text-xs font-black uppercase tracking-widest text-gray-500 block mb-0.5">
+          <span className="font-mono text-[10px] uppercase tracking-wide text-forensic-text-muted block mb-0.5">
             Timestamp
           </span>
-          <span className="text-sm font-mono text-gray-400">
+          <span className="font-mono text-sm text-forensic-text-secondary">
             {new Date(frame.timestamp).toLocaleTimeString()}
           </span>
         </div>
       </div>
 
       {frame.userMessage && (
-        <div className="bg-gray-900/50 rounded-xl p-6 border border-white/5 prose prose-invert prose-blue max-w-none">
+        <div className="bg-forensic-bg-primary p-5 border border-forensic-border border-l-4 border-l-accent-cyan prose prose-invert prose-sm max-w-none">
           <ReactMarkdown>{frame.userMessage.text}</ReactMarkdown>
         </div>
       )}
 
       {frame.thinking && (
-        <div className="bg-gray-900/50 rounded-xl p-6 border border-white/5 border-l-purple-500/50 border-l-4 prose prose-invert prose-purple max-w-none">
-          <div className="text-sm leading-relaxed text-gray-400 italic font-mono">
+        <div className="bg-forensic-bg-primary p-5 border border-forensic-border border-l-4 border-l-accent-purple prose prose-invert prose-sm max-w-none">
+          <div className="text-sm leading-relaxed text-forensic-text-secondary italic font-mono">
             <ReactMarkdown>{frame.thinking.text}</ReactMarkdown>
           </div>
         </div>
       )}
 
       {frame.claudeResponse && (
-        <div className="bg-gray-900/50 rounded-xl p-6 border border-white/5 border-l-green-500/50 border-l-4 prose prose-invert prose-green max-w-none">
+        <div className="bg-forensic-bg-primary p-5 border border-forensic-border border-l-4 border-l-accent-green prose prose-invert prose-sm max-w-none">
           <ReactMarkdown>{frame.claudeResponse.text}</ReactMarkdown>
         </div>
       )}
@@ -1096,11 +1123,11 @@ const FrameRenderer: React.FC<{ frame: PlaybackFrame; searchQuery?: string }> = 
       {frame.toolExecution && (
         <div className="space-y-4">
           <div className="flex items-center gap-2">
-            <div className="px-3 py-1 bg-orange-500/10 text-orange-400 text-xs font-black uppercase tracking-widest rounded-lg border border-orange-500/20">
+            <div className="px-3 py-1 bg-accent-amber/10 text-accent-amber font-mono text-xs uppercase tracking-wide border border-accent-amber/30">
               Tool: {frame.toolExecution.tool}
             </div>
             {frame.toolExecution.output.isError && (
-              <div className="px-3 py-1 bg-red-500/10 text-red-400 text-xs font-black uppercase tracking-widest rounded-lg border border-red-500/20">
+              <div className="px-3 py-1 bg-accent-red/10 text-accent-red font-mono text-xs uppercase tracking-wide border border-accent-red/30">
                 Failed
               </div>
             )}
@@ -1108,8 +1135,8 @@ const FrameRenderer: React.FC<{ frame: PlaybackFrame; searchQuery?: string }> = 
 
           {frame.toolExecution.input && (
             <div className="space-y-2">
-              <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">
-                Input Parameters
+              <span className="font-mono text-[10px] uppercase tracking-wide text-forensic-text-muted">
+                // Input Parameters
               </span>
               <CodeBlock
                 code={JSON.stringify(frame.toolExecution.input, null, 2)}
@@ -1120,8 +1147,8 @@ const FrameRenderer: React.FC<{ frame: PlaybackFrame; searchQuery?: string }> = 
           )}
 
           <div className="space-y-2">
-            <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">
-              Output Result
+            <span className="font-mono text-[10px] uppercase tracking-wide text-forensic-text-muted">
+              // Output Result
             </span>
             <ToolOutputBlock
               tool={frame.toolExecution.tool}

@@ -14,12 +14,12 @@ interface ModelBadgeProps {
  * Format raw model string into human-readable display name
  *
  * Examples:
- * - "claude-opus-4-5-20251101" → "Opus 4.5"
- * - "claude-haiku-4-5-20251001" → "Haiku 4.5"
- * - "claude-sonnet-4-20250514" → "Sonnet 4"
- * - "o1" → "O1"
- * - "gpt-4o" → "GPT-4"
- * - "gemini-2.0-flash" → "Gemini 2.0 Flash"
+ * - "claude-opus-4-5-20251101" -> "Opus 4.5"
+ * - "claude-haiku-4-5-20251001" -> "Haiku 4.5"
+ * - "claude-sonnet-4-20250514" -> "Sonnet 4"
+ * - "o1" -> "O1"
+ * - "gpt-4o" -> "GPT-4"
+ * - "gemini-2.0-flash" -> "Gemini 2.0 Flash"
  */
 export function formatModelName(model: string | undefined): string | null {
   if (!model) return null;
@@ -61,11 +61,11 @@ export function ModelBadge({ model, size = 'sm' }: ModelBadgeProps) {
   const displayName = formatModelName(model);
   if (!displayName) return null;
 
-  const sizeClass = size === 'sm' ? 'px-2 py-0.5 text-xs' : 'px-3 py-1 text-sm';
+  const sizeClass = size === 'sm' ? 'px-2 py-0.5 text-[10px]' : 'px-3 py-1 text-xs';
 
   return (
     <span
-      className={`bg-gray-700/50 text-gray-300 ${sizeClass} rounded font-mono border border-gray-600/30`}
+      className={`bg-forensic-bg-tertiary text-forensic-text-secondary ${sizeClass} font-mono border border-forensic-border`}
     >
       {displayName}
     </span>

@@ -2,6 +2,7 @@
  * TimelineScrubber Component
  *
  * Interactive timeline with click-to-seek, hover preview, and frame type markers
+ * Forensic theme styling
  */
 
 import React, { useState, useRef, useMemo } from 'react';
@@ -10,17 +11,17 @@ import { CommentaryTimeline } from '../CommentaryBubble';
 import { Hash } from 'lucide-react';
 
 const FRAME_TYPE_COLOR_MAP: Record<string, string> = {
-  user_message: 'bg-blue-500',
-  claude_thinking: 'bg-purple-500',
-  claude_response: 'bg-green-500',
-  tool_execution: 'bg-orange-500',
+  user_message: 'bg-accent-cyan',
+  claude_thinking: 'bg-accent-purple',
+  claude_response: 'bg-accent-green',
+  tool_execution: 'bg-accent-amber',
 };
 
 const FRAME_TYPE_LABELS: Record<string, string> = {
-  user_message: '👤 User',
-  claude_thinking: '🧠 Thinking',
-  claude_response: '🤖 Response',
-  tool_execution: '🛠️ Tool',
+  user_message: 'USER',
+  claude_thinking: 'THINKING',
+  claude_response: 'RESPONSE',
+  tool_execution: 'TOOL',
 };
 
 interface TimelineScrubberProps {
@@ -104,15 +105,15 @@ export const TimelineScrubber: React.FC<TimelineScrubberProps> = ({
         if (!activeFrameTypes.has(frame.type)) return null;
         if (isFrameVisible && !isFrameVisible(frame)) return null;
         const position = frames.length > 1 ? (idx / (frames.length - 1)) * 100 : 0;
-        const color = FRAME_TYPE_COLOR_MAP[frame.type] || 'bg-gray-500';
+        const color = FRAME_TYPE_COLOR_MAP[frame.type] || 'bg-forensic-text-muted';
 
         return (
           <div
             key={frame.id}
-            className={`absolute w-0.5 h-8 ${color} opacity-40`}
+            className={`absolute w-0.5 h-6 ${color} opacity-40`}
             style={{
               left: `${position}%`,
-              top: '-4px',
+              top: '-2px',
             }}
           />
         );
@@ -121,18 +122,18 @@ export const TimelineScrubber: React.FC<TimelineScrubberProps> = ({
   );
 
   return (
-    <div className="bg-gray-900/40 backdrop-blur-xl border-t border-white/5 px-6 py-4">
+    <div className="bg-forensic-bg-secondary border-t border-forensic-border px-6 py-4">
       <div className="max-w-6xl mx-auto">
-        <div className="flex items-center justify-between mb-3 text-[10px] font-black uppercase tracking-[0.2em] text-gray-300">
-          <div className="flex items-center gap-4">
-            <span className="text-blue-400">{formatTimestamp(currentTimestampMs)}</span>
-            <span className="text-gray-700">/</span>
-            <span className="text-gray-300">{formatTimestamp(totalDurationMs)}</span>
+        <div className="flex items-center justify-between mb-3 font-mono text-xs uppercase tracking-wide">
+          <div className="flex items-center gap-3">
+            <span className="text-accent-green">{formatTimestamp(currentTimestampMs)}</span>
+            <span className="text-forensic-text-muted">/</span>
+            <span className="text-forensic-text-secondary">{formatTimestamp(totalDurationMs)}</span>
           </div>
-          <div className="flex items-center gap-1.5 bg-gray-800/50 px-2 py-1 rounded border border-white/5">
+          <div className="flex items-center gap-1.5 text-forensic-text-muted">
             <Hash className="w-3 h-3" />
             <span>
-              Frame {currentFrameIndex + 1} of {frames.length}
+              {currentFrameIndex + 1} / {frames.length}
             </span>
           </div>
         </div>
@@ -149,7 +150,7 @@ export const TimelineScrubber: React.FC<TimelineScrubberProps> = ({
             aria-valuenow={currentFrameIndex}
             aria-valuetext={`Frame ${currentFrameIndex + 1} of ${frames.length}`}
             tabIndex={0}
-            className="relative h-4 bg-gray-800/80 rounded-full cursor-pointer overflow-hidden backdrop-blur-sm border border-white/5"
+            className="relative h-3 bg-forensic-bg-tertiary cursor-pointer overflow-hidden border border-forensic-border"
             onClick={handleTimelineClick}
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
@@ -161,7 +162,7 @@ export const TimelineScrubber: React.FC<TimelineScrubberProps> = ({
           >
             {/* Progress Fill */}
             <div
-              className="absolute top-0 left-0 h-full bg-gradient-to-r from-blue-600 to-blue-500 rounded-full transition-all"
+              className="absolute top-0 left-0 h-full bg-accent-green transition-all"
               style={{ width: `${progress}%` }}
             />
 
@@ -172,7 +173,7 @@ export const TimelineScrubber: React.FC<TimelineScrubberProps> = ({
 
             {/* Current Position Handle */}
             <div
-              className="absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-white rounded-full border-2 border-blue-600 shadow-lg transition-all"
+              className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-accent-green border-2 border-forensic-bg-primary shadow-lg transition-all"
               style={{
                 left: `${progress}%`,
                 transform: 'translate(-50%, -50%)',
@@ -193,32 +194,26 @@ export const TimelineScrubber: React.FC<TimelineScrubberProps> = ({
           {/* Hover Preview Tooltip */}
           {hoverInfo && timelineRef.current && (
             <div
-              className="absolute bg-gray-900 px-3 py-2 rounded shadow-lg text-xs z-10 pointer-events-none border border-gray-700"
+              className="absolute bg-forensic-bg-secondary border border-forensic-border px-3 py-2 z-10 pointer-events-none font-mono"
               style={{
                 left: `${hoverInfo.x}px`,
-                top: '-4rem',
+                top: '-5rem',
                 transform: 'translateX(-50%)',
               }}
             >
-              <div className="text-white font-bold mb-1 border-b border-gray-700 pb-1">
+              <div className="text-accent-green text-xs mb-1 border-b border-forensic-border pb-1">
                 Frame {hoverInfo.frameIndex + 1}
               </div>
-              <div className="flex items-center gap-1.5 mb-2 truncate">
-                <span className="text-lg">
-                  {FRAME_TYPE_LABELS[frames[hoverInfo.frameIndex]?.type]?.split(' ')[0] || '❓'}
-                </span>
-                <span className="text-gray-300 font-medium">
-                  {FRAME_TYPE_LABELS[frames[hoverInfo.frameIndex]?.type]?.split(' ')[1] ||
-                    'Unknown'}
-                </span>
+              <div className="text-[10px] text-forensic-text-secondary uppercase tracking-wide mb-2">
+                {FRAME_TYPE_LABELS[frames[hoverInfo.frameIndex]?.type] || 'Unknown'}
               </div>
-              <div className="text-[10px] text-gray-400 bg-gray-950/50 p-1.5 rounded leading-tight max-w-[200px] line-clamp-3 italic">
+              <div className="text-[10px] text-forensic-text-muted max-w-[200px] line-clamp-2 leading-tight">
                 {frames[hoverInfo.frameIndex]?.userMessage?.text ||
                   frames[hoverInfo.frameIndex]?.claudeResponse?.text ||
                   frames[hoverInfo.frameIndex]?.thinking?.text ||
                   (frames[hoverInfo.frameIndex]?.toolExecution
                     ? `Tool: ${frames[hoverInfo.frameIndex]?.toolExecution?.tool}`
-                    : 'No preview available')}
+                    : 'No preview')}
               </div>
             </div>
           )}

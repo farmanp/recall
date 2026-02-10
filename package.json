@@ -1,7 +1,7 @@
 {
   "name": "recall-player",
-  "version": "1.7.0",
-  "description": "Replay AI coding sessions like a video player - supports Claude Code, Codex CLI, and Gemini CLI",
+  "version": "1.8.0",
+  "description": "Replay AI coding sessions like a video player. Watch how features were built, review decisions, and debug problems. Supports Claude Code, Codex CLI, and Gemini CLI. Local-first with powerful search, frame filtering, and work unit tracking.",
   "workspaces": [
     "backend",
     "frontend"
@@ -37,14 +37,24 @@
     "backend/package.json"
   ],
   "keywords": [
+    "ai",
+    "assistant",
     "claude",
+    "claude-code",
     "codex",
     "gemini",
-    "ai",
     "coding",
     "replay",
+    "playback",
     "session",
-    "video-player"
+    "video-player",
+    "developer-tools",
+    "debugging",
+    "code-review",
+    "local-first",
+    "session-replay",
+    "ai-coding",
+    "code-history"
   ],
   "author": "Farman",
   "license": "MIT",

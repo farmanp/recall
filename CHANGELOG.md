@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.0] - 2026-02-09
+
+### Added
+
+- **Artifacts Split-Pane Sidebar**: Press `a` to open artifacts as a side-by-side panel while watching playback (replaces modal overlay)
+- **Artifacts Full-Page View**: Click expand icon or navigate to `/session/:id/artifacts` for dedicated full-width artifact analysis workspace
+- **Forensic Terminal Theme**: Complete UI redesign with dark terminal aesthetic, scan lines, and evidence-card styling
+- **Progressive Disclosure UX**: Quick glance in sidebar → expand file rows → full-page analysis
+
+### Changed
+
+- **Layout Architecture**: Session player now uses horizontal split layout when artifacts sidebar is open
+- **Main Content Adapts**: Content area smoothly resizes when sidebar opens/closes
+- **Frame Navigation**: Clicking file operations in sidebar navigates to frame without closing sidebar
+- **Route Structure**: Added `/session/:sessionId/artifacts` route for full-page artifacts view
+
 ## [1.7.0] - 2026-02-09
 
 ### Added
