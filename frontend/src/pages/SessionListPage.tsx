@@ -492,6 +492,7 @@ const SessionCard: React.FC<SessionCardProps> = ({ session, index, onClick }) =>
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.03 }}
       onClick={onClick}
+      data-testid="session-card"
       className="group cursor-pointer bg-forensic-bg-secondary border border-forensic-border hover:border-accent-green/50 transition-all overflow-hidden"
     >
       {/* Terminal Header */}
