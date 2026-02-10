@@ -51,11 +51,6 @@ _Replay sessions frame-by-frame with timeline scrubber, playback controls, and s
 ![Chat View](docs/assets/chat-view.png)
 _Toggle between technical view and conversational chat view for easier reading_
 
-### Work Units
-
-![Work Units](docs/assets/work-units.png)
-_Group related sessions into atomic work units to track features and bug fixes across multiple coding sessions_
-
 ---
 
 ## Supported Agents
