@@ -5,7 +5,7 @@
 **See exactly what your AI built**
 
 [![npm version](https://img.shields.io/npm/v/recall-player.svg?color=22c55e)](https://www.npmjs.com/package/recall-player)
-[![GitHub stars](https://img.shields.io/github/stars/farmanp/recall?style=flat&color=22c55e)](https://github.com/farmanp/recall)
+[![GitHub stars](https://img.shields.io/github/stars/farmanp/recall.svg?style=flat&color=22c55e)](https://github.com/farmanp/recall)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 **Replay AI coding sessions like a video. Track every file change, understand every decision.**
