@@ -117,6 +117,8 @@ npm run build:frontend && npm run copy:frontend
 
 ## Publishing Process
 
+**See [docs/VERSIONING.md](docs/VERSIONING.md) for detailed versioning guidelines.**
+
 ### Pre-Release Checklist
 
 1. **Run tests** to ensure nothing is broken:
@@ -142,10 +144,7 @@ npm run build:frontend && npm run copy:frontend
    npm install <missing-package> --save
    ```
 
-3. **Update version** in `package.json` following semver:
-   - `patch` (1.0.x): Bug fixes
-   - `minor` (1.x.0): New features (backward compatible)
-   - `major` (x.0.0): Breaking changes
+3. **Update version** using `npm version patch|minor|major` (see [VERSIONING.md](docs/VERSIONING.md) for guidelines on which to use)
 
 4. **Update CHANGELOG.md** with the new version and changes
 
