@@ -1,848 +1,883 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Recall - The Forensic DVR for AI Coding Agents</title>
+    <meta
+      name="description"
+      content="Forensic analysis for AI coding sessions. Investigate what happened, track file operations, replay the evidence. Supports Claude Code, Codex CLI, Gemini CLI."
+    />
+    <meta property="og:title" content="Recall - AI Coding Agent Forensics" />
+    <meta
+      property="og:description"
+      content="Investigate your AI coding sessions. Replay frame-by-frame, track file operations, analyze agent behavior."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://farmanp.github.io/recall" />
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Recall - The Forensic DVR for AI Coding Agents</title>
-  <meta name="description"
-    content="Forensic analysis for AI coding sessions. Investigate what happened, track file operations, replay the evidence. Supports Claude Code, Codex CLI, Gemini CLI.">
-  <meta property="og:title" content="Recall - AI Coding Agent Forensics">
-  <meta property="og:description"
-    content="Investigate your AI coding sessions. Replay frame-by-frame, track file operations, analyze agent behavior.">
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="https://farmanp.github.io/recall">
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔍</text></svg>"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg-primary: #0a0a0a;
+        --bg-secondary: #111111;
+        --bg-tertiary: #1a1a1a;
+        --border: #262626;
+        --text-primary: #e5e5e5;
+        --text-secondary: #737373;
+        --text-muted: #525252;
+        --green: #22c55e;
+        --green-dim: #166534;
+        --cyan: #06b6d4;
+        --amber: #f59e0b;
+        --red: #ef4444;
+        --purple: #a855f7;
+      }
 
-  <link rel="icon"
-    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔍</text></svg>">
-  <link
-    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap"
-    rel="stylesheet">
-  <style>
-    :root {
-      --bg-primary: #0a0a0a;
-      --bg-secondary: #111111;
-      --bg-tertiary: #1a1a1a;
-      --border: #262626;
-      --text-primary: #e5e5e5;
-      --text-secondary: #737373;
-      --text-muted: #525252;
-      --green: #22c55e;
-      --green-dim: #166534;
-      --cyan: #06b6d4;
-      --amber: #f59e0b;
-      --red: #ef4444;
-      --purple: #a855f7;
-    }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+      body {
+        font-family:
+          'Inter',
+          -apple-system,
+          BlinkMacSystemFont,
+          sans-serif;
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        line-height: 1.6;
+      }
 
-    body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: var(--bg-primary);
-      color: var(--text-primary);
-      line-height: 1.6;
-    }
+      code,
+      .mono {
+        font-family: 'JetBrains Mono', 'SF Mono', Monaco, monospace;
+      }
 
-    code,
-    .mono {
-      font-family: 'JetBrains Mono', 'SF Mono', Monaco, monospace;
-    }
+      a {
+        color: var(--green);
+        text-decoration: none;
+      }
 
-    a {
-      color: var(--green);
-      text-decoration: none;
-    }
+      a:hover {
+        text-decoration: underline;
+      }
 
-    a:hover {
-      text-decoration: underline;
-    }
+      .container {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 0 24px;
+      }
 
-    .container {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 0 24px;
-    }
-
-    /* Scanline effect */
-    .scanlines::before {
-      content: "";
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: repeating-linear-gradient(0deg,
+      /* Scanline effect */
+      .scanlines::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: repeating-linear-gradient(
+          0deg,
           rgba(0, 0, 0, 0.15),
           rgba(0, 0, 0, 0.15) 1px,
           transparent 1px,
-          transparent 2px);
-      pointer-events: none;
-      z-index: 1000;
-      opacity: 0.3;
-    }
-
-    /* Nav */
-    nav {
-      padding: 20px 0;
-      border-bottom: 1px solid var(--border);
-      position: relative;
-    }
-
-    nav .container {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .logo {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: var(--green);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .logo::before {
-      content: ">";
-      color: var(--text-muted);
-    }
-
-    .nav-links {
-      display: flex;
-      gap: 32px;
-    }
-
-    .nav-links a {
-      color: var(--text-secondary);
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.85rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    .nav-links a:hover {
-      color: var(--green);
-      text-decoration: none;
-    }
-
-    /* Hero */
-    .hero {
-      padding: 120px 0 80px;
-      text-align: center;
-      position: relative;
-    }
-
-    .hero::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 1px;
-      height: 60px;
-      background: linear-gradient(to bottom, transparent, var(--green));
-    }
-
-    .badge {
-      display: inline-block;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: var(--green);
-      border: 1px solid var(--green-dim);
-      padding: 6px 12px;
-      margin-bottom: 32px;
-      background: rgba(34, 197, 94, 0.1);
-    }
-
-    .hero h1 {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 3rem;
-      font-weight: 700;
-      line-height: 1.2;
-      margin-bottom: 24px;
-      color: var(--text-primary);
-    }
-
-    .hero h1 .highlight {
-      color: var(--green);
-    }
-
-    .hero .tagline {
-      font-size: 1.1rem;
-      color: var(--text-secondary);
-      max-width: 600px;
-      margin: 0 auto 48px;
-    }
-
-    /* Terminal box */
-    .terminal {
-      background: var(--bg-secondary);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      max-width: 500px;
-      margin: 0 auto;
-      text-align: left;
-      overflow: hidden;
-    }
-
-    .terminal-header {
-      background: var(--bg-tertiary);
-      padding: 12px 16px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .terminal-dot {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      background: var(--border);
-    }
-
-    .terminal-dot.red {
-      background: var(--red);
-    }
-
-    .terminal-dot.amber {
-      background: var(--amber);
-    }
-
-    .terminal-dot.green {
-      background: var(--green);
-    }
-
-    .terminal-body {
-      padding: 20px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.9rem;
-    }
-
-    .terminal-line {
-      margin-bottom: 8px;
-    }
-
-    .terminal-prompt {
-      color: var(--green);
-    }
-
-    .terminal-cmd {
-      color: var(--text-primary);
-    }
-
-    .terminal-output {
-      color: var(--text-secondary);
-    }
-
-    .cursor {
-      display: inline-block;
-      width: 8px;
-      height: 18px;
-      background: var(--green);
-      animation: blink 1s infinite;
-      vertical-align: text-bottom;
-    }
-
-    @keyframes blink {
-
-      0%,
-      50% {
-        opacity: 1;
+          transparent 2px
+        );
+        pointer-events: none;
+        z-index: 1000;
+        opacity: 0.3;
       }
 
-      51%,
-      100% {
-        opacity: 0;
+      /* Nav */
+      nav {
+        padding: 20px 0;
+        border-bottom: 1px solid var(--border);
+        position: relative;
       }
-    }
 
-    /* Case file section */
-    .case-file {
-      padding: 100px 0;
-      border-top: 1px solid var(--border);
-    }
-
-    .case-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 48px;
-    }
-
-    .case-id {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.8rem;
-      color: var(--amber);
-      background: rgba(245, 158, 11, 0.1);
-      border: 1px solid rgba(245, 158, 11, 0.3);
-      padding: 4px 10px;
-    }
-
-    .case-title {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 1.5rem;
-      color: var(--text-primary);
-    }
-
-    .evidence-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 16px;
-    }
-
-    @media (max-width: 768px) {
-      .evidence-grid {
-        grid-template-columns: 1fr;
+      nav .container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
       }
-    }
 
-    .evidence-card {
-      background: var(--bg-secondary);
-      border: 1px solid var(--border);
-      padding: 24px;
-      position: relative;
-    }
-
-    .evidence-card::before {
-      content: attr(data-id);
-      position: absolute;
-      top: 12px;
-      right: 12px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.7rem;
-      color: var(--text-muted);
-    }
-
-    .evidence-card .icon {
-      font-size: 1.5rem;
-      margin-bottom: 16px;
-    }
-
-    .evidence-card h3 {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 1rem;
-      margin-bottom: 8px;
-      color: var(--green);
-    }
-
-    .evidence-card p {
-      color: var(--text-secondary);
-      font-size: 0.9rem;
-    }
-
-    /* Capabilities */
-    .capabilities {
-      padding: 100px 0;
-      background: var(--bg-secondary);
-      border-top: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
-    }
-
-    .capabilities h2 {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 1.5rem;
-      text-align: center;
-      margin-bottom: 16px;
-      color: var(--green);
-    }
-
-    .capabilities .subtitle {
-      text-align: center;
-      color: var(--text-secondary);
-      margin-bottom: 64px;
-      font-size: 0.95rem;
-    }
-
-    .cap-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 32px;
-    }
-
-    @media (max-width: 768px) {
-      .cap-grid {
-        grid-template-columns: 1fr;
+      .logo {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--green);
+        display: flex;
+        align-items: center;
+        gap: 8px;
       }
-    }
 
-    .cap-item {
-      text-align: center;
-    }
-
-    .cap-icon {
-      width: 64px;
-      height: 64px;
-      margin: 0 auto 20px;
-      border: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.5rem;
-      background: var(--bg-primary);
-    }
-
-    .cap-item h3 {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.95rem;
-      margin-bottom: 8px;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    .cap-item p {
-      color: var(--text-secondary);
-      font-size: 0.85rem;
-    }
-
-    /* Agents */
-    .agents {
-      padding: 100px 0;
-    }
-
-    .agents h2 {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 1.25rem;
-      text-align: center;
-      margin-bottom: 48px;
-      color: var(--text-primary);
-    }
-
-    .agents-list {
-      display: flex;
-      justify-content: center;
-      gap: 48px;
-      flex-wrap: wrap;
-    }
-
-    .agent {
-      text-align: center;
-    }
-
-    .agent-name {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.9rem;
-      margin-bottom: 4px;
-    }
-
-    .agent-name.claude {
-      color: #f97316;
-    }
-
-    .agent-name.gemini {
-      color: #22c55e;
-    }
-
-    .agent-name.codex {
-      color: #a855f7;
-    }
-
-    .agent-path {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.75rem;
-      color: var(--text-muted);
-    }
-
-    /* Install */
-    .install {
-      padding: 100px 0;
-      background: var(--bg-secondary);
-      border-top: 1px solid var(--border);
-    }
-
-    .install h2 {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 1.25rem;
-      text-align: center;
-      margin-bottom: 48px;
-    }
-
-    .install-steps {
-      max-width: 500px;
-      margin: 0 auto;
-    }
-
-    .install-step {
-      display: flex;
-      gap: 16px;
-      margin-bottom: 32px;
-      align-items: flex-start;
-    }
-
-    .step-marker {
-      font-family: 'JetBrains Mono', monospace;
-      color: var(--text-muted);
-      font-size: 0.8rem;
-      padding-top: 2px;
-    }
-
-    .step-content {
-      flex: 1;
-    }
-
-    .step-content h3 {
-      font-size: 1rem;
-      margin-bottom: 8px;
-    }
-
-    .step-content code {
-      display: block;
-      background: var(--bg-primary);
-      border: 1px solid var(--border);
-      padding: 12px 16px;
-      margin-top: 8px;
-      color: var(--green);
-      font-size: 0.85rem;
-    }
-
-    .step-content p {
-      color: var(--text-secondary);
-      font-size: 0.9rem;
-    }
-
-    /* CTA */
-    .cta {
-      padding: 100px 0;
-      text-align: center;
-      border-top: 1px solid var(--border);
-    }
-
-    .cta h2 {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 1.5rem;
-      margin-bottom: 16px;
-    }
-
-    .cta p {
-      color: var(--text-secondary);
-      margin-bottom: 32px;
-    }
-
-    .btn {
-      display: inline-block;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.9rem;
-      padding: 14px 28px;
-      background: var(--green);
-      color: var(--bg-primary);
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      border: none;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .btn:hover {
-      background: #16a34a;
-      text-decoration: none;
-      transform: translateY(-2px);
-    }
-
-    /* Footer */
-    footer {
-      padding: 32px 0;
-      border-top: 1px solid var(--border);
-    }
-
-    footer .container {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 16px;
-    }
-
-    .footer-links {
-      display: flex;
-      gap: 24px;
-    }
-
-    .footer-links a {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.8rem;
-      color: var(--text-secondary);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    .footer-copy {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.75rem;
-      color: var(--text-muted);
-    }
-
-    /* Responsive */
-    @media (max-width: 768px) {
-      .hero h1 {
-        font-size: 2rem;
+      .logo::before {
+        content: '>';
+        color: var(--text-muted);
       }
 
       .nav-links {
-        display: none;
+        display: flex;
+        gap: 32px;
       }
-    }
-  </style>
-</head>
 
-<body class="scanlines">
-  <nav>
-    <div class="container">
-      <div class="logo">recall</div>
-      <div class="nav-links">
-        <a href="#evidence">Evidence</a>
-        <a href="#capabilities">Capabilities</a>
-        <a href="#install">Install</a>
-        <a href="https://github.com/farmanp/recall">Source</a>
-      </div>
-    </div>
-  </nav>
+      .nav-links a {
+        color: var(--text-secondary);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
 
-  <section class="hero">
-    <div class="container">
-      <div class="badge">v2.1.0 · Forensic Grade · Local-First</div>
-      <h1>The Forensic DVR for<br><span class="highlight">AI-Driven Development</span></h1>
-      <p class="tagline">
-        Clear the "AI Fog of War". Investigate exactly how your agents built your features.
-        Replay every thought, every prompt, and every file operation with sub-second precision.
-      </p>
-      <div class="terminal">
-        <div class="terminal-header">
-          <div class="terminal-dot red"></div>
-          <div class="terminal-dot amber"></div>
-          <div class="terminal-dot green"></div>
+      .nav-links a:hover {
+        color: var(--green);
+        text-decoration: none;
+      }
+
+      /* Hero */
+      .hero {
+        padding: 120px 0 80px;
+        text-align: center;
+        position: relative;
+      }
+
+      .hero::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 1px;
+        height: 60px;
+        background: linear-gradient(to bottom, transparent, var(--green));
+      }
+
+      .badge {
+        display: inline-block;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--green);
+        border: 1px solid var(--green-dim);
+        padding: 6px 12px;
+        margin-bottom: 32px;
+        background: rgba(34, 197, 94, 0.1);
+      }
+
+      .hero h1 {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 3rem;
+        font-weight: 700;
+        line-height: 1.2;
+        margin-bottom: 24px;
+        color: var(--text-primary);
+      }
+
+      .hero h1 .highlight {
+        color: var(--green);
+      }
+
+      .hero .tagline {
+        font-size: 1.1rem;
+        color: var(--text-secondary);
+        max-width: 600px;
+        margin: 0 auto 48px;
+      }
+
+      /* Terminal box */
+      .terminal {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        max-width: 500px;
+        margin: 0 auto;
+        text-align: left;
+        overflow: hidden;
+      }
+
+      .terminal-header {
+        background: var(--bg-tertiary);
+        padding: 12px 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .terminal-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: var(--border);
+      }
+
+      .terminal-dot.red {
+        background: var(--red);
+      }
+
+      .terminal-dot.amber {
+        background: var(--amber);
+      }
+
+      .terminal-dot.green {
+        background: var(--green);
+      }
+
+      .terminal-body {
+        padding: 20px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.9rem;
+      }
+
+      .terminal-line {
+        margin-bottom: 8px;
+      }
+
+      .terminal-prompt {
+        color: var(--green);
+      }
+
+      .terminal-cmd {
+        color: var(--text-primary);
+      }
+
+      .terminal-output {
+        color: var(--text-secondary);
+      }
+
+      .cursor {
+        display: inline-block;
+        width: 8px;
+        height: 18px;
+        background: var(--green);
+        animation: blink 1s infinite;
+        vertical-align: text-bottom;
+      }
+
+      @keyframes blink {
+        0%,
+        50% {
+          opacity: 1;
+        }
+
+        51%,
+        100% {
+          opacity: 0;
+        }
+      }
+
+      /* Case file section */
+      .case-file {
+        padding: 100px 0;
+        border-top: 1px solid var(--border);
+      }
+
+      .case-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 48px;
+      }
+
+      .case-id {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.8rem;
+        color: var(--amber);
+        background: rgba(245, 158, 11, 0.1);
+        border: 1px solid rgba(245, 158, 11, 0.3);
+        padding: 4px 10px;
+      }
+
+      .case-title {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 1.5rem;
+        color: var(--text-primary);
+      }
+
+      .evidence-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+      }
+
+      @media (max-width: 768px) {
+        .evidence-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .evidence-card {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border);
+        padding: 24px;
+        position: relative;
+      }
+
+      .evidence-card::before {
+        content: attr(data-id);
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.7rem;
+        color: var(--text-muted);
+      }
+
+      .evidence-card .icon {
+        font-size: 1.5rem;
+        margin-bottom: 16px;
+      }
+
+      .evidence-card h3 {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 1rem;
+        margin-bottom: 8px;
+        color: var(--green);
+      }
+
+      .evidence-card p {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+      }
+
+      /* Capabilities */
+      .capabilities {
+        padding: 100px 0;
+        background: var(--bg-secondary);
+        border-top: 1px solid var(--border);
+        border-bottom: 1px solid var(--border);
+      }
+
+      .capabilities h2 {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 1.5rem;
+        text-align: center;
+        margin-bottom: 16px;
+        color: var(--green);
+      }
+
+      .capabilities .subtitle {
+        text-align: center;
+        color: var(--text-secondary);
+        margin-bottom: 64px;
+        font-size: 0.95rem;
+      }
+
+      .cap-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 32px;
+      }
+
+      @media (max-width: 768px) {
+        .cap-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .cap-item {
+        text-align: center;
+      }
+
+      .cap-icon {
+        width: 64px;
+        height: 64px;
+        margin: 0 auto 20px;
+        border: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        background: var(--bg-primary);
+      }
+
+      .cap-item h3 {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.95rem;
+        margin-bottom: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      .cap-item p {
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+      }
+
+      /* Agents */
+      .agents {
+        padding: 100px 0;
+      }
+
+      .agents h2 {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 1.25rem;
+        text-align: center;
+        margin-bottom: 48px;
+        color: var(--text-primary);
+      }
+
+      .agents-list {
+        display: flex;
+        justify-content: center;
+        gap: 48px;
+        flex-wrap: wrap;
+      }
+
+      .agent {
+        text-align: center;
+      }
+
+      .agent-name {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.9rem;
+        margin-bottom: 4px;
+      }
+
+      .agent-name.claude {
+        color: #f97316;
+      }
+
+      .agent-name.gemini {
+        color: #22c55e;
+      }
+
+      .agent-name.codex {
+        color: #a855f7;
+      }
+
+      .agent-path {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.75rem;
+        color: var(--text-muted);
+      }
+
+      /* Install */
+      .install {
+        padding: 100px 0;
+        background: var(--bg-secondary);
+        border-top: 1px solid var(--border);
+      }
+
+      .install h2 {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 1.25rem;
+        text-align: center;
+        margin-bottom: 48px;
+      }
+
+      .install-steps {
+        max-width: 500px;
+        margin: 0 auto;
+      }
+
+      .install-step {
+        display: flex;
+        gap: 16px;
+        margin-bottom: 32px;
+        align-items: flex-start;
+      }
+
+      .step-marker {
+        font-family: 'JetBrains Mono', monospace;
+        color: var(--text-muted);
+        font-size: 0.8rem;
+        padding-top: 2px;
+      }
+
+      .step-content {
+        flex: 1;
+      }
+
+      .step-content h3 {
+        font-size: 1rem;
+        margin-bottom: 8px;
+      }
+
+      .step-content code {
+        display: block;
+        background: var(--bg-primary);
+        border: 1px solid var(--border);
+        padding: 12px 16px;
+        margin-top: 8px;
+        color: var(--green);
+        font-size: 0.85rem;
+      }
+
+      .step-content p {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+      }
+
+      /* CTA */
+      .cta {
+        padding: 100px 0;
+        text-align: center;
+        border-top: 1px solid var(--border);
+      }
+
+      .cta h2 {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 1.5rem;
+        margin-bottom: 16px;
+      }
+
+      .cta p {
+        color: var(--text-secondary);
+        margin-bottom: 32px;
+      }
+
+      .btn {
+        display: inline-block;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.9rem;
+        padding: 14px 28px;
+        background: var(--green);
+        color: var(--bg-primary);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .btn:hover {
+        background: #16a34a;
+        text-decoration: none;
+        transform: translateY(-2px);
+      }
+
+      /* Footer */
+      footer {
+        padding: 32px 0;
+        border-top: 1px solid var(--border);
+      }
+
+      footer .container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+      }
+
+      .footer-links {
+        display: flex;
+        gap: 24px;
+      }
+
+      .footer-links a {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      .footer-copy {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.75rem;
+        color: var(--text-muted);
+      }
+
+      /* Responsive */
+      @media (max-width: 768px) {
+        .hero h1 {
+          font-size: 2rem;
+        }
+
+        .nav-links {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+
+  <body class="scanlines">
+    <nav>
+      <div class="container">
+        <div class="logo">recall</div>
+        <div class="nav-links">
+          <a href="#evidence">Evidence</a>
+          <a href="#capabilities">Capabilities</a>
+          <a href="#install">Install</a>
+          <a href="https://github.com/farmanp/recall">Source</a>
         </div>
-        <div class="terminal-body">
-          <div class="terminal-line">
-            <span class="terminal-prompt">$</span> <span class="terminal-cmd">npx recall-player</span>
+      </div>
+    </nav>
+
+    <section class="hero">
+      <div class="container">
+        <div class="badge">v2.1.0 · Forensic Grade · Local-First</div>
+        <h1>The Forensic DVR for<br /><span class="highlight">AI-Driven Development</span></h1>
+        <p class="tagline">
+          Clear the "AI Fog of War". Investigate exactly how your agents built your features. Replay
+          every thought, every prompt, and every file operation with sub-second precision.
+        </p>
+        <div class="terminal">
+          <div class="terminal-header">
+            <div class="terminal-dot red"></div>
+            <div class="terminal-dot amber"></div>
+            <div class="terminal-dot green"></div>
           </div>
-          <div class="terminal-line terminal-output">
-            Scanning sessions...
-          </div>
-          <div class="terminal-line terminal-output">
-            Found 156 sessions across 3 agents
-          </div>
-          <div class="terminal-line terminal-output">
-            Server running at http://localhost:3001 // Forensic Dashboard Active
-          </div>
-          <div class="terminal-line">
-            <span class="terminal-prompt">$</span> <span class="cursor"></span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="case-file" id="evidence">
-    <div class="container">
-      <div class="case-header">
-        <span class="case-id">ANALYSIS</span>
-        <span class="case-title">Clearing the AI "Fog of War"</span>
-      </div>
-      <div class="evidence-grid">
-        <div class="evidence-card" data-id="EV-001">
-          <div class="icon">😶‍🌫️</div>
-          <h3>Invisible Decisions</h3>
-          <p>Why did it choose this library? The rationale often disappears with your terminal scrollback. Recall
-            persists the logic.</p>
-        </div>
-        <div class="evidence-card" data-id="EV-002">
-          <div class="icon">👻</div>
-          <h3>Ghost Changes</h3>
-          <p>Small edits in distant files you might have missed. Recall isolates and highlights every single file
-            operation.</p>
-        </div>
-        <div class="evidence-card" data-id="EV-003">
-          <div class="icon">📉</div>
-          <h3>Knowledge Decay</h3>
-          <p>Looking back at code a week later and forgetting how the AI reached that solution. Replay the history to
-            regain context.</p>
-        </div>
-        <div class="evidence-card" data-id="EV-004">
-          <div class="icon">🧩</div>
-          <h3>Fragmented Work</h3>
-          <p>Using Claude, Gemini, and Codex across projects? Recall correlates all agent activities into unified Work
-            Units.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <style>
-    .screenshot-gallery {
-      padding: 100px 0;
-      border-top: 1px solid var(--border);
-    }
-
-    .gallery-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 64px;
-    }
-
-    .gallery-item {
-      background: var(--bg-secondary);
-      border: 1px solid var(--border);
-      padding: 16px;
-      border-radius: 4px;
-    }
-
-    .gallery-item img {
-      width: 100%;
-      height: auto;
-      border: 1px solid var(--border);
-      display: block;
-      border-radius: 2px;
-    }
-
-    .gallery-item .label {
-      display: block;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      margin-top: 12px;
-    }
-  </style>
-
-  <section class="screenshot-gallery">
-    <div class="container">
-      <div class="case-header">
-        <span class="case-id">FORENSIC ASSETS</span>
-        <span class="case-title">Visual Evidence</span>
-      </div>
-      <div class="gallery-grid">
-        <div class="gallery-item">
-          <img src="assets/session-list.png" alt="Recall Session List Dashboard">
-          <span class="label">// Session List - Unified dashboard with deep search and agent filtering.</span>
-        </div>
-        <div class="gallery-item">
-          <img src="assets/hero-replay.gif" alt="Recall Replay Player">
-          <span class="label">// Forensic Replay - Animated frame-by-frame playback simulation (GIF).</span>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="capabilities" id="capabilities">
-    <div class="container">
-      <h2>// The Forensic Toolbox</h2>
-      <p class="subtitle">Mission-critical tools to audit and analyze agent behavior</p>
-      <div class="cap-grid">
-        <div class="cap-item">
-          <div class="cap-icon">📹</div>
-          <h3>Mission Control</h3>
-          <p>Scrub through sessions with variable speeds (0.5x to 20x). Automated dead-air compression.</p>
-        </div>
-        <div class="cap-item">
-          <div class="cap-icon">📂</div>
-          <h3>Artifact Tracking</h3>
-          <p>Binary-level tracking of every file operation. Inline syntax-highlighted diffs for every write.</p>
-        </div>
-        <div class="cap-item">
-          <div class="cap-icon">🔍</div>
-          <h3>Signal Intelligence</h3>
-          <p>Deep search across all session transcripts via SQLite FTS5. Find discussion points in milliseconds.</p>
-        </div>
-        <div class="cap-item">
-          <div class="cap-icon">📦</div>
-          <h3>Work Logistics</h3>
-          <p>Correlate disparate sessions into "Work Units" for a holistic view of feature evolution.</p>
-        </div>
-        <div class="cap-item">
-          <div class="cap-icon">🔒</div>
-          <h3>OpSec First</h3>
-          <p>100% local operation. Read-only ingestion ensures no modification of original session evidence.</p>
-        </div>
-        <div class="cap-item">
-          <div class="cap-icon">⌨️</div>
-          <h3>Hotkeys</h3>
-          <p>Full keyboard navigation for investigators. Space, Arrows, Home/End, and specialized filters.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="agents" id="agents">
-    <div class="container">
-      <h2>// Verified Evidence Sources</h2>
-      <div class="agents-list">
-        <div class="agent">
-          <div class="agent-name claude">Claude Code</div>
-          <div class="agent-path">~/.claude/projects/</div>
-        </div>
-        <div class="agent">
-          <div class="agent-name gemini">Gemini CLI</div>
-          <div class="agent-path">~/.gemini/tmp/</div>
-        </div>
-        <div class="agent">
-          <div class="agent-name codex">Codex CLI</div>
-          <div class="agent-path">~/.codex/sessions/</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="install" id="install">
-    <div class="container">
-      <h2>// Begin Investigation</h2>
-      <div class="install-steps">
-        <div class="install-step">
-          <div class="step-marker">01</div>
-          <div class="step-content">
-            <h3>Run with npx</h3>
-            <p>No installation required.</p>
-            <code>npx recall-player</code>
-          </div>
-        </div>
-        <div class="install-step">
-          <div class="step-marker">02</div>
-          <div class="step-content">
-            <h3>Open Interface</h3>
-            <p>Access the investigation dashboard.</p>
-            <code>open http://localhost:3001</code>
-          </div>
-        </div>
-        <div class="install-step">
-          <div class="step-marker">03</div>
-          <div class="step-content">
-            <h3>Analyze Sessions</h3>
-            <p>Browse, search, replay. Uncover what happened.</p>
+          <div class="terminal-body">
+            <div class="terminal-line">
+              <span class="terminal-prompt">$</span>
+              <span class="terminal-cmd">npx recall-player</span>
+            </div>
+            <div class="terminal-line terminal-output">Scanning sessions...</div>
+            <div class="terminal-line terminal-output">Found 156 sessions across 3 agents</div>
+            <div class="terminal-line terminal-output">
+              Server running at http://localhost:3001 // Forensic Dashboard Active
+            </div>
+            <div class="terminal-line">
+              <span class="terminal-prompt">$</span> <span class="cursor"></span>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <section class="cta">
-    <div class="container">
-      <h2>Begin the Investigation</h2>
-      <p>Analyze your AI coding sessions in sub-second speed.</p>
-      <a href="https://github.com/farmanp/recall" class="btn">Star on GitHub</a>
-    </div>
-  </section>
-
-  <footer>
-    <div class="container">
-      <div class="footer-links">
-        <a href="https://github.com/farmanp/recall">GitHub</a>
-        <a href="https://github.com/farmanp/recall/issues">Issues</a>
-        <a href="https://www.npmjs.com/package/recall-player">npm</a>
+    <section class="case-file" id="evidence">
+      <div class="container">
+        <div class="case-header">
+          <span class="case-id">ANALYSIS</span>
+          <span class="case-title">Clearing the AI "Fog of War"</span>
+        </div>
+        <div class="evidence-grid">
+          <div class="evidence-card" data-id="EV-001">
+            <div class="icon">😶‍🌫️</div>
+            <h3>Invisible Decisions</h3>
+            <p>
+              Why did it choose this library? The rationale often disappears with your terminal
+              scrollback. Recall persists the logic.
+            </p>
+          </div>
+          <div class="evidence-card" data-id="EV-002">
+            <div class="icon">👻</div>
+            <h3>Ghost Changes</h3>
+            <p>
+              Small edits in distant files you might have missed. Recall isolates and highlights
+              every single file operation.
+            </p>
+          </div>
+          <div class="evidence-card" data-id="EV-003">
+            <div class="icon">📉</div>
+            <h3>Knowledge Decay</h3>
+            <p>
+              Looking back at code a week later and forgetting how the AI reached that solution.
+              Replay the history to regain context.
+            </p>
+          </div>
+          <div class="evidence-card" data-id="EV-004">
+            <div class="icon">🧩</div>
+            <h3>Fragmented Work</h3>
+            <p>
+              Using Claude, Gemini, and Codex across projects? Recall correlates all agent
+              activities into unified Work Units.
+            </p>
+          </div>
+        </div>
       </div>
-      <div class="footer-copy">
-        MIT License · Local-first · No telemetry
-      </div>
-    </div>
-  </footer>
-</body>
+    </section>
 
+    <style>
+      .screenshot-gallery {
+        padding: 100px 0;
+        border-top: 1px solid var(--border);
+      }
+
+      .gallery-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 64px;
+      }
+
+      .gallery-item {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border);
+        padding: 16px;
+        border-radius: 4px;
+      }
+
+      .gallery-item img {
+        width: 100%;
+        height: auto;
+        border: 1px solid var(--border);
+        display: block;
+        border-radius: 2px;
+      }
+
+      .gallery-item .label {
+        display: block;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        margin-top: 12px;
+      }
+    </style>
+
+    <section class="screenshot-gallery">
+      <div class="container">
+        <div class="case-header">
+          <span class="case-id">FORENSIC ASSETS</span>
+          <span class="case-title">Visual Evidence</span>
+        </div>
+        <div class="gallery-grid">
+          <div class="gallery-item">
+            <img src="assets/session-list.png" alt="Recall Session List Dashboard" />
+            <span class="label"
+              >// Session List - Unified dashboard with deep search and agent filtering.</span
+            >
+          </div>
+          <div class="gallery-item">
+            <img src="assets/hero-replay.gif" alt="Recall Replay Player" />
+            <span class="label"
+              >// Forensic Replay - Animated frame-by-frame playback simulation (GIF).</span
+            >
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="capabilities" id="capabilities">
+      <div class="container">
+        <h2>// The Forensic Toolbox</h2>
+        <p class="subtitle">Mission-critical tools to audit and analyze agent behavior</p>
+        <div class="cap-grid">
+          <div class="cap-item">
+            <div class="cap-icon">📹</div>
+            <h3>Mission Control</h3>
+            <p>
+              Scrub through sessions with variable speeds (0.5x to 20x). Automated dead-air
+              compression.
+            </p>
+          </div>
+          <div class="cap-item">
+            <div class="cap-icon">📂</div>
+            <h3>Artifact Tracking</h3>
+            <p>
+              Binary-level tracking of every file operation. Inline syntax-highlighted diffs for
+              every write.
+            </p>
+          </div>
+          <div class="cap-item">
+            <div class="cap-icon">🔍</div>
+            <h3>Signal Intelligence</h3>
+            <p>
+              Deep search across all session transcripts via SQLite FTS5. Find discussion points in
+              milliseconds.
+            </p>
+          </div>
+          <div class="cap-item">
+            <div class="cap-icon">📦</div>
+            <h3>Work Logistics</h3>
+            <p>
+              Correlate disparate sessions into "Work Units" for a holistic view of feature
+              evolution.
+            </p>
+          </div>
+          <div class="cap-item">
+            <div class="cap-icon">🔒</div>
+            <h3>OpSec First</h3>
+            <p>
+              100% local operation. Read-only ingestion ensures no modification of original session
+              evidence.
+            </p>
+          </div>
+          <div class="cap-item">
+            <div class="cap-icon">⌨️</div>
+            <h3>Hotkeys</h3>
+            <p>
+              Full keyboard navigation for investigators. Space, Arrows, Home/End, and specialized
+              filters.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="agents" id="agents">
+      <div class="container">
+        <h2>// Verified Evidence Sources</h2>
+        <div class="agents-list">
+          <div class="agent">
+            <div class="agent-name claude">Claude Code</div>
+            <div class="agent-path">~/.claude/projects/</div>
+          </div>
+          <div class="agent">
+            <div class="agent-name gemini">Gemini CLI</div>
+            <div class="agent-path">~/.gemini/tmp/</div>
+          </div>
+          <div class="agent">
+            <div class="agent-name codex">Codex CLI</div>
+            <div class="agent-path">~/.codex/sessions/</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="install" id="install">
+      <div class="container">
+        <h2>// Begin Investigation</h2>
+        <div class="install-steps">
+          <div class="install-step">
+            <div class="step-marker">01</div>
+            <div class="step-content">
+              <h3>Run with npx</h3>
+              <p>No installation required.</p>
+              <code>npx recall-player</code>
+            </div>
+          </div>
+          <div class="install-step">
+            <div class="step-marker">02</div>
+            <div class="step-content">
+              <h3>Open Interface</h3>
+              <p>Access the investigation dashboard.</p>
+              <code>open http://localhost:3001</code>
+            </div>
+          </div>
+          <div class="install-step">
+            <div class="step-marker">03</div>
+            <div class="step-content">
+              <h3>Analyze Sessions</h3>
+              <p>Browse, search, replay. Uncover what happened.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta">
+      <div class="container">
+        <h2>Begin the Investigation</h2>
+        <p>Analyze your AI coding sessions in sub-second speed.</p>
+        <a href="https://github.com/farmanp/recall" class="btn">Star on GitHub</a>
+      </div>
+    </section>
+
+    <footer>
+      <div class="container">
+        <div class="footer-links">
+          <a href="https://github.com/farmanp/recall">GitHub</a>
+          <a href="https://github.com/farmanp/recall/issues">Issues</a>
+          <a href="https://www.npmjs.com/package/recall-player">npm</a>
+        </div>
+        <div class="footer-copy">MIT License · Local-first · No telemetry</div>
+      </div>
+    </footer>
+  </body>
 </html>
