@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.1] - 2026-02-11
+
+### Changed
+
+- **Directory Toggle** - "All Projects" button now toggles between "All Directories" / "Current Directory" for clarity
+- **Session Count** - Simplified header to show just "X sessions" instead of confusing "X of Y // filtered"
+- **npx Commands** - All documentation now uses `@latest` tag to avoid stale cache issues
+
+### Fixed
+
+- **Landing Page** - Fixed broken demo.gif path and updated version badge to 2.2.0
+
+### Removed (temporarily)
+
+- **Content Search** - Hidden until feature is fully implemented
+- **Docs Button** - Hidden CLAUDE.md panel button until feature is ready
+- **CLAUDE.md Filter** - Hidden filter button until feature is ready
+
+---
+
 ## [2.2.0] - 2026-02-11
 
 ### Added

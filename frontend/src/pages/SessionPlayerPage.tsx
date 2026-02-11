@@ -610,6 +610,7 @@ export const SessionPlayerPage: React.FC = () => {
             </span>
           </button>
 
+          {/* TODO: Bring back Docs button when CLAUDE.md panel feature is ready
           <button
             onClick={() => setShowClaudeMd(!showClaudeMd)}
             className={`inline-flex items-center gap-2 px-3 py-2 font-mono text-xs uppercase tracking-wide transition-all border ${
@@ -625,6 +626,7 @@ export const SessionPlayerPage: React.FC = () => {
             <FileText className="w-4 h-4" />
             <span className="hidden xl:inline">Docs</span>
           </button>
+          */}
 
           <button
             onClick={() => setShowArtifacts(!showArtifacts)}

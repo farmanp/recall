@@ -187,10 +187,7 @@ export const SessionListPage: React.FC = () => {
               <span className="badge badge-green">v{__APP_VERSION__}</span>
             </div>
             <div className="font-mono text-sm text-forensic-text-secondary">
-              {filteredSessions.length} of {total} sessions
-              {filteredSessions.length !== total && (
-                <span className="text-accent-amber ml-2">// filtered</span>
-              )}
+              {filteredSessions.length} sessions
             </div>
           </div>
         </div>
@@ -230,6 +227,7 @@ export const SessionListPage: React.FC = () => {
               )}
             </div>
 
+            {/* TODO: Bring back Content search button when feature is ready
             <div className="flex bg-forensic-bg-primary border border-forensic-border">
               <button
                 onClick={() => setSearchMode('sessions')}
@@ -252,6 +250,7 @@ export const SessionListPage: React.FC = () => {
                 Content
               </button>
             </div>
+            */}
           </div>
 
           {/* Agent Filter Tabs */}
@@ -344,6 +343,7 @@ export const SessionListPage: React.FC = () => {
             </div>
 
             {/* Toggle Filters */}
+            {/* TODO: Bring back CLAUDE.md filter when feature is ready
             <button
               onClick={() => setHasClaudeMdFilter(!hasClaudeMdFilter)}
               className={`px-3 py-1.5 font-mono text-xs uppercase tracking-wider border flex items-center gap-1.5 transition-colors ${
@@ -355,6 +355,7 @@ export const SessionListPage: React.FC = () => {
               <FileText className="w-3 h-3" />
               CLAUDE.md
             </button>
+            */}
 
             <button
               onClick={() => setShowAllProjects(!showAllProjects)}
@@ -365,7 +366,7 @@ export const SessionListPage: React.FC = () => {
               }`}
             >
               <FolderOpen className="w-3 h-3" />
-              All Projects
+              {showAllProjects ? 'Current Directory' : 'All Directories'}
             </button>
 
             {/* Clear Filters */}
