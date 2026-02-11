@@ -85,7 +85,7 @@
     "rimraf": "^6.1.2"
   },
   "lint-staged": {
-    "*.{js,jsx,ts,tsx,json,css,md,yml,yaml}": "npx prettier --write",
+    "*.{js,jsx,ts,tsx,json,css,md,yml,yaml,html}": "npx prettier --write",
     "backend/**/*.{ts,tsx}": "bash -lc \"cd backend && npx eslint -c eslint.config.cjs\"",
     "frontend/**/*.{ts,tsx}": "bash -lc \"cd frontend && npx eslint -c eslint.config.js\""
   },
