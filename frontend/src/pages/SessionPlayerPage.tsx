@@ -70,7 +70,13 @@ import {
   findPrevMatchIndex,
   highlightText,
 } from '../lib/frameSearch';
-import { sessionToMarkdown, sessionToHTML, downloadFile } from '../lib/exportSession';
+import {
+  sessionToMarkdown,
+  sessionToHTML,
+  frameToMarkdown,
+  frameToHTML,
+  downloadFile,
+} from '../lib/exportSession';
 
 type FrameType = 'user_message' | 'claude_thinking' | 'claude_response' | 'tool_execution';
 
@@ -573,6 +579,70 @@ export const SessionPlayerPage: React.FC = () => {
               </div>
             </div>
           </div>
+
+          {/* Export Current Frame Button */}
+          {currentFrame && (
+            <div className="relative">
+              <button
+                onClick={() => setShowExportDropdown(!showExportDropdown)}
+                className="inline-flex items-center gap-2 px-3 py-2 bg-forensic-bg-tertiary hover:bg-forensic-border text-forensic-text-secondary hover:text-forensic-text-primary border border-forensic-border font-mono text-xs uppercase tracking-wide transition-all"
+                title="Export current frame"
+                aria-label="Export current frame"
+              >
+                <Download className="w-4 h-4" />
+                <span className="hidden xl:inline">Export Frame</span>
+              </button>
+
+              {showExportDropdown && (
+                <>
+                  {/* Backdrop to close dropdown */}
+                  <div
+                    className="fixed inset-0 z-10"
+                    onClick={() => setShowExportDropdown(false)}
+                  />
+
+                  {/* Dropdown menu */}
+                  <div className="absolute top-full right-0 mt-2 bg-forensic-bg-secondary border border-forensic-border shadow-2xl z-20 min-w-[200px]">
+                    <button
+                      onClick={() => {
+                        if (currentFrame && sessionDetails) {
+                          const markdown = frameToMarkdown(currentFrame, sessionDetails);
+                          downloadFile(
+                            `${sessionDetails.slug}_frame-${currentFrameIndex + 1}.md`,
+                            markdown
+                          );
+                          setShowExportDropdown(false);
+                        }
+                      }}
+                      className="w-full px-4 py-3 text-left font-mono text-sm text-forensic-text-secondary hover:bg-forensic-bg-tertiary hover:text-forensic-text-primary transition-colors flex items-center gap-3"
+                    >
+                      <span className="text-forensic-text-muted">.md</span>
+                      <span>Markdown</span>
+                    </button>
+
+                    <div className="border-t border-forensic-border" />
+
+                    <button
+                      onClick={() => {
+                        if (currentFrame && sessionDetails) {
+                          const html = frameToHTML(currentFrame, sessionDetails);
+                          downloadFile(
+                            `${sessionDetails.slug}_frame-${currentFrameIndex + 1}.html`,
+                            html
+                          );
+                          setShowExportDropdown(false);
+                        }
+                      }}
+                      className="w-full px-4 py-3 text-left font-mono text-sm text-forensic-text-secondary hover:bg-forensic-bg-tertiary hover:text-forensic-text-primary transition-colors flex items-center gap-3"
+                    >
+                      <span className="text-accent-green">.html</span>
+                      <span>HTML</span>
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
 
           <div className="relative">
             <button
