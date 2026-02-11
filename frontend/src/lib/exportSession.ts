@@ -77,6 +77,514 @@ export function sessionToMarkdown(session: SessionTimeline): string {
 }
 
 /**
+ * Get inlined CSS for standalone HTML exports
+ */
+function getInlinedCSS(): string {
+  return `
+    :root {
+      --bg-primary: #0a0a0a;
+      --bg-secondary: #111111;
+      --bg-tertiary: #1a1a1a;
+      --border: #262626;
+      --text-primary: #e5e5e5;
+      --text-secondary: #737373;
+      --text-muted: #525252;
+      --green: #22c55e;
+      --green-dim: #166534;
+      --amber: #f59e0b;
+      --red: #ef4444;
+      --cyan: #06b6d4;
+      --purple: #a855f7;
+      --orange: #f97316;
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+      padding: 2rem;
+    }
+    
+    .mono, code, pre {
+      font-family: 'JetBrains Mono', 'SF Mono', Monaco, Consolas, monospace;
+    }
+    
+    header {
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    
+    h1 {
+      font-size: 1.875rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      color: var(--text-primary);
+    }
+    
+    .metadata {
+      display: flex;
+      gap: 1rem;
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    
+    .metadata span {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .frame {
+      border: 1px solid;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      transition: all 0.3s;
+    }
+    
+    .frame-user { border-color: rgba(6, 182, 212, 0.3); background: rgba(6, 182, 212, 0.05); }
+    .frame-thinking { border-color: rgba(168, 85, 247, 0.3); background: rgba(168, 85, 247, 0.05); }
+    .frame-response { border-color: rgba(34, 197, 94, 0.3); background: rgba(34, 197, 94, 0.05); }
+    .frame-tool { border-color: rgba(245, 158, 11, 0.3); background: rgba(245, 158, 11, 0.05); }
+    
+    .frame-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .frame-type {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    
+    .frame-icon {
+      padding: 0.5rem;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .frame-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    
+    .label-user { color: var(--cyan); }
+    .label-thinking { color: var(--purple); }
+    .label-response { color: var(--green); }
+    .label-tool { color: var(--amber); }
+    
+    .frame-timestamp {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-align: right;
+    }
+    
+    .frame-content {
+      background: var(--bg-primary);
+      padding: 1.25rem;
+      border: 1px solid var(--border);
+    }
+    
+    .frame-content.thinking {
+      font-style: italic;
+      color: var(--text-secondary);
+    }
+    
+    .frame-content.user,
+    .frame-content.response {
+      line-height: 1.7;
+    }
+    
+    .tool-info {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    
+    .tool-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      padding: 0.25rem 0.75rem;
+      border: 1px solid;
+      letter-spacing: 0.05em;
+    }
+    
+    .tool-badge.tool-name {
+      background: rgba(245, 158, 11, 0.1);
+      border-color: rgba(245, 158, 11, 0.3);
+      color: var(--amber);
+    }
+    
+    .tool-badge.error {
+      background: rgba(239, 68, 68, 0.1);
+      border-color: rgba(239, 68, 68, 0.3);
+      color: var(--red);
+    }
+    
+    .tool-section {
+      margin-top: 1rem;
+    }
+    
+    .tool-section-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.625rem;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+      letter-spacing: 0.05em;
+    }
+    
+    pre {
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      padding: 1rem;
+      overflow-x: auto;
+      font-size: 0.875rem;
+      line-height: 1.5;
+    }
+    
+    code {
+      color: var(--text-secondary);
+    }
+    
+    .error-output {
+      border-color: rgba(239, 68, 68, 0.5);
+    }
+    
+    .error-output code {
+      color: var(--red);
+    }
+    
+    footer {
+      margin-top: 3rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    
+    footer a {
+      color: var(--green);
+      text-decoration: none;
+    }
+    
+    footer a:hover {
+      text-decoration: underline;
+    }
+    
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: var(--bg-secondary);
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 4px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--text-muted);
+    }
+  `;
+}
+
+/**
+ * Escape HTML special characters
+ */
+function escapeHTML(text: string): string {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+/**
+ * Convert a single frame to HTML
+ */
+export function frameToHTML(frame: PlaybackFrame, sessionMeta?: Partial<SessionTimeline>): string {
+  const agentName =
+    frame.agent || sessionMeta?.agent
+      ? (frame.agent || sessionMeta?.agent || 'AI').charAt(0).toUpperCase() +
+        (frame.agent || sessionMeta?.agent || 'AI').slice(1)
+      : 'AI';
+
+  const frameTypeLabels = {
+    user_message: 'USER MESSAGE',
+    claude_thinking: `${agentName.toUpperCase()} THINKING`,
+    claude_response: `${agentName.toUpperCase()} RESPONSE`,
+    tool_execution: 'TOOL EXECUTION',
+  };
+
+  const frameTypeClasses = {
+    user_message: 'frame-user',
+    claude_thinking: 'frame-thinking',
+    claude_response: 'frame-response',
+    tool_execution: 'frame-tool',
+  };
+
+  const labelClasses = {
+    user_message: 'label-user',
+    claude_thinking: 'label-thinking',
+    claude_response: 'label-response',
+    tool_execution: 'label-tool',
+  };
+
+  let contentHTML = '';
+
+  switch (frame.type) {
+    case 'user_message':
+      contentHTML = `
+        <div class="frame-content user">
+          ${escapeHTML(frame.userMessage?.text || '')}
+        </div>
+      `;
+      break;
+
+    case 'claude_thinking':
+      contentHTML = `
+        <div class="frame-content thinking">
+          ${escapeHTML(frame.thinking?.text || '')}
+        </div>
+      `;
+      break;
+
+    case 'claude_response':
+      contentHTML = `
+        <div class="frame-content response">
+          ${escapeHTML(frame.claudeResponse?.text || '')}
+        </div>
+      `;
+      break;
+
+    case 'tool_execution':
+      const tool = frame.toolExecution;
+      if (tool) {
+        const inputJSON = JSON.stringify(tool.input, null, 2);
+        const output = tool.output.content;
+        const truncated = output.length > 1000 ? output.substring(0, 1000) + '\n...' : output;
+
+        contentHTML = `
+          <div class="tool-info">
+            <div class="tool-badge tool-name">Tool: ${escapeHTML(tool.tool)}</div>
+            ${tool.output.isError ? '<div class="tool-badge error">Failed</div>' : ''}
+          </div>
+          
+          <div class="tool-section">
+            <div class="tool-section-label">// Input Parameters</div>
+            <pre><code>${escapeHTML(inputJSON)}</code></pre>
+          </div>
+          
+          <div class="tool-section">
+            <div class="tool-section-label">// Output Result</div>
+            <pre class="${tool.output.isError ? 'error-output' : ''}"><code>${escapeHTML(truncated)}</code></pre>
+          </div>
+        `;
+      }
+      break;
+  }
+
+  return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${frame.id} - Recall Export</title>
+  <style>${getInlinedCSS()}</style>
+</head>
+<body>
+  <header>
+    <h1 class="mono">${sessionMeta?.slug || 'Frame Export'}</h1>
+    <div class="metadata">
+      ${sessionMeta?.project ? `<span>📁 ${escapeHTML(sessionMeta.project.split('/').pop() || sessionMeta.project)}</span>` : ''}
+      ${sessionMeta?.agent ? `<span>🤖 ${escapeHTML(sessionMeta.agent)}</span>` : ''}
+      <span>🕐 ${new Date(frame.timestamp).toLocaleString()}</span>
+    </div>
+  </header>
+  
+  <main>
+    <div class="frame ${frameTypeClasses[frame.type]}">
+      <div class="frame-header">
+        <div class="frame-type">
+          <div class="frame-icon">
+            <span class="${labelClasses[frame.type]}">■</span>
+          </div>
+          <div>
+            <div class="frame-label ${labelClasses[frame.type]}">
+              ${frameTypeLabels[frame.type]}
+            </div>
+          </div>
+        </div>
+        <div class="frame-timestamp">
+          ${new Date(frame.timestamp).toLocaleTimeString()}
+        </div>
+      </div>
+      
+      ${contentHTML}
+    </div>
+  </main>
+  
+  <footer>
+    <p>Generated by <a href="https://github.com/farmanp/recall" target="_blank">Recall</a></p>
+    <p>Exported: ${new Date().toLocaleString()}</p>
+  </footer>
+</body>
+</html>
+  `.trim();
+}
+
+/**
+ * Convert full session timeline to HTML
+ */
+export function sessionToHTML(session: SessionTimeline): string {
+  const framesHTML = session.frames
+    .map((frame) => {
+      const agentName = session.agent
+        ? session.agent.charAt(0).toUpperCase() + session.agent.slice(1)
+        : 'AI';
+
+      const frameTypeLabels = {
+        user_message: 'USER MESSAGE',
+        claude_thinking: `${agentName.toUpperCase()} THINKING`,
+        claude_response: `${agentName.toUpperCase()} RESPONSE`,
+        tool_execution: 'TOOL EXECUTION',
+      };
+
+      const frameTypeClasses = {
+        user_message: 'frame-user',
+        claude_thinking: 'frame-thinking',
+        claude_response: 'frame-response',
+        tool_execution: 'frame-tool',
+      };
+
+      const labelClasses = {
+        user_message: 'label-user',
+        claude_thinking: 'label-thinking',
+        claude_response: 'label-response',
+        tool_execution: 'label-tool',
+      };
+
+      let contentHTML = '';
+
+      switch (frame.type) {
+        case 'user_message':
+          contentHTML = `<div class="frame-content user">${escapeHTML(frame.userMessage?.text || '')}</div>`;
+          break;
+        case 'claude_thinking':
+          contentHTML = `<div class="frame-content thinking">${escapeHTML(frame.thinking?.text || '')}</div>`;
+          break;
+        case 'claude_response':
+          contentHTML = `<div class="frame-content response">${escapeHTML(frame.claudeResponse?.text || '')}</div>`;
+          break;
+        case 'tool_execution':
+          const tool = frame.toolExecution;
+          if (tool) {
+            const inputJSON = JSON.stringify(tool.input, null, 2);
+            const output = tool.output.content;
+            const truncated = output.length > 1000 ? output.substring(0, 1000) + '\n...' : output;
+
+            contentHTML = `
+              <div class="tool-info">
+                <div class="tool-badge tool-name">Tool: ${escapeHTML(tool.tool)}</div>
+                ${tool.output.isError ? '<div class="tool-badge error">Failed</div>' : ''}
+              </div>
+              <div class="tool-section">
+                <div class="tool-section-label">// Input Parameters</div>
+                <pre><code>${escapeHTML(inputJSON)}</code></pre>
+              </div>
+              <div class="tool-section">
+                <div class="tool-section-label">// Output Result</div>
+                <pre class="${tool.output.isError ? 'error-output' : ''}"><code>${escapeHTML(truncated)}</code></pre>
+              </div>
+            `;
+          }
+          break;
+      }
+
+      return `
+        <div class="frame ${frameTypeClasses[frame.type]}" id="frame-${frame.id}">
+          <div class="frame-header">
+            <div class="frame-type">
+              <div class="frame-icon">
+                <span class="${labelClasses[frame.type]}">■</span>
+              </div>
+              <div>
+                <div class="frame-label ${labelClasses[frame.type]}">
+                  ${frameTypeLabels[frame.type]}
+                </div>
+              </div>
+            </div>
+            <div class="frame-timestamp">
+              ${new Date(frame.timestamp).toLocaleTimeString()}
+            </div>
+          </div>
+          ${contentHTML}
+        </div>
+      `;
+    })
+    .join('\n');
+
+  return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${escapeHTML(session.slug)} - Recall Export</title>
+  <style>${getInlinedCSS()}</style>
+</head>
+<body>
+  <header>
+    <h1 class="mono">${escapeHTML(session.slug)}</h1>
+    <div class="metadata">
+      <span>📁 ${escapeHTML(session.project.split('/').pop() || session.project)}</span>
+      <span>🤖 ${escapeHTML(session.agent || 'AI')}</span>
+      <span>🕐 ${new Date(session.startedAt).toLocaleString()}</span>
+      <span>📊 ${session.totalFrames} frames</span>
+    </div>
+  </header>
+  
+  <main>
+    ${framesHTML}
+  </main>
+  
+  <footer>
+    <p>Generated by <a href="https://github.com/farmanp/recall" target="_blank">Recall</a></p>
+    <p>Exported: ${new Date().toLocaleString()}</p>
+  </footer>
+</body>
+</html>
+  `.trim();
+}
+
+/**
  * Triggers a file download of the given text
  */
 export function downloadFile(filename: string, text: string) {

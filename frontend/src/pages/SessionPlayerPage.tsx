@@ -49,6 +49,7 @@ import { StatsPanel } from '../components/session-player/StatsPanel';
 import { ClaudeMdPanel } from '../components/session-player/ClaudeMdPanel';
 import { ArtifactsSidebar } from '../components/session-player/ArtifactsSidebar';
 import { FiltersPanel } from '../components/session-player/FiltersPanel';
+import { FrameActions } from '../components/session-player/FrameActions';
 import { useSessionStats } from '../hooks/useSessionStats';
 import {
   findMatchingFrameIndices,
@@ -56,7 +57,7 @@ import {
   findPrevMatchIndex,
   highlightText,
 } from '../lib/frameSearch';
-import { sessionToMarkdown, downloadFile } from '../lib/exportSession';
+import { sessionToMarkdown, sessionToHTML, downloadFile } from '../lib/exportSession';
 
 type FrameType = 'user_message' | 'claude_thinking' | 'claude_response' | 'tool_execution';
 
@@ -95,6 +96,7 @@ export const SessionPlayerPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'timeline' | 'chat'>('timeline');
   const [showFiltersPanel, setShowFiltersPanel] = useState(false);
+  const [showExportDropdown, setShowExportDropdown] = useState(false);
 
   // Fetch session details and all frames
   const { data: sessionDetails, isLoading: loadingDetails } = useSessionDetails(sessionId);
@@ -505,24 +507,72 @@ export const SessionPlayerPage: React.FC = () => {
             </div>
           </div>
 
-          <button
-            onClick={() => {
-              if (sessionDetails) {
-                const timeline: SessionTimeline = {
-                  ...sessionDetails,
-                  frames,
-                };
-                const markdown = sessionToMarkdown(timeline);
-                downloadFile(`${sessionDetails.slug}.md`, markdown);
-              }
-            }}
-            className="inline-flex items-center gap-2 px-3 py-2 bg-forensic-bg-tertiary hover:bg-forensic-border text-forensic-text-secondary hover:text-forensic-text-primary border border-forensic-border font-mono text-xs uppercase tracking-wide transition-all"
-            title="Export session to Markdown"
-            aria-label="Export session to Markdown"
-          >
-            <Download className="w-4 h-4" />
-            <span className="hidden xl:inline">Export</span>
-          </button>
+          <div className="relative">
+            <button
+              onClick={() => setShowExportDropdown(!showExportDropdown)}
+              className="inline-flex items-center gap-2 px-3 py-2 bg-forensic-bg-tertiary hover:bg-forensic-border text-forensic-text-secondary hover:text-forensic-text-primary border border-forensic-border font-mono text-xs uppercase tracking-wide transition-all"
+              title="Export session"
+              aria-label="Export session"
+            >
+              <Download className="w-4 h-4" />
+              <span className="hidden xl:inline">Export</span>
+              <span
+                className={`ml-1 transition-transform ${showExportDropdown ? 'rotate-180' : ''}`}
+              >
+                ▾
+              </span>
+            </button>
+
+            {showExportDropdown && (
+              <>
+                {/* Backdrop to close dropdown */}
+                <div className="fixed inset-0 z-10" onClick={() => setShowExportDropdown(false)} />
+
+                {/* Dropdown menu */}
+                <div className="absolute top-full right-0 mt-2 bg-forensic-bg-secondary border border-forensic-border shadow-2xl z-20 min-w-[200px]">
+                  <button
+                    onClick={() => {
+                      if (sessionDetails) {
+                        const timeline: SessionTimeline = {
+                          ...sessionDetails,
+                          frames,
+                        };
+                        const markdown = sessionToMarkdown(timeline);
+                        downloadFile(`${sessionDetails.slug}.md`, markdown);
+                        setShowExportDropdown(false);
+                      }
+                    }}
+                    className="w-full px-4 py-3 text-left font-mono text-sm text-forensic-text-secondary hover:bg-forensic-bg-tertiary hover:text-forensic-text-primary transition-colors flex items-center gap-3"
+                  >
+                    <span className="text-forensic-text-muted">.md</span>
+                    <span>Markdown</span>
+                  </button>
+
+                  <div className="border-t border-forensic-border" />
+
+                  <button
+                    onClick={() => {
+                      if (sessionDetails) {
+                        const timeline: SessionTimeline = {
+                          ...sessionDetails,
+                          frames,
+                        };
+                        const html = sessionToHTML(timeline);
+                        downloadFile(`${sessionDetails.slug}.html`, html);
+                        setShowExportDropdown(false);
+                      }
+                    }}
+                    className="w-full px-4 py-3 text-left font-mono text-sm text-forensic-text-secondary hover:bg-forensic-bg-tertiary hover:text-forensic-text-primary transition-colors flex items-center gap-3"
+                  >
+                    <span className="text-accent-green">.html</span>
+                    <span>
+                      HTML <span className="text-accent-green text-xs">(New!)</span>
+                    </span>
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
 
           <button
             onClick={() => setViewMode(viewMode === 'timeline' ? 'chat' : 'timeline')}
@@ -633,7 +683,11 @@ export const SessionPlayerPage: React.FC = () => {
               )}
 
               {currentFrame && isFrameVisible(currentFrame) ? (
-                <FrameRenderer frame={currentFrame} searchQuery={searchQuery} />
+                <FrameRenderer
+                  frame={currentFrame}
+                  searchQuery={searchQuery}
+                  sessionMeta={sessionDetails}
+                />
               ) : (
                 currentFrame && (
                   <div className="text-center py-24">
@@ -1038,10 +1092,11 @@ const ToolOutputBlock: React.FC<{
   );
 };
 
-const FrameRenderer: React.FC<{ frame: PlaybackFrame; searchQuery?: string }> = ({
-  frame,
-  searchQuery = '',
-}) => {
+const FrameRenderer: React.FC<{
+  frame: PlaybackFrame;
+  searchQuery?: string;
+  sessionMeta?: Partial<SessionTimeline>;
+}> = ({ frame, searchQuery = '', sessionMeta }) => {
   const frameTypeColors = {
     user_message: 'bg-accent-cyan/5 border-accent-cyan/30',
     claude_thinking: 'bg-accent-purple/5 border-accent-purple/30',
@@ -1074,8 +1129,11 @@ const FrameRenderer: React.FC<{ frame: PlaybackFrame; searchQuery?: string }> = 
 
   return (
     <div
-      className={`border p-6 mb-6 transition-all duration-300 ${frameTypeColors[frame.type] || 'bg-forensic-bg-secondary border-forensic-border'}`}
+      className={`group relative border p-6 mb-6 transition-all duration-300 ${frameTypeColors[frame.type] || 'bg-forensic-bg-secondary border-forensic-border'}`}
     >
+      {/* Frame Actions (appears on hover) */}
+      <FrameActions frame={frame} sessionMeta={sessionMeta} />
+
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-forensic-bg-tertiary border border-forensic-border">
