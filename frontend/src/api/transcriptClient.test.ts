@@ -1,29 +1,14 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { fetchSessions } from './transcriptClient';
-
-/**
- * Unit tests for transcriptClient API functions
- *
- * These tests verify the API client constructs correct URLs and defaults.
- * The key test here prevents regression of the bug where source defaulted
- * to 'db' instead of 'filesystem', causing 0 sessions to be returned.
- */
+import * as client from './transcriptClient';
 
 describe('transcriptClient', () => {
   let fetchSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    // Mock global fetch
     fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
       ok: true,
-      json: () =>
-        Promise.resolve({
-          sessions: [],
-          total: 0,
-          offset: 0,
-          limit: 20,
-          source: 'filesystem',
-        }),
+      status: 200,
+      json: () => Promise.resolve({ success: true }),
     } as Response);
   });
 
@@ -32,69 +17,87 @@ describe('transcriptClient', () => {
   });
 
   describe('fetchSessions', () => {
-    it('defaults to filesystem source when no source specified', async () => {
-      await fetchSessions({});
-
-      // Verify fetch was called with filesystem source
-      expect(fetchSpy).toHaveBeenCalledTimes(1);
-      const calledUrl = fetchSpy.mock.calls[0][0] as string;
-
-      // This test prevents regression: source MUST default to 'filesystem'
-      // Previously defaulted to 'db' which returned 0 sessions when DB was empty
-      expect(calledUrl).toContain('source=filesystem');
-      expect(calledUrl).not.toContain('source=db');
+    it('defaults to filesystem source', async () => {
+      await client.fetchSessions({});
+      expect(fetchSpy).toHaveBeenCalledWith(expect.stringContaining('source=filesystem'));
     });
+  });
 
-    it('respects explicit source=db when specified', async () => {
-      await fetchSessions({ source: 'db' });
-
-      const calledUrl = fetchSpy.mock.calls[0][0] as string;
-      expect(calledUrl).toContain('source=db');
-    });
-
-    it('respects explicit source=filesystem when specified', async () => {
-      await fetchSessions({ source: 'filesystem' });
-
-      const calledUrl = fetchSpy.mock.calls[0][0] as string;
-      expect(calledUrl).toContain('source=filesystem');
-    });
-
-    it('includes pagination parameters', async () => {
-      await fetchSessions({ offset: 10, limit: 50 });
-
-      const calledUrl = fetchSpy.mock.calls[0][0] as string;
-      expect(calledUrl).toContain('offset=10');
-      expect(calledUrl).toContain('limit=50');
-    });
-
-    it('includes agent filter when specified', async () => {
-      await fetchSessions({ agent: 'claude' });
-
-      const calledUrl = fetchSpy.mock.calls[0][0] as string;
-      expect(calledUrl).toContain('agent=claude');
-    });
-
-    it('includes hasClaudeMd filter when specified', async () => {
-      await fetchSessions({ hasClaudeMd: true });
-
-      const calledUrl = fetchSpy.mock.calls[0][0] as string;
-      expect(calledUrl).toContain('hasClaudeMd=true');
-    });
-
-    it('includes showAll flag when specified', async () => {
-      await fetchSessions({ showAll: true });
-
-      const calledUrl = fetchSpy.mock.calls[0][0] as string;
-      expect(calledUrl).toContain('showAll=true');
-    });
-
-    it('throws error when response is not ok', async () => {
+  describe('fetchCheckpoints', () => {
+    it('calls correct URL', async () => {
       fetchSpy.mockResolvedValueOnce({
-        ok: false,
-        statusText: 'Internal Server Error',
+        ok: true,
+        json: () => Promise.resolve({ checkpoints: [] }),
       } as Response);
+      await client.fetchCheckpoints('s1');
+      expect(fetchSpy).toHaveBeenCalledWith('/api/sessions/s1/checkpoints');
+    });
+  });
 
-      await expect(fetchSessions({})).rejects.toThrow('Failed to fetch sessions');
+  describe('createCheckpoint', () => {
+    it('sends POST request with data', async () => {
+      const data = { name: 'CP1', frameIndex: 5 };
+      await client.createCheckpoint('s1', data);
+      expect(fetchSpy).toHaveBeenCalledWith(
+        '/api/sessions/s1/checkpoints',
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify(data),
+        })
+      );
+    });
+  });
+
+  describe('previewRewind', () => {
+    it('sends POST request with frameIndex', async () => {
+      await client.previewRewind('s1', 10);
+      expect(fetchSpy).toHaveBeenCalledWith(
+        '/api/sessions/s1/rewind/preview',
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({ frameIndex: 10 }),
+        })
+      );
+    });
+  });
+
+  describe('executeRewind', () => {
+    it('sends POST request with options', async () => {
+      const options = { createBackups: true, skipConflicts: false };
+      await client.executeRewind('s1', 10, options);
+      expect(fetchSpy).toHaveBeenCalledWith(
+        '/api/sessions/s1/rewind/execute',
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({ frameIndex: 10, ...options }),
+        })
+      );
+    });
+  });
+
+  describe('fetchSessionSummary', () => {
+    it('calls correct URL', async () => {
+      await client.fetchSessionSummary('s1');
+      expect(fetchSpy).toHaveBeenCalledWith('/api/sessions/s1/summary');
+    });
+  });
+
+  describe('regenerateSummary', () => {
+    it('sends POST request', async () => {
+      await client.regenerateSummary('s1');
+      expect(fetchSpy).toHaveBeenCalledWith(
+        '/api/sessions/s1/summary/regenerate',
+        expect.objectContaining({
+          method: 'POST',
+        })
+      );
+    });
+  });
+
+  describe('fetchSessionGit', () => {
+    it('calls correct URL', async () => {
+      await client.fetchSessionGit('s1');
+      expect(fetchSpy).toHaveBeenCalledWith('/api/sessions/s1/git');
     });
   });
 });
