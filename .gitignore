@@ -57,3 +57,6 @@ backend/public/*
 
 # Validation output (contains session-specific data)
 validation_report.json
+
+# Marketing docs (private)
+docs/marketing/
