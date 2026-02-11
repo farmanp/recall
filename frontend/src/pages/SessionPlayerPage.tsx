@@ -10,6 +10,9 @@ import {
   useSessionDetails,
   useSessionFrames,
   useSessionCommentary,
+  useSessionGit,
+  useCheckpoints,
+  useSessionSummary,
 } from '../hooks/useTranscriptApi';
 import type { PlaybackFrame, CommentaryData, SessionTimeline } from '../types/transcript';
 import ReactMarkdown from 'react-markdown';
@@ -36,6 +39,10 @@ import {
   Layout,
   FileText,
   SlidersHorizontal,
+  GitBranch,
+  Bookmark,
+  RotateCcw,
+  AlignLeft,
 } from 'lucide-react';
 import { CommentaryTimeline, CommentaryCard } from '../components/CommentaryBubble';
 import { TimelineScrubber } from '../components/session-player/TimelineScrubber';
@@ -50,6 +57,12 @@ import { ClaudeMdPanel } from '../components/session-player/ClaudeMdPanel';
 import { ArtifactsSidebar } from '../components/session-player/ArtifactsSidebar';
 import { FiltersPanel } from '../components/session-player/FiltersPanel';
 import { FrameActions } from '../components/session-player/FrameActions';
+import { GitPanel } from '../components/session-player/GitPanel';
+import { GitBadge } from '../components/GitBadge';
+import { CheckpointPanel } from '../components/session-player/CheckpointPanel';
+import { CheckpointMarkers } from '../components/session-player/CheckpointMarker';
+import { RewindPanel } from '../components/session-player/RewindPanel';
+import { SummaryCard } from '../components/session-player/SummaryCard';
 import { useSessionStats } from '../hooks/useSessionStats';
 import {
   findMatchingFrameIndices,
@@ -97,6 +110,10 @@ export const SessionPlayerPage: React.FC = () => {
   const [viewMode, setViewMode] = useState<'timeline' | 'chat'>('timeline');
   const [showFiltersPanel, setShowFiltersPanel] = useState(false);
   const [showExportDropdown, setShowExportDropdown] = useState(false);
+  const [showGitPanel, setShowGitPanel] = useState(false);
+  const [showCheckpoints, setShowCheckpoints] = useState(false);
+  const [showRewind, setShowRewind] = useState(false);
+  const [showSummary, setShowSummary] = useState(false);
 
   // Fetch session details and all frames
   const { data: sessionDetails, isLoading: loadingDetails } = useSessionDetails(sessionId);
@@ -107,6 +124,15 @@ export const SessionPlayerPage: React.FC = () => {
 
   // Fetch commentary observations from claude-mem
   const { data: commentaryData } = useSessionCommentary(sessionId);
+
+  // Fetch git context for the session
+  const { data: gitData } = useSessionGit(sessionId);
+
+  // Fetch checkpoints for the session
+  const { data: checkpointsData } = useCheckpoints(sessionId);
+
+  // Fetch session summary
+  const { data: summaryData } = useSessionSummary(sessionId);
 
   const frames = useMemo(() => framesData?.frames ?? [], [framesData?.frames]);
   const currentFrame = useMemo(() => frames[currentFrameIndex], [frames, currentFrameIndex]);
@@ -310,6 +336,26 @@ export const SessionPlayerPage: React.FC = () => {
           e.preventDefault();
           setShowClaudeMd((prev) => !prev);
           break;
+        case 'g':
+        case 'G':
+          e.preventDefault();
+          setShowGitPanel((prev) => !prev);
+          break;
+        case 'k':
+        case 'K':
+          e.preventDefault();
+          setShowCheckpoints((prev) => !prev);
+          break;
+        case 'w':
+        case 'W':
+          e.preventDefault();
+          setShowRewind((prev) => !prev);
+          break;
+        case 'y':
+        case 'Y':
+          e.preventDefault();
+          setShowSummary((prev) => !prev);
+          break;
         case '1':
         case '2':
         case '3':
@@ -330,6 +376,14 @@ export const SessionPlayerPage: React.FC = () => {
             setShowArtifacts(false);
           } else if (showFiltersPanel) {
             setShowFiltersPanel(false);
+          } else if (showGitPanel) {
+            setShowGitPanel(false);
+          } else if (showCheckpoints) {
+            setShowCheckpoints(false);
+          } else if (showRewind) {
+            setShowRewind(false);
+          } else if (showSummary) {
+            setShowSummary(false);
           } else {
             navigate('/');
           }
@@ -401,6 +455,10 @@ export const SessionPlayerPage: React.FC = () => {
     showClaudeMd,
     showArtifacts,
     showFiltersPanel,
+    showGitPanel,
+    showCheckpoints,
+    showRewind,
+    showSummary,
     isFrameVisible,
   ]);
 
@@ -503,6 +561,15 @@ export const SessionPlayerPage: React.FC = () => {
               <div className="mt-0.5 flex items-center gap-2">
                 <AgentBadge agent={sessionDetails?.agent} />
                 <ModelBadge model={sessionDetails?.metadata?.agentVersion} />
+                {gitData && (
+                  <GitBadge
+                    branch={gitData.branch}
+                    commit={gitData.headCommit}
+                    isDirty={gitData.isDirty}
+                    onClick={() => setShowGitPanel(true)}
+                    size="sm"
+                  />
+                )}
               </div>
             </div>
           </div>
@@ -651,6 +718,57 @@ export const SessionPlayerPage: React.FC = () => {
             <Settings className="w-4 h-4" />
             <span className="hidden xl:inline">Stats</span>
           </button>
+
+          {/* Git Context Button */}
+          {gitData && (
+            <button
+              onClick={() => setShowGitPanel(!showGitPanel)}
+              className={`inline-flex items-center gap-2 px-3 py-2 font-mono text-xs uppercase tracking-wide transition-all border ${
+                showGitPanel
+                  ? 'bg-accent-purple/20 border-accent-purple/50 text-accent-purple'
+                  : 'bg-forensic-bg-tertiary border-forensic-border text-forensic-text-secondary hover:text-forensic-text-primary'
+              }`}
+              title="Git context (g)"
+            >
+              <GitBranch className="w-4 h-4" />
+              <span className="hidden xl:inline">Git</span>
+            </button>
+          )}
+
+          {/* Checkpoints Button */}
+          <button
+            onClick={() => setShowCheckpoints(!showCheckpoints)}
+            className={`inline-flex items-center gap-2 px-3 py-2 font-mono text-xs uppercase tracking-wide transition-all border ${
+              showCheckpoints
+                ? 'bg-accent-amber/20 border-accent-amber/50 text-accent-amber'
+                : checkpointsData && checkpointsData.length > 0
+                  ? 'bg-accent-amber/10 border-accent-amber/30 text-accent-amber'
+                  : 'bg-forensic-bg-tertiary border-forensic-border text-forensic-text-secondary hover:text-forensic-text-primary'
+            }`}
+            title={`Checkpoints (k) - ${checkpointsData?.length || 0} saved`}
+          >
+            <Bookmark className="w-4 h-4" />
+            <span className="hidden xl:inline">
+              Checkpoints
+              {checkpointsData && checkpointsData.length > 0 ? ` (${checkpointsData.length})` : ''}
+            </span>
+          </button>
+
+          {/* Summary Button */}
+          {summaryData && (
+            <button
+              onClick={() => setShowSummary(!showSummary)}
+              className={`inline-flex items-center gap-2 px-3 py-2 font-mono text-xs uppercase tracking-wide transition-all border ${
+                showSummary
+                  ? 'bg-accent-green/20 border-accent-green/50 text-accent-green'
+                  : 'bg-forensic-bg-tertiary border-forensic-border text-forensic-text-secondary hover:text-forensic-text-primary'
+              }`}
+              title="Session summary (y)"
+            >
+              <AlignLeft className="w-4 h-4" />
+              <span className="hidden xl:inline">Summary</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -738,15 +856,24 @@ export const SessionPlayerPage: React.FC = () => {
               <span>// Filters: {activeFrameCount}/4 active</span>
             </div>
 
-            <TimelineScrubber
-              frames={frames}
-              currentFrameIndex={currentFrameIndex}
-              onSeek={handleFrameChange}
-              showCommentary={showCommentary}
-              commentary={commentaryData?.commentary}
-              activeFrameTypes={activeFrameTypes}
-              isFrameVisible={isFrameVisible}
-            />
+            <div className="relative">
+              <TimelineScrubber
+                frames={frames}
+                currentFrameIndex={currentFrameIndex}
+                onSeek={handleFrameChange}
+                showCommentary={showCommentary}
+                commentary={commentaryData?.commentary}
+                activeFrameTypes={activeFrameTypes}
+                isFrameVisible={isFrameVisible}
+              />
+              {checkpointsData && checkpointsData.length > 0 && (
+                <CheckpointMarkers
+                  checkpoints={checkpointsData}
+                  totalFrames={frames.length}
+                  onNavigateToFrame={handleFrameChange}
+                />
+              )}
+            </div>
 
             {/* Playback Controls Bar */}
             <div className="bg-forensic-bg-tertiary border-t border-forensic-border px-6 py-5 transition-all duration-300">
@@ -957,6 +1084,53 @@ export const SessionPlayerPage: React.FC = () => {
             }
           }}
           onClose={() => setShowFiltersPanel(false)}
+        />
+      )}
+      {showGitPanel && gitData && (
+        <GitPanel gitContext={gitData} onClose={() => setShowGitPanel(false)} />
+      )}
+      {showCheckpoints && sessionId && (
+        <CheckpointPanel
+          checkpoints={checkpointsData || []}
+          currentFrameIndex={currentFrameIndex}
+          totalFrames={frames.length}
+          onNavigateToFrame={handleFrameChange}
+          onCreate={() => {
+            // TODO: Implement checkpoint creation
+            console.log('Create checkpoint at frame', currentFrameIndex);
+          }}
+          onDelete={(checkpointId: string) => {
+            // TODO: Implement checkpoint deletion
+            console.log('Delete checkpoint', checkpointId);
+          }}
+          onClose={() => setShowCheckpoints(false)}
+        />
+      )}
+      {showRewind && sessionId && (
+        <RewindPanel
+          sessionId={sessionId}
+          targetFrameIndex={currentFrameIndex}
+          currentFrameIndex={currentFrameIndex}
+          plan={null}
+          onClose={() => setShowRewind(false)}
+          onPreview={() => {
+            // TODO: Implement rewind preview
+            console.log('Preview rewind to frame', currentFrameIndex);
+          }}
+          onExecute={(options) => {
+            // TODO: Implement rewind execution
+            console.log('Execute rewind with options', options);
+          }}
+        />
+      )}
+      {showSummary && summaryData && (
+        <SummaryCard
+          summary={summaryData}
+          onRegenerate={() => {
+            // TODO: Implement summary regeneration
+            console.log('Regenerate summary for session', sessionId);
+          }}
+          onClose={() => setShowSummary(false)}
         />
       )}
     </div>

@@ -77,6 +77,99 @@ export function sessionToMarkdown(session: SessionTimeline): string {
 }
 
 /**
+ * Converts a single frame to Markdown format.
+ */
+export function frameToMarkdown(
+  frame: PlaybackFrame,
+  sessionMeta?: Partial<SessionTimeline>
+): string {
+  const lines: string[] = [];
+
+  // Header with session context if available
+  if (sessionMeta) {
+    lines.push(`# Frame Export: ${sessionMeta.slug || 'Session'}`);
+    lines.push(`**Project:** ${sessionMeta.project || 'Unknown'}`);
+    lines.push(`**Agent:** ${sessionMeta.agent || 'AI'}`);
+    lines.push(`**Frame ID:** \`${frame.id}\``);
+    lines.push(`**Timestamp:** ${new Date(frame.timestamp).toLocaleString()}`);
+    lines.push('');
+    lines.push('---');
+    lines.push('');
+  }
+
+  // Frame content based on type
+  switch (frame.type) {
+    case 'user_message':
+      lines.push(`## 👤 User Message`);
+      lines.push('');
+      lines.push(frame.userMessage?.text || '');
+      break;
+
+    case 'claude_thinking':
+      lines.push(
+        `## 💭 ${sessionMeta?.agent ? sessionMeta.agent.charAt(0).toUpperCase() + sessionMeta.agent.slice(1) : 'AI'} Thinking`
+      );
+      lines.push('');
+      lines.push(frame.thinking?.text || '');
+      break;
+
+    case 'claude_response':
+      lines.push(
+        `## 🤖 ${sessionMeta?.agent ? sessionMeta.agent.charAt(0).toUpperCase() + sessionMeta.agent.slice(1) : 'AI'} Response`
+      );
+      lines.push('');
+      lines.push(frame.claudeResponse?.text || '');
+      break;
+
+    case 'tool_execution':
+      const tool = frame.toolExecution;
+      if (!tool) break;
+
+      lines.push(`## 🛠️ Tool Execution: \`${tool.tool}\``);
+      lines.push('');
+
+      // Input parameters
+      if (tool.input) {
+        lines.push('### Input Parameters');
+        lines.push('```json');
+        lines.push(JSON.stringify(tool.input, null, 2));
+        lines.push('```');
+        lines.push('');
+      }
+
+      // File diff
+      if (tool.fileDiff) {
+        lines.push(`### Modified File: \`${tool.fileDiff.filePath}\``);
+        lines.push('```' + (tool.fileDiff.language || ''));
+        lines.push(tool.fileDiff.newContent);
+        lines.push('```');
+        lines.push('');
+      }
+
+      // Output
+      if (tool.output) {
+        lines.push('### Output Result');
+        if (tool.output.isError) {
+          lines.push('**❌ Error**');
+          lines.push('');
+        }
+        lines.push('```');
+        lines.push(tool.output.content);
+        lines.push('```');
+      }
+      break;
+  }
+
+  lines.push('');
+  lines.push('---');
+  lines.push(
+    `*Exported from [Recall](https://github.com/farmanp/recall) on ${new Date().toLocaleString()}*`
+  );
+
+  return lines.join('\n');
+}
+
+/**
  * Get inlined CSS for standalone HTML exports
  */
 function getInlinedCSS(): string {

@@ -7,7 +7,7 @@
 import React, { useState } from 'react';
 import { Download } from 'lucide-react';
 import type { PlaybackFrame, SessionTimeline } from '../../types/transcript';
-import { frameToHTML, downloadFile } from '../../lib/exportSession';
+import { frameToHTML, frameToMarkdown, downloadFile } from '../../lib/exportSession';
 
 interface FrameActionsProps {
   frame: PlaybackFrame;
@@ -16,6 +16,13 @@ interface FrameActionsProps {
 
 export const FrameActions: React.FC<FrameActionsProps> = ({ frame, sessionMeta }) => {
   const [showMenu, setShowMenu] = useState(false);
+
+  const handleExportMarkdown = () => {
+    const markdown = frameToMarkdown(frame, sessionMeta);
+    const filename = `${sessionMeta?.slug || 'frame'}_${frame.id}.md`;
+    downloadFile(filename, markdown);
+    setShowMenu(false);
+  };
 
   const handleExportHTML = () => {
     const html = frameToHTML(frame, sessionMeta);
@@ -44,11 +51,21 @@ export const FrameActions: React.FC<FrameActionsProps> = ({ frame, sessionMeta }
             {/* Dropdown */}
             <div className="absolute top-full right-0 mt-2 bg-forensic-bg-secondary border border-forensic-border shadow-2xl z-20 min-w-[180px]">
               <button
+                onClick={handleExportMarkdown}
+                className="w-full px-4 py-3 text-left font-mono text-sm text-forensic-text-secondary hover:bg-forensic-bg-tertiary hover:text-forensic-text-primary transition-colors flex items-center gap-3"
+              >
+                <span className="text-forensic-text-muted">.md</span>
+                <span>Markdown</span>
+              </button>
+
+              <div className="border-t border-forensic-border" />
+
+              <button
                 onClick={handleExportHTML}
                 className="w-full px-4 py-3 text-left font-mono text-sm text-forensic-text-secondary hover:bg-forensic-bg-tertiary hover:text-forensic-text-primary transition-colors flex items-center gap-3"
               >
                 <span className="text-accent-green">.html</span>
-                <span>Export Frame</span>
+                <span>HTML</span>
               </button>
             </div>
           </>
