@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - 2026-02-11
+
+### Added
+
+- **Git Commit Linking** - Sessions automatically capture git context (branch, commit, dirty state) on import. API endpoints for querying sessions by commit hash or branch.
+- **Checkpoints** - Create named save points during sessions with file snapshots. Navigate to any checkpoint from the timeline.
+- **Rewind** - Restore file state from any checkpoint with preview and undo capability. Automatic backup before rewind.
+- **Session Summaries** - Storage and display of AI-generated session summaries via SummaryCard component.
+- **Export Modal** - Unified export dialog with options for current frame or full session, in Markdown or HTML format.
+- **New UI Components** - GitPanel, GitBadge, CheckpointPanel, CheckpointMarker, CreateCheckpointDialog, RewindPanel, RewindConfirmDialog, SummaryCard
+- **Keyboard Shortcuts** - `g` (git), `k` (checkpoints), `w` (rewind), `y` (summary)
+- **Comprehensive Tests** - 146 new tests across backend services, routes, and frontend components
+- **Versioning Guide** - New `docs/VERSIONING.md` with semantic versioning guidelines
+
+### Changed
+
+- **SessionPlayerPage** - Integrated all new feature panels and keyboard shortcuts
+- **Test Coverage** - Backend coverage improved to 57%, frontend to 36%
+
+### Fixed
+
+- **ESLint Warnings** - Resolved React hooks dependency warnings in TimelineScrubber, ArtifactsPanel, ArtifactsSidebar, ModelBadge
+- **Prettier Formatting** - Added HTML files to lint-staged, fixed formatting in docs/index.html and frontend/index.html
+
+---
+
 ## [2.1.1] - 2026-02-10
 
 ### Security
