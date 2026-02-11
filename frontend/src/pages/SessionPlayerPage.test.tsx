@@ -11,6 +11,9 @@ vi.mock('../hooks/useTranscriptApi');
 const mockedUseSessionDetails = vi.mocked(transcriptHooks.useSessionDetails);
 const mockedUseSessionFrames = vi.mocked(transcriptHooks.useSessionFrames);
 const mockedUseSessionCommentary = vi.mocked(transcriptHooks.useSessionCommentary);
+const mockedUseSessionGit = vi.mocked(transcriptHooks.useSessionGit);
+const mockedUseCheckpoints = vi.mocked(transcriptHooks.useCheckpoints);
+const mockedUseSessionSummary = vi.mocked(transcriptHooks.useSessionSummary);
 
 const sessionDetails: SessionDetailsResponse = {
   sessionId: 's1',
@@ -73,6 +76,21 @@ describe('SessionPlayerPage', () => {
     });
     mockedUseSessionCommentary.mockReturnValue({
       data: { commentary: [], total: 0, sessionId: 's1' },
+      isLoading: false,
+      error: null,
+    });
+    mockedUseSessionGit.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error: null,
+    });
+    mockedUseCheckpoints.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error: null,
+    });
+    mockedUseSessionSummary.mockReturnValue({
+      data: undefined,
       isLoading: false,
       error: null,
     });

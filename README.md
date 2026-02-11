@@ -51,10 +51,10 @@ When working with AI coding assistants, you often face a loss of context:
 ![Session List](docs/assets/session-list.png)
 _Unified forensic dashboard with deep search and agent filtering._
 
-### Replay Player
+### Forensic Replay Player
 
-![Session Player](docs/assets/session-player.png)
-_Frame-by-frame playback with precise timeline scrubbing and diffing._
+![Forensic Replay](docs/assets/hero-replay.gif)
+_High-fidelity frame-by-frame playback with precise timeline scrubbing._\_
 
 ### Conversational View
 

@@ -167,6 +167,40 @@ export async function importTranscript(filePath: string, agent?: AgentType): Pro
       }
     }
 
+    // Extract and store git context (best-effort, don't fail import)
+    if (timeline.metadata.cwd) {
+      try {
+        const { GitExtractor, initializeGitActivitySchema } = await import('./git-extractor');
+
+        // Ensure git activity schema exists
+        initializeGitActivitySchema();
+
+        const gitContext = GitExtractor.extractGitContext(timeline.metadata.cwd);
+        if (gitContext) {
+          GitExtractor.storeGitContext(sessionId, gitContext);
+          console.log(
+            `[Import] Stored git context: ${gitContext.branch}@${gitContext.headCommit?.slice(0, 7) || 'no-commit'}`
+          );
+
+          // If we have session timing, look for commits made during the session
+          if (timeline.startedAt && timeline.completedAt) {
+            const commits = GitExtractor.getCommitsInTimeRange(
+              timeline.metadata.cwd,
+              timeline.startedAt,
+              timeline.completedAt
+            );
+            if (commits.length > 0) {
+              GitExtractor.storeSessionCommits(sessionId, commits);
+              console.log(`[Import] Found ${commits.length} commit(s) during session`);
+            }
+          }
+        }
+      } catch (error) {
+        // Log but don't fail the import if git extraction fails
+        console.warn(`[Import] Failed to extract git context:`, error);
+      }
+    }
+
     const framesInserted = timeline.frames.length;
 
     // Mark as completed

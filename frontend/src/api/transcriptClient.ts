@@ -285,3 +285,202 @@ export async function deleteWorkUnit(
 
   return response.json();
 }
+
+// ============================================================================
+// Competitive Features API Functions
+// ============================================================================
+
+import type {
+  GitContext,
+  Checkpoint,
+  CreateCheckpointRequest,
+  RewindPlan,
+  RewindOptions,
+  RewindResult,
+  SessionSummary,
+} from '../types/competitive';
+
+// ----------------------------------------------------------------------------
+// Phase 1: Git Context API
+// ----------------------------------------------------------------------------
+
+/**
+ * Fetch git context for a session
+ */
+export async function fetchSessionGit(sessionId: string): Promise<GitContext> {
+  const url = `${API_BASE_URL}/sessions/${sessionId}/git`;
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch git info: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+// ----------------------------------------------------------------------------
+// Phase 2: Checkpoints API
+// ----------------------------------------------------------------------------
+
+/**
+ * Fetch all checkpoints for a session
+ */
+export async function fetchCheckpoints(sessionId: string): Promise<Checkpoint[]> {
+  const url = `${API_BASE_URL}/sessions/${sessionId}/checkpoints`;
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch checkpoints: ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  return data.checkpoints || data;
+}
+
+/**
+ * Create a new checkpoint for a session
+ */
+export async function createCheckpoint(
+  sessionId: string,
+  data: CreateCheckpointRequest
+): Promise<Checkpoint> {
+  const url = `${API_BASE_URL}/sessions/${sessionId}/checkpoints`;
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to create checkpoint: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+/**
+ * Delete a checkpoint
+ */
+export async function deleteCheckpoint(checkpointId: string): Promise<void> {
+  const url = `${API_BASE_URL}/checkpoints/${checkpointId}`;
+  const response = await fetch(url, { method: 'DELETE' });
+
+  if (!response.ok) {
+    throw new Error(`Failed to delete checkpoint: ${response.statusText}`);
+  }
+}
+
+/**
+ * Compare two checkpoints
+ */
+export async function compareCheckpoints(
+  checkpoint1Id: string,
+  checkpoint2Id: string
+): Promise<{
+  checkpoint1: Checkpoint;
+  checkpoint2: Checkpoint;
+  filesDiff: { added: string[]; removed: string[]; modified: string[] };
+}> {
+  const url = `${API_BASE_URL}/checkpoints/compare?from=${checkpoint1Id}&to=${checkpoint2Id}`;
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error(`Failed to compare checkpoints: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+// ----------------------------------------------------------------------------
+// Phase 3: Rewind API
+// ----------------------------------------------------------------------------
+
+/**
+ * Preview a rewind operation (dry run)
+ */
+export async function previewRewind(sessionId: string, frameIndex: number): Promise<RewindPlan> {
+  const url = `${API_BASE_URL}/sessions/${sessionId}/rewind/preview`;
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ frameIndex }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to preview rewind: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+/**
+ * Execute a rewind operation
+ */
+export async function executeRewind(
+  sessionId: string,
+  frameIndex: number,
+  options: RewindOptions
+): Promise<RewindResult> {
+  const url = `${API_BASE_URL}/sessions/${sessionId}/rewind/execute`;
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ frameIndex, ...options }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to execute rewind: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+/**
+ * Undo a previous rewind operation
+ */
+export async function undoRewind(rewindId: string): Promise<{
+  success: boolean;
+  filesRestored: number;
+  errors: string[];
+}> {
+  const url = `${API_BASE_URL}/rewind/${rewindId}/undo`;
+  const response = await fetch(url, { method: 'POST' });
+
+  if (!response.ok) {
+    throw new Error(`Failed to undo rewind: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+// ----------------------------------------------------------------------------
+// Phase 4: Summary API
+// ----------------------------------------------------------------------------
+
+/**
+ * Fetch session summary (may be cached)
+ */
+export async function fetchSessionSummary(sessionId: string): Promise<SessionSummary> {
+  const url = `${API_BASE_URL}/sessions/${sessionId}/summary`;
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch summary: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+/**
+ * Regenerate session summary (force new generation)
+ */
+export async function regenerateSummary(sessionId: string): Promise<SessionSummary> {
+  const url = `${API_BASE_URL}/sessions/${sessionId}/summary/regenerate`;
+  const response = await fetch(url, { method: 'POST' });
+
+  if (!response.ok) {
+    throw new Error(`Failed to regenerate summary: ${response.statusText}`);
+  }
+
+  return response.json();
+}

@@ -214,7 +214,7 @@ export function initializeTranscriptSchema(): void {
     DROP TRIGGER IF EXISTS playback_frames_au;
     CREATE TRIGGER playback_frames_au AFTER UPDATE ON playback_frames BEGIN
       UPDATE playback_frames_fts
-      SET 
+      SET
         user_message_text = new.user_message_text,
         thinking_text = new.thinking_text,
         response_text = new.response_text
@@ -225,6 +225,29 @@ export function initializeTranscriptSchema(): void {
     CREATE TRIGGER playback_frames_ad AFTER DELETE ON playback_frames BEGIN
       DELETE FROM playback_frames_fts WHERE rowid = old.rowid;
     END;
+  `);
+
+  // 7. SESSION_SUMMARIES - auto-generated session summaries
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS recall_summaries (
+      session_id TEXT PRIMARY KEY,
+      summary_text TEXT NOT NULL,
+      key_decisions TEXT,
+      files_changed TEXT,
+      tools_used TEXT,
+      error_count INTEGER NOT NULL DEFAULT 0,
+      success_indicators TEXT,
+      generated_at TEXT NOT NULL,
+      generated_at_epoch INTEGER NOT NULL,
+      generated_by TEXT NOT NULL DEFAULT 'heuristic',
+      FOREIGN KEY (session_id) REFERENCES session_metadata(session_id) ON DELETE CASCADE
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_recall_summaries_generated
+      ON recall_summaries(generated_at_epoch DESC);
+
+    CREATE INDEX IF NOT EXISTS idx_recall_summaries_by
+      ON recall_summaries(generated_by);
   `);
 }
 

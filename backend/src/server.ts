@@ -5,6 +5,10 @@ import sessionsRouter from './routes/sessions';
 import commentaryRouter from './routes/commentary';
 import importRouter from './routes/import';
 import workUnitsRouter, { getSessionWorkUnit } from './routes/work-units';
+import gitRouter from './routes/git';
+import summariesRouter from './routes/summaries';
+import checkpointsRouter from './routes/checkpoints';
+import rewindRouter from './routes/rewind';
 import { getDbInstance, isClaudeMemAvailable } from './db/connection';
 import { getTranscriptDbInstance } from './db/transcript-connection';
 import { initializeTranscriptSchema } from './db/transcript-queries';
@@ -101,10 +105,19 @@ export function createServer(): Application {
   // API Routes
   app.use('/api/sessions', sessionsRouter);
   app.use('/api/sessions', commentaryRouter);
+  app.use('/api/sessions', summariesRouter); // Summary routes under /api/sessions/:sessionId/summary
+  app.use('/api/summaries', summariesRouter); // Stats and batch routes under /api/summaries
   app.use('/api/import', importRouter);
   app.use('/api/work-units', workUnitsRouter);
+  app.use('/api/git', gitRouter);
+  // Checkpoint routes - mounted at /api for both session-specific and standalone endpoints
+  app.use('/api', checkpointsRouter);
+  // Rewind routes - mounted under /api/sessions/:sessionId/rewind/*
+  app.use('/api/sessions', rewindRouter);
   // Mount sessions router at /api for /api/agents endpoint
   app.use('/api', sessionsRouter);
+  // Mount git router for session-specific git endpoint
+  app.use('/api', gitRouter);
   // Add work unit lookup for sessions
   app.get('/api/sessions/:id/work-unit', getSessionWorkUnit);
 

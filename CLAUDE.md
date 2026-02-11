@@ -339,6 +339,20 @@ GET /api/sessions/:id/work-unit      # Get work unit for a session
 GET /api/sessions/:id/commentary     # Get claude-mem observations for session
 ```
 
+### Rewind
+
+```bash
+# Preview and execute file state restoration
+POST /api/sessions/:id/rewind/preview    # Preview what would change
+POST /api/sessions/:id/rewind/execute    # Execute rewind to restore files
+POST /api/sessions/:id/rewind/undo       # Undo the last rewind (restore from backup)
+
+# Rewind history and status
+GET /api/sessions/:id/rewind/history     # Get rewind history for session
+GET /api/sessions/:id/rewind/undo-info   # Check if undo is available
+GET /api/sessions/:id/rewind/stats       # Get rewind statistics
+```
+
 ## Keyboard Shortcuts
 
 ### Session Player
