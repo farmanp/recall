@@ -74,6 +74,7 @@ export const ArtifactsPanel: React.FC<ArtifactsPanelProps> = ({
   // Re-measure all rows when expanded paths change
   useEffect(() => {
     virtualizer.measure();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- virtualizer is stable from useVirtualizer
   }, [expandedPaths]);
 
   // Close on Escape key (also handled in parent, but good for direct modal interactions)

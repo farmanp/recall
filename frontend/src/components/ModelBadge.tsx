@@ -21,6 +21,7 @@ interface ModelBadgeProps {
  * - "gpt-4o" -> "GPT-4"
  * - "gemini-2.0-flash" -> "Gemini 2.0 Flash"
  */
+// eslint-disable-next-line react-refresh/only-export-components -- utility function intentionally co-located
 export function formatModelName(model: string | undefined): string | null {
   if (!model) return null;
 

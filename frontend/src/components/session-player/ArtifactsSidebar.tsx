@@ -74,6 +74,7 @@ export const ArtifactsSidebar: React.FC<ArtifactsSidebarProps> = ({
   // Re-measure all rows when expanded paths change
   useEffect(() => {
     virtualizer.measure();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- virtualizer is stable from useVirtualizer
   }, [expandedPaths]);
 
   // Toggle file expansion

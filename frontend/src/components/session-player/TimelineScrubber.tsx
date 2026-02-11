@@ -118,7 +118,7 @@ export const TimelineScrubber: React.FC<TimelineScrubberProps> = ({
           />
         );
       }),
-    [frames, activeFrameTypes]
+    [frames, activeFrameTypes, isFrameVisible]
   );
 
   return (
