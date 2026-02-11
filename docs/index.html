@@ -15,6 +15,14 @@
     />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://farmanp.github.io/recall" />
+    <meta property="og:image" content="https://farmanp.github.io/recall/assets/session-list.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Recall - See What Your AI Built" />
+    <meta
+      name="twitter:description"
+      content="Replay AI coding sessions frame-by-frame. Track every file change. Understand what happened."
+    />
+    <meta name="twitter:image" content="https://farmanp.github.io/recall/assets/session-list.png" />
 
     <link
       rel="icon"
@@ -95,7 +103,7 @@
         );
         pointer-events: none;
         z-index: 1000;
-        opacity: 0.3;
+        opacity: 0.15;
       }
 
       /* Nav */
@@ -620,11 +628,28 @@
 
     <section class="hero">
       <div class="container">
-        <div class="badge">v2.2.1 · Forensic Grade · Local-First</div>
-        <h1>The Forensic DVR for<br /><span class="highlight">AI-Driven Development</span></h1>
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 32px;
+          "
+        >
+          <div class="badge" style="margin-bottom: 0">v2.2.1 · Local-First · Open Source</div>
+          <a href="https://github.com/farmanp/recall" target="_blank" rel="noopener">
+            <img
+              src="https://img.shields.io/github/stars/farmanp/recall?style=flat&color=22c55e&labelColor=0a0a0a"
+              alt="GitHub Stars"
+              style="height: 24px"
+            />
+          </a>
+        </div>
+        <h1>See exactly what<br /><span class="highlight">your AI built</span></h1>
         <p class="tagline">
-          Clear the "AI Fog of War". Investigate exactly how your agents built your features. Replay
-          every thought, every prompt, and every file operation with sub-second precision.
+          Replay AI coding sessions like a video. Track every file change, understand every
+          decision. Works with Claude Code, Codex CLI, and Gemini CLI.
         </p>
         <div class="terminal">
           <div class="terminal-header">
@@ -635,7 +660,7 @@
           <div class="terminal-body">
             <div class="terminal-line">
               <span class="terminal-prompt">$</span>
-              <span class="terminal-cmd">npx recall-player</span>
+              <span class="terminal-cmd">npx recall-player@latest</span>
             </div>
             <div class="terminal-line terminal-output">Scanning sessions...</div>
             <div class="terminal-line terminal-output">Found 156 sessions across 3 agents</div>
@@ -650,123 +675,95 @@
       </div>
     </section>
 
-    <section class="case-file" id="evidence">
-      <div class="container">
-        <div class="case-header">
-          <span class="case-id">ANALYSIS</span>
-          <span class="case-title">Clearing the AI "Fog of War"</span>
-        </div>
-        <div class="evidence-grid">
-          <div class="evidence-card" data-id="EV-001">
-            <div class="icon">😶‍🌫️</div>
-            <h3>Invisible Decisions</h3>
-            <p>
-              Why did it choose this library? The rationale often disappears with your terminal
-              scrollback. Recall persists the logic.
-            </p>
-          </div>
-          <div class="evidence-card" data-id="EV-002">
-            <div class="icon">👻</div>
-            <h3>Ghost Changes</h3>
-            <p>
-              Small edits in distant files you might have missed. Recall isolates and highlights
-              every single file operation.
-            </p>
-          </div>
-          <div class="evidence-card" data-id="EV-003">
-            <div class="icon">📉</div>
-            <h3>Knowledge Decay</h3>
-            <p>
-              Looking back at code a week later and forgetting how the AI reached that solution.
-              Replay the history to regain context.
-            </p>
-          </div>
-          <div class="evidence-card" data-id="EV-004">
-            <div class="icon">🧩</div>
-            <h3>Fragmented Work</h3>
-            <p>
-              Using Claude, Gemini, and Codex across projects? Recall correlates all agent
-              activities into unified Work Units.
-            </p>
-          </div>
-        </div>
-      </div>
-    </section>
-
+    <!-- Demo Section - Moved up for visibility -->
     <style>
-      .screenshot-gallery {
-        padding: 100px 0;
+      .demo-section {
+        padding: 60px 0 80px;
         border-top: 1px solid var(--border);
       }
 
-      .gallery-grid {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 64px;
-      }
-
-      .gallery-item {
+      .demo-container {
         background: var(--bg-secondary);
         border: 1px solid var(--border);
         padding: 16px;
         border-radius: 4px;
       }
 
-      .gallery-item img {
-        width: 100%;
-        height: auto;
-        border: 1px solid var(--border);
-        display: block;
-        border-radius: 2px;
-      }
-
-      .gallery-item .label {
+      .demo-label {
         display: block;
         font-family: 'JetBrains Mono', monospace;
         font-size: 0.75rem;
         color: var(--text-muted);
         text-transform: uppercase;
         margin-top: 12px;
+        text-align: center;
       }
     </style>
 
-    <section class="screenshot-gallery">
+    <section class="demo-section">
+      <div class="container">
+        <div class="demo-container">
+          <div
+            style="position: relative; padding-bottom: calc(64.94% + 41px); height: 0; width: 100%"
+          >
+            <iframe
+              src="https://demo.arcade.software/mmUYOyo3g5eODbwxamx0?embed&embed_mobile=tab&embed_desktop=inline&show_copy_link=true"
+              title="Search a session, replay events, and inspect file diffs"
+              frameborder="0"
+              loading="lazy"
+              webkitallowfullscreen
+              mozallowfullscreen
+              allowfullscreen
+              allow="clipboard-write"
+              style="
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                color-scheme: light;
+                border-radius: 4px;
+              "
+            ></iframe>
+          </div>
+          <span class="demo-label">// Click through the interactive demo</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Problem Section -->
+    <section class="case-file" id="why">
       <div class="container">
         <div class="case-header">
-          <span class="case-id">FORENSIC ASSETS</span>
-          <span class="case-title">Visual Evidence</span>
+          <span class="case-id">THE PROBLEM</span>
+          <span class="case-title">The AI Black Box</span>
         </div>
-        <div class="gallery-grid">
-          <div class="gallery-item">
-            <div
-              style="
-                position: relative;
-                padding-bottom: calc(64.94% + 41px);
-                height: 0;
-                width: 100%;
-              "
-            >
-              <iframe
-                src="https://demo.arcade.software/mmUYOyo3g5eODbwxamx0?embed&embed_mobile=tab&embed_desktop=inline&show_copy_link=true"
-                title="Search a session, replay events, and inspect file diffs"
-                frameborder="0"
-                loading="lazy"
-                webkitallowfullscreen
-                mozallowfullscreen
-                allowfullscreen
-                allow="clipboard-write"
-                style="
-                  position: absolute;
-                  top: 0;
-                  left: 0;
-                  width: 100%;
-                  height: 100%;
-                  color-scheme: light;
-                  border: 1px solid var(--border);
-                "
-              ></iframe>
-            </div>
-            <span class="label">// Interactive Demo - Click through to explore Recall</span>
+        <div class="evidence-grid">
+          <div class="evidence-card" data-id="01">
+            <div class="icon">😶‍🌫️</div>
+            <h3>Lost Context</h3>
+            <p>
+              "Why did it choose this library?" The reasoning disappears with your terminal
+              scrollback.
+            </p>
+          </div>
+          <div class="evidence-card" data-id="02">
+            <div class="icon">👻</div>
+            <h3>Hidden Changes</h3>
+            <p>
+              Small edits in distant files you missed. What else did it touch while you weren't
+              looking?
+            </p>
+          </div>
+          <div class="evidence-card" data-id="03">
+            <div class="icon">📉</div>
+            <h3>Forgotten Work</h3>
+            <p>A week later: "How did this get built?" Replay history to regain understanding.</p>
+          </div>
+          <div class="evidence-card" data-id="04">
+            <div class="icon">🧩</div>
+            <h3>Scattered Sessions</h3>
+            <p>Using Claude, Gemini, and Codex? Recall unifies all agents into one timeline.</p>
           </div>
         </div>
       </div>
@@ -774,56 +771,38 @@
 
     <section class="capabilities" id="capabilities">
       <div class="container">
-        <h2>// The Forensic Toolbox</h2>
-        <p class="subtitle">Mission-critical tools to audit and analyze agent behavior</p>
+        <h2>// Features</h2>
+        <p class="subtitle">Everything you need to understand your AI coding sessions</p>
         <div class="cap-grid">
           <div class="cap-item">
-            <div class="cap-icon">📹</div>
-            <h3>Mission Control</h3>
-            <p>
-              Scrub through sessions with variable speeds (0.5x to 20x). Automated dead-air
-              compression.
-            </p>
+            <div class="cap-icon">▶️</div>
+            <h3>Playback</h3>
+            <p>Scrub through sessions at variable speeds. Skip dead air automatically.</p>
           </div>
           <div class="cap-item">
             <div class="cap-icon">📂</div>
-            <h3>Artifact Tracking</h3>
-            <p>
-              Binary-level tracking of every file operation. Inline syntax-highlighted diffs for
-              every write.
-            </p>
+            <h3>File Tracking</h3>
+            <p>See every file read, write, and edit. Syntax-highlighted diffs included.</p>
           </div>
           <div class="cap-item">
             <div class="cap-icon">🔍</div>
-            <h3>Signal Intelligence</h3>
-            <p>
-              Deep search across all session transcripts via SQLite FTS5. Find discussion points in
-              milliseconds.
-            </p>
+            <h3>Search</h3>
+            <p>Full-text search across all sessions. Find any conversation in milliseconds.</p>
           </div>
           <div class="cap-item">
             <div class="cap-icon">📦</div>
-            <h3>Work Logistics</h3>
-            <p>
-              Correlate disparate sessions into "Work Units" for a holistic view of feature
-              evolution.
-            </p>
+            <h3>Work Units</h3>
+            <p>Group related sessions together. See the full picture of how a feature evolved.</p>
           </div>
           <div class="cap-item">
             <div class="cap-icon">🔒</div>
-            <h3>OpSec First</h3>
-            <p>
-              100% local operation. Read-only ingestion ensures no modification of original session
-              evidence.
-            </p>
+            <h3>Private & Local</h3>
+            <p>100% local. Your code never leaves your machine. Read-only, never modifies files.</p>
           </div>
           <div class="cap-item">
             <div class="cap-icon">⌨️</div>
-            <h3>Hotkeys</h3>
-            <p>
-              Full keyboard navigation for investigators. Space, Arrows, Home/End, and specialized
-              filters.
-            </p>
+            <h3>Keyboard First</h3>
+            <p>Full hotkey support. Space to play, arrows to navigate, and more.</p>
           </div>
         </div>
       </div>
@@ -831,7 +810,7 @@
 
     <section class="agents" id="agents">
       <div class="container">
-        <h2>// Verified Evidence Sources</h2>
+        <h2>// Supported Agents</h2>
         <div class="agents-list">
           <div class="agent">
             <div class="agent-name claude">Claude Code</div>
@@ -851,29 +830,21 @@
 
     <section class="install" id="install">
       <div class="container">
-        <h2>// Begin Investigation</h2>
+        <h2>// Get Started</h2>
         <div class="install-steps">
           <div class="install-step">
             <div class="step-marker">01</div>
             <div class="step-content">
               <h3>Run with npx</h3>
-              <p>No installation required.</p>
-              <code>npx recall-player</code>
+              <p>No installation required. Opens in your browser automatically.</p>
+              <code>npx recall-player@latest</code>
             </div>
           </div>
           <div class="install-step">
             <div class="step-marker">02</div>
             <div class="step-content">
-              <h3>Open Interface</h3>
-              <p>Access the investigation dashboard.</p>
-              <code>open http://localhost:3001</code>
-            </div>
-          </div>
-          <div class="install-step">
-            <div class="step-marker">03</div>
-            <div class="step-content">
-              <h3>Analyze Sessions</h3>
-              <p>Browse, search, replay. Uncover what happened.</p>
+              <h3>Browse & Replay</h3>
+              <p>Search your sessions, click to open, and replay like a video.</p>
             </div>
           </div>
         </div>
@@ -882,9 +853,17 @@
 
     <section class="cta">
       <div class="container">
-        <h2>Begin the Investigation</h2>
-        <p>Analyze your AI coding sessions in sub-second speed.</p>
-        <a href="https://github.com/farmanp/recall" class="btn">Star on GitHub</a>
+        <h2>Ready to see what your AI built?</h2>
+        <p>One command. No sign-up. Free forever.</p>
+        <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap">
+          <a href="https://github.com/farmanp/recall#quick-start" class="btn">Get Started</a>
+          <a
+            href="https://github.com/farmanp/recall"
+            class="btn"
+            style="background: transparent; border: 1px solid var(--green); color: var(--green)"
+            >Star on GitHub</a
+          >
+        </div>
       </div>
     </section>
 
