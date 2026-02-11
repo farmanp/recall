@@ -14,7 +14,7 @@ Recall is a local-first web application that replays AI coding sessions like a v
 
 ```bash
 # Run via npx (recommended)
-npx recall-player
+npx recall-player@latest
 
 # Or install globally
 npm install -g recall-player
@@ -29,10 +29,10 @@ Comma-separated list of directory patterns to exclude from session scanning. Use
 
 ```bash
 # Exclude specific directories
-RECALL_EXCLUDE_PATTERNS="thedotmack,archived" npx recall-player
+RECALL_EXCLUDE_PATTERNS="thedotmack,archived" npx recall-player@latest
 
 # Exclude with glob-style patterns
-RECALL_EXCLUDE_PATTERNS="**/claude-mem/**,**/test-data/**" npx recall-player
+RECALL_EXCLUDE_PATTERNS="**/claude-mem/**,**/test-data/**" npx recall-player@latest
 ```
 
 **Pattern matching:**
@@ -47,11 +47,11 @@ Controls automatic filtering of sessions based on the startup directory. When en
 ```bash
 # Default behavior: filter to current directory
 cd /Users/me/projects/myapp
-npx recall-player
+npx recall-player@latest
 # Shows only sessions from /Users/me/projects/myapp
 
 # Disable CWD filter to see all sessions
-RECALL_FILTER_CWD=false npx recall-player
+RECALL_FILTER_CWD=false npx recall-player@latest
 # Shows all sessions from all directories
 ```
 
@@ -165,7 +165,7 @@ npm run build
 npm publish
 
 # Verify the publish
-npx recall-player --version
+npx recall-player@latest --version
 ```
 
 ## Architecture

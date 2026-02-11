@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🎬 Recall v2.1.0
+# 🎬 Recall v2.2.0
 
 **The Forensic DVR for AI-Driven Development**
 
@@ -53,7 +53,7 @@ _Unified forensic dashboard with deep search and agent filtering._
 
 ### Forensic Replay Player
 
-![Forensic Replay](docs/assets/hero-replay.gif)
+![Forensic Replay](docs/demo.gif)
 _High-fidelity frame-by-frame playback with precise timeline scrubbing._\_
 
 ### Conversational View
@@ -107,7 +107,7 @@ Recall currently supports high-fidelity ingestion from three primary agents:
 **Option 1: npx (Recommended)**
 
 ```bash
-npx recall-player
+npx recall-player@latest
 ```
 
 This will start Recall and automatically open your browser.
@@ -210,10 +210,10 @@ Controls automatic directory-based session filtering (default: `true`).
 ```bash
 # Show only sessions from current directory (default)
 cd /Users/me/projects/myapp
-npx recall-player
+npx recall-player@latest
 
 # Disable filtering to see ALL sessions
-RECALL_FILTER_CWD=false npx recall-player
+RECALL_FILTER_CWD=false npx recall-player@latest
 ```
 
 #### `RECALL_EXCLUDE_PATTERNS`
@@ -222,10 +222,10 @@ Comma-separated glob patterns to exclude directories from session scanning.
 
 ```bash
 # Exclude specific directories
-RECALL_EXCLUDE_PATTERNS="archived,thedotmack" npx recall-player
+RECALL_EXCLUDE_PATTERNS="archived,thedotmack" npx recall-player@latest
 
 # Exclude with glob patterns
-RECALL_EXCLUDE_PATTERNS="**/test-data/**,**/plugins/**" npx recall-player
+RECALL_EXCLUDE_PATTERNS="**/test-data/**,**/plugins/**" npx recall-player@latest
 ```
 
 ---
@@ -411,7 +411,7 @@ Yes! Use the **CWD filter** feature:
 ```bash
 # Run Recall from your project directory
 cd /Users/me/projects/myapp
-npx recall-player
+npx recall-player@latest
 ```
 
 Only sessions from `/Users/me/projects/myapp` will be shown. Disable with `RECALL_FILTER_CWD=false`.
@@ -444,7 +444,7 @@ For detailed troubleshooting, see the [**Troubleshooting Guide**](docs/TROUBLESH
 ```bash
 # Clear the database cache and restart
 rm -f ~/.recall-player/transcripts.db*
-npx recall-player
+npx recall-player@latest
 ```
 
 **SQLite corruption errors?**
@@ -452,13 +452,13 @@ npx recall-player
 ```bash
 # The transcript DB is just a cache - safe to delete
 rm -f ~/.recall-player/transcripts.db*
-npx recall-player
+npx recall-player@latest
 ```
 
 **Stale npx cache?**
 
 ```bash
-npx clear-npx-cache && npx recall-player
+npx clear-npx-cache && npx recall-player@latest
 ```
 
 See the [full troubleshooting guide](docs/TROUBLESHOOTING.md) for more solutions
