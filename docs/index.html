@@ -610,6 +610,123 @@
           display: none;
         }
       }
+
+      /* Social Proof */
+      .social-proof {
+        margin: 24px auto;
+        text-align: center;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+      }
+
+      .social-proof a {
+        color: var(--green);
+      }
+
+      /* Tagline sub */
+      .tagline-sub {
+        font-size: 0.9rem;
+        color: var(--text-muted);
+        margin-top: 8px;
+      }
+
+      /* CTA Buttons */
+      .cta-buttons {
+        display: flex;
+        gap: 16px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-top: 32px;
+        margin-bottom: 32px;
+      }
+
+      .btn-secondary {
+        display: inline-block;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.9rem;
+        padding: 14px 28px;
+        background: transparent;
+        border: 2px solid var(--green);
+        color: var(--green);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .btn-secondary:hover {
+        background: var(--green);
+        color: var(--bg-primary);
+        text-decoration: none;
+        transform: translateY(-2px);
+      }
+
+      /* Feature benefits */
+      .feature-benefit {
+        margin-top: 12px;
+        color: var(--green);
+        font-size: 0.8rem;
+        font-family: 'JetBrains Mono', monospace;
+      }
+
+      /* Use Cases */
+      .use-cases {
+        padding: 80px 0;
+        border-top: 1px solid var(--border);
+      }
+
+      .use-case-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 24px;
+        margin-top: 48px;
+      }
+
+      @media (max-width: 768px) {
+        .use-case-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .use-case-card {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border);
+        padding: 24px;
+      }
+
+      .use-case-emoji {
+        font-size: 2rem;
+        margin-bottom: 16px;
+      }
+
+      .use-case-title {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.95rem;
+        color: var(--green);
+        margin-bottom: 8px;
+      }
+
+      .use-case-scenario {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        font-style: italic;
+        margin-bottom: 12px;
+      }
+
+      .use-case-solution {
+        color: var(--text-primary);
+        font-size: 0.85rem;
+      }
+
+      /* Step benefits */
+      .step-benefit {
+        margin-top: 8px;
+        color: var(--green);
+        font-size: 0.8rem;
+        font-family: 'JetBrains Mono', monospace;
+      }
     </style>
   </head>
 
@@ -637,8 +754,7 @@
             margin-bottom: 32px;
           "
         >
-          <div class="badge" style="margin-bottom: 0">v2.4.0 · Local-First · Open Source</div>
-          <!-- TODO: Re-enable GitHub stars badge when shields.io issue is resolved
+          <div class="badge" style="margin-bottom: 0">Local-First · Open Source</div>
           <a href="https://github.com/farmanp/recall" target="_blank" rel="noopener">
             <img
               src="https://img.shields.io/github/stars/farmanp/recall.svg?style=flat&color=22c55e"
@@ -646,13 +762,28 @@
               style="height: 24px"
             />
           </a>
-          -->
         </div>
-        <h1>See exactly what<br /><span class="highlight">your AI built</span></h1>
+        <h1>Never lose track of<br /><span class="highlight">what your AI changed</span></h1>
         <p class="tagline">
-          Replay AI coding sessions like a video. Track every file change, understand every
-          decision. Works with Claude Code, Codex CLI, and Gemini CLI.
+          The DVR for your AI coding sessions. Rewind, replay, and understand what changed—frame by
+          frame.
         </p>
+        <p class="tagline-sub">Works with Claude Code, Gemini CLI, and Codex CLI</p>
+
+        <div class="social-proof">
+          <a href="https://www.npmjs.com/package/recall-player" target="_blank" rel="noopener">
+            <img
+              src="https://img.shields.io/npm/dm/recall-player.svg?style=flat&color=22c55e"
+              alt="npm downloads"
+              style="height: 20px; vertical-align: middle"
+            />
+          </a>
+        </div>
+
+        <div class="cta-buttons">
+          <a href="#install" class="btn">Try It Now (30 sec install)</a>
+          <a href="#evidence" class="btn-secondary">See the Demo</a>
+        </div>
         <div class="terminal">
           <div class="terminal-header">
             <div class="terminal-dot red"></div>
@@ -733,6 +864,42 @@
       </div>
     </section>
 
+    <!-- Use Cases Section -->
+    <section class="use-cases">
+      <div class="container">
+        <h2>// Built for Real Work</h2>
+        <div class="use-case-grid">
+          <div class="use-case-card">
+            <div class="use-case-emoji">🔍</div>
+            <div class="use-case-title">Debugging</div>
+            <p class="use-case-scenario">"When did this bug get introduced?"</p>
+            <p class="use-case-solution">
+              → Scrub through your session timeline to find the exact moment a file change caused
+              unexpected behavior.
+            </p>
+          </div>
+          <div class="use-case-card">
+            <div class="use-case-emoji">📚</div>
+            <div class="use-case-title">Knowledge Sharing</div>
+            <p class="use-case-scenario">"Show the team how I implemented OAuth"</p>
+            <p class="use-case-solution">
+              → Record and replay your Claude session to demonstrate architectural decisions and
+              debugging steps.
+            </p>
+          </div>
+          <div class="use-case-card">
+            <div class="use-case-emoji">⏮️</div>
+            <div class="use-case-title">Context Recovery</div>
+            <p class="use-case-scenario">"What was I working on yesterday?"</p>
+            <p class="use-case-solution">
+              → Quickly review your last session's work to pick up where you left off without losing
+              momentum.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- Problem Section -->
     <section class="case-file" id="why">
       <div class="container">
@@ -780,31 +947,49 @@
             <div class="cap-icon">▶️</div>
             <h3>Playback</h3>
             <p>Scrub through sessions at variable speeds. Skip dead air automatically.</p>
+            <p class="feature-benefit">
+              → Debug bugs faster by pinpointing exactly when something broke.
+            </p>
           </div>
           <div class="cap-item">
             <div class="cap-icon">📂</div>
             <h3>File Tracking</h3>
             <p>See every file read, write, and edit. Syntax-highlighted diffs included.</p>
+            <p class="feature-benefit">
+              → See the ripple effect of every AI edit across your codebase.
+            </p>
           </div>
           <div class="cap-item">
             <div class="cap-icon">🔍</div>
             <h3>Search</h3>
             <p>Full-text search across all sessions. Find any conversation in milliseconds.</p>
+            <p class="feature-benefit">
+              → Instantly recall how your AI solved a similar problem weeks ago.
+            </p>
           </div>
           <div class="cap-item">
             <div class="cap-icon">📦</div>
             <h3>Work Units</h3>
             <p>Group related sessions together. See the full picture of how a feature evolved.</p>
+            <p class="feature-benefit">
+              → Track the full evolution of a feature across multiple sessions.
+            </p>
           </div>
           <div class="cap-item">
             <div class="cap-icon">🔒</div>
             <h3>Private & Local</h3>
             <p>100% local. Your code never leaves your machine. Read-only, never modifies files.</p>
+            <p class="feature-benefit">
+              → Zero security risk. No telemetry, no cloud, no external calls.
+            </p>
           </div>
           <div class="cap-item">
             <div class="cap-icon">⌨️</div>
             <h3>Keyboard First</h3>
             <p>Full hotkey support. Space to play, arrows to navigate, and more.</p>
+            <p class="feature-benefit">
+              → Navigate sessions without taking your hands off the keyboard.
+            </p>
           </div>
         </div>
       </div>
@@ -812,7 +997,11 @@
 
     <section class="agents" id="agents">
       <div class="container">
-        <h2>// Supported Agents</h2>
+        <h2>// One Timeline, All Your AI Agents</h2>
+        <p class="subtitle">
+          Recall automatically unifies sessions from Claude Code, Gemini CLI, and Codex CLI into a
+          single searchable timeline. No more switching between tools to track down what happened.
+        </p>
         <div class="agents-list">
           <div class="agent">
             <div class="agent-name claude">Claude Code</div>
@@ -832,7 +1021,7 @@
 
     <section class="install" id="install">
       <div class="container">
-        <h2>// Get Started</h2>
+        <h2>// Get Started in 30 Seconds</h2>
         <div class="install-steps">
           <div class="install-step">
             <div class="step-marker">01</div>
@@ -840,6 +1029,7 @@
               <h3>Run with npx</h3>
               <p>No installation required. Opens in your browser automatically.</p>
               <code>npx recall-player@latest</code>
+              <p class="step-benefit">→ Automatically scans ~/.claude, ~/.gemini, ~/.codex</p>
             </div>
           </div>
           <div class="install-step">
@@ -847,6 +1037,9 @@
             <div class="step-content">
               <h3>Browse & Replay</h3>
               <p>Search your sessions, click to open, and replay like a video.</p>
+              <p class="step-benefit">
+                → Start understanding what your AI actually did in under a minute
+              </p>
             </div>
           </div>
         </div>
