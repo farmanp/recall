@@ -26,6 +26,10 @@ export interface SessionSummary {
   successIndicators: string[];
   generatedAt: string;
   generatedBy: 'heuristic' | 'llm';
+  // LLM-specific fields (optional)
+  tokensUsed?: number;
+  estimatedCost?: number;
+  model?: string;
 }
 
 /**
@@ -42,6 +46,10 @@ export interface SessionSummaryRow {
   generated_at: string;
   generated_at_epoch: number;
   generated_by: string;
+  // LLM-specific fields (optional)
+  tokens_used?: number | null;
+  estimated_cost?: number | null;
+  llm_model?: string | null;
 }
 
 /**
@@ -412,6 +420,9 @@ export class Summarizer {
       generated_at: summary.generatedAt,
       generated_at_epoch: now.getTime(),
       generated_by: summary.generatedBy,
+      tokens_used: summary.tokensUsed ?? null,
+      estimated_cost: summary.estimatedCost ?? null,
+      llm_model: summary.model ?? null,
     };
   }
 
@@ -422,7 +433,7 @@ export class Summarizer {
    * @returns SessionSummary object
    */
   static fromRow(row: SessionSummaryRow): SessionSummary {
-    return {
+    const summary: SessionSummary = {
       sessionId: row.session_id,
       summaryText: row.summary_text,
       keyDecisions: row.key_decisions ? JSON.parse(row.key_decisions) : [],
@@ -435,5 +446,12 @@ export class Summarizer {
       generatedAt: row.generated_at,
       generatedBy: row.generated_by as 'heuristic' | 'llm',
     };
+
+    // Add LLM fields if present
+    if (row.tokens_used != null) summary.tokensUsed = row.tokens_used;
+    if (row.estimated_cost != null) summary.estimatedCost = row.estimated_cost;
+    if (row.llm_model != null) summary.model = row.llm_model;
+
+    return summary;
   }
 }

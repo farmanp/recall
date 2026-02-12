@@ -3,7 +3,7 @@ import express, { type Application } from 'express';
 import request from 'supertest';
 
 const mocks = vi.hoisted(() => ({
-  gitExtractor: {
+  gitQueries: {
     getGitActivity: vi.fn(),
     getSessionCommits: vi.fn(),
     findSessionsByCommit: vi.fn(),
@@ -15,8 +15,12 @@ const mocks = vi.hoisted(() => ({
   },
 }));
 
-vi.mock('../../services/git-extractor', () => ({
-  GitExtractor: mocks.gitExtractor,
+vi.mock('../../db/git-queries', () => ({
+  getGitActivity: mocks.gitQueries.getGitActivity,
+  getSessionCommits: mocks.gitQueries.getSessionCommits,
+  findSessionsByCommit: mocks.gitQueries.findSessionsByCommit,
+  getBranchesWithCounts: mocks.gitQueries.getBranchesWithCounts,
+  findSessionsByBranch: mocks.gitQueries.findSessionsByBranch,
 }));
 
 vi.mock('../../db/transcript-queries', () => ({
@@ -37,7 +41,7 @@ describe('Git Routes', () => {
 
   it('returns session git context', async () => {
     mocks.transcriptQueries.getTranscriptSessionById.mockReturnValue({ id: 'session-1' });
-    mocks.gitExtractor.getGitActivity.mockReturnValue({
+    mocks.gitQueries.getGitActivity.mockReturnValue({
       session_id: 'session-1',
       branch_name: 'main',
       commit_hash: 'abc1234',
@@ -49,7 +53,7 @@ describe('Git Routes', () => {
       untracked_count: 2,
       captured_at: '2026-01-01T00:00:00.000Z',
     });
-    mocks.gitExtractor.getSessionCommits.mockReturnValue([
+    mocks.gitQueries.getSessionCommits.mockReturnValue([
       {
         commit_hash: 'abc1234',
         commit_message: 'feat: add api',
@@ -74,7 +78,7 @@ describe('Git Routes', () => {
 
   it('returns 404 when git context is unavailable', async () => {
     mocks.transcriptQueries.getTranscriptSessionById.mockReturnValue({ id: 'session-1' });
-    mocks.gitExtractor.getGitActivity.mockReturnValue(null);
+    mocks.gitQueries.getGitActivity.mockReturnValue(null);
     await request(app).get('/api/sessions/session-1/git').expect(404);
   });
 
@@ -83,14 +87,14 @@ describe('Git Routes', () => {
   });
 
   it('returns sessions by commit hash', async () => {
-    mocks.gitExtractor.findSessionsByCommit.mockReturnValue(['session-1', 'session-2']);
+    mocks.gitQueries.findSessionsByCommit.mockReturnValue(['session-1', 'session-2']);
     const response = await request(app).get('/api/commits?hash=abcd').expect(200);
     expect(response.body.hash).toBe('abcd');
     expect(response.body.count).toBe(2);
   });
 
   it('returns branches with counts', async () => {
-    mocks.gitExtractor.getBranchesWithCounts.mockReturnValue([
+    mocks.gitQueries.getBranchesWithCounts.mockReturnValue([
       { branch: 'main', sessionCount: 3 },
       { branch: 'feature/x', sessionCount: 1 },
     ]);
@@ -100,13 +104,13 @@ describe('Git Routes', () => {
   });
 
   it('returns sessions on a branch using decoded name and capped limit', async () => {
-    mocks.gitExtractor.findSessionsByBranch.mockReturnValue(['session-1']);
+    mocks.gitQueries.findSessionsByBranch.mockReturnValue(['session-1']);
     const response = await request(app)
       .get('/api/branches/feature%2Fnew/sessions?limit=10000')
       .expect(200);
 
     expect(response.body.branch).toBe('feature/new');
     expect(response.body.sessions).toEqual(['session-1']);
-    expect(mocks.gitExtractor.findSessionsByBranch).toHaveBeenCalledWith('feature/new', 500);
+    expect(mocks.gitQueries.findSessionsByBranch).toHaveBeenCalledWith('feature/new', 500);
   });
 });

@@ -26,6 +26,8 @@ const mocks = vi.hoisted(() => ({
     parseFile: vi.fn(),
     buildTimeline: vi.fn(),
   },
+  getTranscriptSessionById: vi.fn(),
+  importTranscript: vi.fn(),
 }));
 
 vi.mock('../../services/checkpoint-manager', () => ({
@@ -39,6 +41,12 @@ vi.mock('../../parser/parser-factory', () => ({
 }));
 vi.mock('../../parser/agent-detector', () => ({
   detectAgentFromPath: vi.fn(() => 'codex'),
+}));
+vi.mock('../../db/transcript-queries', () => ({
+  getTranscriptSessionById: mocks.getTranscriptSessionById,
+}));
+vi.mock('../../services/transcript-importer', () => ({
+  importTranscript: mocks.importTranscript,
 }));
 
 describe('Checkpoint Routes', () => {
@@ -78,6 +86,8 @@ describe('Checkpoint Routes', () => {
     mocks.parserFactory.parseFile.mockResolvedValue({});
     mocks.parserFactory.buildTimeline.mockResolvedValue({ frames: [{ id: 'f1' }] });
     mocks.checkpointManager.createCheckpoint.mockReturnValue({ id: CHECKPOINT_ID, fileCount: 1 });
+    // Mock session exists in DB (no auto-import needed)
+    mocks.getTranscriptSessionById.mockReturnValue({ session_id: 's1' });
 
     const response = await request(app)
       .post('/api/sessions/s1/checkpoints')

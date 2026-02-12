@@ -31,6 +31,9 @@ export function initializeSummarySchema(): void {
       generated_at TEXT NOT NULL,
       generated_at_epoch INTEGER NOT NULL,
       generated_by TEXT NOT NULL DEFAULT 'heuristic',
+      tokens_used INTEGER DEFAULT NULL,
+      estimated_cost REAL DEFAULT NULL,
+      llm_model TEXT DEFAULT NULL,
       FOREIGN KEY (session_id) REFERENCES session_metadata(session_id) ON DELETE CASCADE
     );
 
@@ -101,7 +104,10 @@ export function storeSummary(summary: SessionSummary): void {
       success_indicators,
       generated_at,
       generated_at_epoch,
-      generated_by
+      generated_by,
+      tokens_used,
+      estimated_cost,
+      llm_model
     ) VALUES (
       @session_id,
       @summary_text,
@@ -112,7 +118,10 @@ export function storeSummary(summary: SessionSummary): void {
       @success_indicators,
       @generated_at,
       @generated_at_epoch,
-      @generated_by
+      @generated_by,
+      @tokens_used,
+      @estimated_cost,
+      @llm_model
     )
   `
   ).run(row);
@@ -208,6 +217,9 @@ export function getSummaryStats(): {
   llm: number;
   avgErrorCount: number;
   avgFilesChanged: number;
+  totalTokens: number;
+  totalCost: number;
+  avgTokensPerSummary: number;
 } {
   const db = getTranscriptDbInstance();
 
@@ -225,7 +237,10 @@ export function getSummaryStats(): {
           json_array_length(json_extract(files_changed, '$.modified')),
           0
         )
-      ) as avg_files_changed
+      ) as avg_files_changed,
+      SUM(COALESCE(tokens_used, 0)) as total_tokens,
+      SUM(COALESCE(estimated_cost, 0.0)) as total_cost,
+      AVG(CASE WHEN tokens_used IS NOT NULL THEN tokens_used ELSE NULL END) as avg_tokens
     FROM recall_summaries
   `
     )
@@ -235,6 +250,9 @@ export function getSummaryStats(): {
     llm: number;
     avg_error_count: number | null;
     avg_files_changed: number | null;
+    total_tokens: number | null;
+    total_cost: number | null;
+    avg_tokens: number | null;
   };
 
   return {
@@ -243,6 +261,9 @@ export function getSummaryStats(): {
     llm: stats.llm || 0,
     avgErrorCount: stats.avg_error_count || 0,
     avgFilesChanged: stats.avg_files_changed || 0,
+    totalTokens: stats.total_tokens || 0,
+    totalCost: stats.total_cost || 0,
+    avgTokensPerSummary: stats.avg_tokens || 0,
   };
 }
 
@@ -300,7 +321,10 @@ export function storeSummariesBatch(summaries: SessionSummary[]): number {
       success_indicators,
       generated_at,
       generated_at_epoch,
-      generated_by
+      generated_by,
+      tokens_used,
+      estimated_cost,
+      llm_model
     ) VALUES (
       @session_id,
       @summary_text,
@@ -311,7 +335,10 @@ export function storeSummariesBatch(summaries: SessionSummary[]): number {
       @success_indicators,
       @generated_at,
       @generated_at_epoch,
-      @generated_by
+      @generated_by,
+      @tokens_used,
+      @estimated_cost,
+      @llm_model
     )
   `);
 

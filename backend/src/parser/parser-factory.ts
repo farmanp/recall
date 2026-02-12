@@ -78,12 +78,31 @@ export class ParserFactory {
    * parser to parse the transcript file.
    *
    * @param filePath - Path to the JSONL transcript file
+   * @param options - Optional parsing options
+   * @param options.resolvedProjectPath - For Gemini sessions, the resolved project path to use as cwd
    * @returns Parsed transcript with entries and metadata
    */
-  static async parseFile(filePath: string): Promise<ParsedTranscript> {
+  static async parseFile(
+    filePath: string,
+    options?: { resolvedProjectPath?: string }
+  ): Promise<ParsedTranscript> {
     const agentType = detectAgentFromPath(filePath);
     const parser = ParserFactory.getParser(agentType);
-    return parser.parseFile(filePath);
+
+    // For Gemini parser, set the resolved project path if provided
+    if (agentType === 'gemini' && options?.resolvedProjectPath) {
+      (parser as GeminiParser).setResolvedProjectPath(options.resolvedProjectPath);
+    }
+
+    try {
+      return await parser.parseFile(filePath);
+    } finally {
+      // Clear the resolved project path after parsing to avoid leaking state
+      // when the parser instance is reused
+      if (agentType === 'gemini' && options?.resolvedProjectPath) {
+        (parser as GeminiParser).setResolvedProjectPath(undefined);
+      }
+    }
   }
 
   /**

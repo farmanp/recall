@@ -5,6 +5,46 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.0] - 2026-02-11
+
+### Added
+
+- **Git Branch Display** - Sessions now show the git branch they were recorded on directly in the header. Extracted from session files automatically - no database import required.
+- **Security Foundation** - Added viewer-mode middleware, auth guard, and secret redactor services (preparation for future sharing features).
+- **LLM Summary Generator** - Backend service for generating session summaries with cost tracking (requires API key configuration).
+- **Git Context Capture** - Enhanced git state capture during database import including commits made during session.
+
+### Changed
+
+- **Export Improvements** - Streamlined export functionality with better formatting.
+
+### Internal
+
+- Added comprehensive test suites for new security middleware and services.
+- Added documentation for competitive analysis and feature planning.
+
+---
+
+## [2.3.0] - 2026-02-11
+
+### Added
+
+- **Gemini Project Mapping** - Real-time capture of Gemini hash→project path mappings. Sessions now show project names instead of "Unknown Project" when started from a known directory.
+- **Checkpoint Auto-Import** - Creating a checkpoint now automatically imports the session to the database if needed, removing the manual step.
+- **Checkpoint Count Badge** - Visual indicator showing number of saved checkpoints on the toolbar button.
+
+### Changed
+
+- **Session Player Header** - Cleaner icon-only toolbar buttons with tooltips on hover. Reduces visual clutter while maintaining discoverability.
+- **REPLAY Badge** - Better spacing and positioning relative to session title.
+
+### Fixed
+
+- **Checkpoint Creation** - Fixed silent failure when creating checkpoints on sessions not in database.
+- **Git Activity Table** - Applied missing migration for git_activity table.
+
+---
+
 ## [2.2.1] - 2026-02-11
 
 ### Changed

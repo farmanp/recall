@@ -3,6 +3,7 @@ import path from 'path';
 import os from 'os';
 import { createHash } from 'crypto';
 import { SessionMetadata, AgentType, ClaudeMdInfo } from '../types/transcript';
+import { getGeminiMapping } from '../db/gemini-mapping-queries';
 
 /**
  * Session indexer - scans agent session directories for all available sessions
@@ -11,6 +12,7 @@ import { SessionMetadata, AgentType, ClaudeMdInfo } from '../types/transcript';
 export class SessionIndexer {
   private sessionIndex: Map<string, SessionMetadata> = new Map();
   private sessionFilePaths: Map<string, string> = new Map(); // sessionId -> filePath cache
+  private geminiMappingCache: Map<string, string | null> = new Map(); // hash -> projectPath cache
   private agentDirs: Map<AgentType, string>;
   private excludePatterns: string[] = [];
   private cwdFilter: string | null = null;
@@ -82,6 +84,7 @@ export class SessionIndexer {
   async buildIndex(): Promise<SessionMetadata[]> {
     this.sessionIndex.clear();
     this.sessionFilePaths.clear();
+    this.geminiMappingCache.clear();
     return this.scanAllAgents();
   }
 
@@ -547,6 +550,33 @@ export class SessionIndexer {
   }
 
   /**
+   * Look up project path for a Gemini hash with caching
+   * Uses the gemini_mappings database table to resolve hash -> project path
+   */
+  private lookupGeminiProjectPath(hash: string): string | undefined {
+    // Check cache first
+    if (this.geminiMappingCache.has(hash)) {
+      const cached = this.geminiMappingCache.get(hash);
+      return cached || undefined;
+    }
+
+    // Query database
+    try {
+      const mapping = getGeminiMapping(hash);
+      const projectPath = mapping?.projectPath;
+
+      // Cache the result (including null for "not found")
+      this.geminiMappingCache.set(hash, projectPath || null);
+
+      return projectPath;
+    } catch (error) {
+      console.warn('[SessionIndexer] Failed to lookup Gemini mapping:', error);
+      this.geminiMappingCache.set(hash, null);
+      return undefined;
+    }
+  }
+
+  /**
    * Extract metadata from Gemini session file (single JSON format)
    */
   private extractGeminiMetadata(filePath: string, content: string): SessionMetadata {
@@ -555,13 +585,28 @@ export class SessionIndexer {
     // Gemini stores sessionId in the file
     const sessionId = session.sessionId || path.basename(filePath, '.json');
 
-    // Extract project name from projectHash directory or file path
+    // Try to resolve project name from stored mapping
     const pathParts = filePath.split(path.sep);
     const tmpIndex = pathParts.indexOf('tmp');
     const projectHash = tmpIndex >= 0 ? pathParts[tmpIndex + 1] : undefined;
-    const projectName = projectHash
-      ? `Gemini Project (${projectHash.substring(0, 8)})`
-      : 'Gemini Session';
+
+    let projectName: string;
+    let resolvedCwd = '';
+
+    if (projectHash) {
+      const resolvedPath = this.lookupGeminiProjectPath(projectHash);
+      if (resolvedPath) {
+        // Extract project name from resolved path
+        const resolvedParts = resolvedPath.split(path.sep).filter(Boolean);
+        projectName = resolvedParts[resolvedParts.length - 1] || 'Gemini Session';
+        resolvedCwd = resolvedPath;
+      } else {
+        // Fallback to showing hash prefix
+        projectName = `Gemini Project (${projectHash.substring(0, 8)})`;
+      }
+    } else {
+      projectName = 'Gemini Session';
+    }
 
     // Timestamps
     const startTime = session.startTime;
@@ -599,7 +644,7 @@ export class SessionIndexer {
       endTime,
       duration,
       eventCount: session.messages?.length || 0,
-      cwd: '',
+      cwd: resolvedCwd,
       firstUserMessage,
     };
   }

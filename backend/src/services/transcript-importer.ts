@@ -69,34 +69,74 @@ interface ImportSummary {
 }
 
 /**
+ * Options for importing a transcript
+ */
+export interface ImportTranscriptOptions {
+  /**
+   * Optional agent type override. If not specified, auto-detected from path.
+   */
+  agent?: AgentType;
+
+  /**
+   * For Gemini sessions, the resolved project path to use as cwd.
+   * Gemini session files don't store the working directory, so this
+   * allows callers to provide it when they have resolved it from the
+   * project hash mapping.
+   */
+  resolvedProjectPath?: string;
+}
+
+/**
  * Import a single transcript file into the database
  *
  * Parses the .jsonl file, builds a timeline, and inserts all data
  * into the database. Updates parsing_status table for progress tracking.
  *
  * @param filePath - Absolute path to .jsonl transcript file
- * @param agent - Optional agent type override. If not specified, auto-detected from path.
+ * @param agentOrOptions - Optional agent type override or options object.
+ *                         If not specified, auto-detected from path.
  * @returns Promise that resolves when import is complete
  * @throws Error if parsing or database insertion fails
  *
  * @example
+ * // Basic import with auto-detection
  * await importTranscript('/Users/me/.claude/projects/my-project/session-123.jsonl');
  *
  * @example
+ * // Import with agent type override (legacy signature)
  * await importTranscript('/custom/path/session.jsonl', 'codex');
+ *
+ * @example
+ * // Import Gemini session with resolved project path
+ * await importTranscript('/Users/me/.gemini/tmp/abc123/chats/session-1.json', {
+ *   agent: 'gemini',
+ *   resolvedProjectPath: '/Users/me/projects/my-app'
+ * });
  */
-export async function importTranscript(filePath: string, agent?: AgentType): Promise<void> {
+export async function importTranscript(
+  filePath: string,
+  agentOrOptions?: AgentType | ImportTranscriptOptions
+): Promise<void> {
+  // Handle both legacy (agent string) and new (options object) signatures
+  const options: ImportTranscriptOptions =
+    typeof agentOrOptions === 'string' ? { agent: agentOrOptions } : agentOrOptions || {};
+
   console.log(`[Import] Starting import: ${filePath}`);
 
   let sessionId: string | undefined;
 
   try {
     // Use provided agent type or auto-detect from file path
-    const agentType: AgentType = agent || detectAgentFromPath(filePath);
-    console.log(`[Import] Agent type: ${agentType}${agent ? ' (specified)' : ' (auto-detected)'}`);
+    const agentType: AgentType = options.agent || detectAgentFromPath(filePath);
+    console.log(
+      `[Import] Agent type: ${agentType}${options.agent ? ' (specified)' : ' (auto-detected)'}`
+    );
 
     // Parse transcript file using ParserFactory
-    const parsed = await ParserFactory.parseFile(filePath);
+    // Pass resolved project path for Gemini sessions
+    const parsed = await ParserFactory.parseFile(filePath, {
+      resolvedProjectPath: options.resolvedProjectPath,
+    });
     sessionId = parsed.sessionId;
     if (!sessionId) {
       throw new Error(`Parser did not return a session ID for file: ${filePath}`);
@@ -170,14 +210,28 @@ export async function importTranscript(filePath: string, agent?: AgentType): Pro
     // Extract and store git context (best-effort, don't fail import)
     if (timeline.metadata.cwd) {
       try {
-        const { GitExtractor, initializeGitActivitySchema } = await import('./git-extractor');
+        const { GitExtractor } = await import('./git-extractor');
+        const { saveGitActivity, saveSessionCommits, initializeGitActivitySchema } =
+          await import('../db/git-queries');
 
         // Ensure git activity schema exists
         initializeGitActivitySchema();
 
         const gitContext = GitExtractor.extractGitContext(timeline.metadata.cwd);
         if (gitContext) {
-          GitExtractor.storeGitContext(sessionId, gitContext);
+          saveGitActivity({
+            sessionId,
+            commitHash: gitContext.headCommit,
+            commitMessage: gitContext.commitMessage,
+            branchName: gitContext.branch,
+            parentCommit: gitContext.parentCommit,
+            isDirty: gitContext.isDirty,
+            filesStaged:
+              gitContext.stagedFiles.length > 0 ? JSON.stringify(gitContext.stagedFiles) : null,
+            filesModified:
+              gitContext.modifiedFiles.length > 0 ? JSON.stringify(gitContext.modifiedFiles) : null,
+            untrackedCount: gitContext.untrackedCount,
+          });
           console.log(
             `[Import] Stored git context: ${gitContext.branch}@${gitContext.headCommit?.slice(0, 7) || 'no-commit'}`
           );
@@ -190,7 +244,17 @@ export async function importTranscript(filePath: string, agent?: AgentType): Pro
               timeline.completedAt
             );
             if (commits.length > 0) {
-              GitExtractor.storeSessionCommits(sessionId, commits);
+              saveSessionCommits(
+                commits.map((c) => ({
+                  sessionId: safeSessionId,
+                  commitHash: c.hash,
+                  commitMessage: c.message,
+                  authorName: c.authorName,
+                  authorEmail: c.authorEmail,
+                  committedAt: c.committedAt,
+                  committedAtEpoch: c.committedAtEpoch,
+                }))
+              );
               console.log(`[Import] Found ${commits.length} commit(s) during session`);
             }
           }

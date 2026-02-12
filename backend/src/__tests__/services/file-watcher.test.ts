@@ -2,9 +2,19 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import path from 'path';
 import os from 'os';
 
-const handlers = new Map<string, (path: string) => void>();
-const closeMock = vi.fn().mockResolvedValue(undefined);
+// Track handlers separately for Claude and Gemini watchers
+const claudeHandlers = new Map<string, (path: string) => void>();
+const geminiHandlers = new Map<string, (path: string) => void>();
+const closeMocks: Array<ReturnType<typeof vi.fn>> = [];
+
+let watchCallCount = 0;
 const watchMock = vi.fn(() => {
+  const currentCall = watchCallCount++;
+  const isClaudeWatcher = currentCall === 0;
+  const handlers = isClaudeWatcher ? claudeHandlers : geminiHandlers;
+  const closeMock = vi.fn().mockResolvedValue(undefined);
+  closeMocks.push(closeMock);
+
   const watcher = {
     on: (event: string, callback: (relativePath: string) => void) => {
       handlers.set(event, callback);
@@ -20,8 +30,17 @@ vi.mock('chokidar', () => ({
   watch: watchMock,
 }));
 
+const importTranscriptMock = vi.fn().mockResolvedValue(undefined);
+const onNewSessionMock = vi.fn().mockReturnValue('/test/project/path');
+
 vi.mock('../../services/transcript-importer', () => ({
-  importTranscript: vi.fn().mockResolvedValue(undefined),
+  importTranscript: importTranscriptMock,
+}));
+
+vi.mock('../../services/gemini-hash-mapper', () => ({
+  geminiHashMapper: {
+    onNewSession: onNewSessionMock,
+  },
 }));
 
 describe('file-watcher', () => {
@@ -30,9 +49,13 @@ describe('file-watcher', () => {
   beforeEach(() => {
     vi.resetModules();
     vi.useFakeTimers();
-    handlers.clear();
+    claudeHandlers.clear();
+    geminiHandlers.clear();
+    closeMocks.length = 0;
+    watchCallCount = 0;
     watchMock.mockClear();
-    closeMock.mockClear();
+    importTranscriptMock.mockClear();
+    onNewSessionMock.mockClear();
     process.env.HOME = path.join(os.tmpdir(), 'recall-watcher-home');
   });
 
@@ -49,12 +72,14 @@ describe('file-watcher', () => {
     expect(isWatcherRunning()).toBe(false);
     startWatcher();
     expect(isWatcherRunning()).toBe(true);
-    expect(watchMock).toHaveBeenCalledTimes(1);
+    // Now creates both Claude and Gemini watchers
+    expect(watchMock).toHaveBeenCalledTimes(2);
 
-    const addHandler = handlers.get('add');
-    expect(addHandler).toBeDefined();
+    // Test Claude watcher handler
+    const claudeAddHandler = claudeHandlers.get('add');
+    expect(claudeAddHandler).toBeDefined();
 
-    addHandler?.('my-project/session.jsonl');
+    claudeAddHandler?.('my-project/session.jsonl');
     expect(importTranscript).not.toHaveBeenCalled();
 
     vi.advanceTimersByTime(2000);
@@ -66,6 +91,44 @@ describe('file-watcher', () => {
 
     await stopWatcher();
     expect(isWatcherRunning()).toBe(false);
-    expect(closeMock).toHaveBeenCalledTimes(1);
+    // Both watchers should be closed
+    expect(closeMocks.length).toBe(2);
+    closeMocks.forEach((mock) => {
+      expect(mock).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it('handles Gemini sessions with hash extraction', async () => {
+    const { startWatcher, stopWatcher, isWatcherRunning } =
+      await import('../../services/file-watcher');
+    const { importTranscript } = await import('../../services/transcript-importer');
+    const { geminiHashMapper } = await import('../../services/gemini-hash-mapper');
+
+    startWatcher();
+    expect(isWatcherRunning()).toBe(true);
+
+    // Test Gemini watcher handler
+    const geminiAddHandler = geminiHandlers.get('add');
+    expect(geminiAddHandler).toBeDefined();
+
+    // Simulate a new Gemini session file
+    geminiAddHandler?.('abc123hash/chats/session-001.json');
+    expect(importTranscript).not.toHaveBeenCalled();
+
+    // Verify hash mapper was called with the extracted hash
+    expect(geminiHashMapper.onNewSession).toHaveBeenCalledWith('abc123hash');
+
+    vi.advanceTimersByTime(2000);
+    await Promise.resolve();
+
+    expect(importTranscript).toHaveBeenCalledWith(
+      path.join(process.env.HOME!, '.gemini', 'tmp', 'abc123hash/chats/session-001.json'),
+      {
+        agent: 'gemini',
+        resolvedProjectPath: '/test/project/path',
+      }
+    );
+
+    await stopWatcher();
   });
 });

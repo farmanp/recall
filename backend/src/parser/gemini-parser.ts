@@ -92,6 +92,40 @@ export class GeminiParser extends AgentParser {
   readonly agentType: AgentType = 'gemini';
 
   /**
+   * Optional resolved project path for Gemini sessions.
+   * Since Gemini doesn't store cwd in session files, this allows
+   * callers to provide the resolved path from the project hash mapping.
+   */
+  private resolvedProjectPath: string | undefined;
+
+  /**
+   * Create a GeminiParser instance
+   *
+   * @param resolvedProjectPath - Optional resolved project path to use as cwd
+   */
+  constructor(resolvedProjectPath?: string) {
+    super();
+    this.resolvedProjectPath = resolvedProjectPath;
+  }
+
+  /**
+   * Set the resolved project path for subsequent parsing operations.
+   * This is useful when the parser instance is reused (e.g., via ParserFactory).
+   *
+   * @param projectPath - The resolved project path
+   */
+  setResolvedProjectPath(projectPath: string | undefined): void {
+    this.resolvedProjectPath = projectPath;
+  }
+
+  /**
+   * Get the current resolved project path
+   */
+  getResolvedProjectPath(): string | undefined {
+    return this.resolvedProjectPath;
+  }
+
+  /**
    * Generate a simple UUID for entries without an ID
    */
   private generateUuid(): string {
@@ -426,11 +460,12 @@ export class GeminiParser extends AgentParser {
     }
 
     // Extract metadata
+    // Use resolved project path if available, otherwise leave empty
     const metadata = {
       startTime: session.startTime,
       endTime: session.lastUpdated,
       totalEntries: entries.length,
-      cwd: '', // Gemini doesn't store cwd at session level
+      cwd: this.resolvedProjectPath || '', // Use resolved path when available
       agentVersion: session.messages[0]?.model,
     };
 

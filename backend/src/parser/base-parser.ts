@@ -142,6 +142,7 @@ export abstract class AgentParser {
         cwd: transcript.metadata.cwd || '',
         claudeVersion: transcript.metadata.claudeVersion,
         agentVersion: transcript.metadata.agentVersion,
+        gitBranch: transcript.metadata.gitBranch,
         claudeMdFiles,
       },
     };
@@ -223,6 +224,9 @@ export abstract class AgentParser {
     // Get agent info
     const agentInfo = getAgentInfo(filePath, firstEntry);
 
+    // Extract gitBranch from first entry that has it
+    const gitBranch = entries.find((e) => e.gitBranch)?.gitBranch;
+
     return {
       startTime: firstEntry?.timestamp || new Date().toISOString(),
       endTime: lastEntry?.timestamp,
@@ -231,6 +235,7 @@ export abstract class AgentParser {
       slug,
       projectName,
       agentVersion: agentInfo.version,
+      gitBranch,
     };
   }
 

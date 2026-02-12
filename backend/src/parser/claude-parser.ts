@@ -67,9 +67,12 @@ export class ClaudeParser extends AgentParser {
       sessionId: rawEntry.sessionId,
     };
 
-    // Copy through any additional fields (slug, etc.)
+    // Copy through any additional fields (slug, gitBranch, etc.)
     if (rawEntry.slug) {
       (entry as any).slug = rawEntry.slug;
+    }
+    if (rawEntry.gitBranch) {
+      (entry as any).gitBranch = rawEntry.gitBranch;
     }
 
     // Preserve model information if present (stored in message.model for Claude)

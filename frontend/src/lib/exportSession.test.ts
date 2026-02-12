@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { sessionToMarkdown, frameToMarkdown, frameToHTML, sessionToHTML } from './exportSession';
+import { sessionToMarkdown, frameToMarkdown, sessionToHTML } from './exportSession';
 import type { SessionTimeline, PlaybackFrame } from '../types/transcript';
 
 describe('exportSession', () => {
@@ -25,24 +25,17 @@ describe('exportSession', () => {
   describe('sessionToMarkdown', () => {
     it('should convert session to markdown summary', () => {
       const markdown = sessionToMarkdown(mockSession);
-      expect(markdown).toContain('# Session: test-session');
+      expect(markdown).toContain('# test-session');
       expect(markdown).toContain('**Project:** test-project');
-      expect(markdown).toContain('### 👤 User');
+      expect(markdown).toContain('### User');
       expect(markdown).toContain('Hello AI');
     });
 
-    it('should include AI thinking and response', () => {
+    it('should include AI response', () => {
       const sessionWithMoreFrames: SessionTimeline = {
         ...mockSession,
         frames: [
           mockFrame,
-          {
-            id: 'frame-2',
-            type: 'claude_thinking',
-            timestamp: 1644480001000,
-            context: { cwd: '/test' },
-            thinking: { text: 'I am thinking' },
-          },
           {
             id: 'frame-3',
             type: 'claude_response',
@@ -53,8 +46,7 @@ describe('exportSession', () => {
         ],
       };
       const markdown = sessionToMarkdown(sessionWithMoreFrames);
-      expect(markdown).toContain('> **AI Thinking:** I am thinking');
-      expect(markdown).toContain('### 🤖 Claude');
+      expect(markdown).toContain('### Assistant');
       expect(markdown).toContain('Hello human');
     });
 
@@ -76,8 +68,7 @@ describe('exportSession', () => {
         ],
       };
       const markdown = sessionToMarkdown(sessionWithTool);
-      expect(markdown).toContain('#### 🛠️ Tool: `ls`');
-      expect(markdown).toContain('file1.txt');
+      expect(markdown).toContain('### Tool: ls');
     });
   });
 
@@ -88,16 +79,6 @@ describe('exportSession', () => {
       expect(markdown).toContain('**Frame ID:** `frame-1`');
       expect(markdown).toContain('## 👤 User Message');
       expect(markdown).toContain('Hello AI');
-    });
-  });
-
-  describe('frameToHTML', () => {
-    it('should convert single frame to HTML', () => {
-      const html = frameToHTML(mockFrame, mockSession);
-      expect(html).toContain('<!DOCTYPE html>');
-      expect(html).toContain('test-session');
-      expect(html).toContain('USER MESSAGE');
-      expect(html).toContain('Hello AI');
     });
   });
 

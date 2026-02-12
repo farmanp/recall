@@ -2,13 +2,14 @@
  * Session Summary Routes
  *
  * API endpoints for session auto-summarization.
- * Summaries are generated using heuristics (no LLM required).
+ * Summaries can be generated using heuristics or LLM (if API key configured).
  *
  * @module routes/summaries
  */
 
 import { Router, Request, Response } from 'express';
 import { Summarizer } from '../services/summarizer';
+import { llmSummaryGenerator } from '../services/llm-summary-generator';
 import {
   getSummary,
   storeSummary,
@@ -38,6 +39,10 @@ initializeSummarySchema();
  *
  * Query Parameters:
  * - source: Data source ('db' or 'filesystem', default: 'db')
+ * - method: Summary method ('heuristic'|'llm'|'auto', default: 'auto')
+ *   * 'auto': Use cached if available, otherwise heuristic
+ *   * 'llm': Force LLM generation (returns 402 if API key not configured)
+ *   * 'heuristic': Force heuristic generation
  *
  * Response:
  * - summary: SessionSummary object
@@ -45,7 +50,7 @@ initializeSummarySchema();
  *
  * @example
  * GET /api/sessions/4b198fdf-b80d-4bbc-806f-2900282cdc56/summary
- * GET /api/sessions/4b198fdf-b80d-4bbc-806f-2900282cdc56/summary?source=filesystem
+ * GET /api/sessions/4b198fdf-b80d-4bbc-806f-2900282cdc56/summary?method=llm
  */
 router.get('/:sessionId/summary', async (req: Request, res: Response) => {
   try {
@@ -56,24 +61,40 @@ router.get('/:sessionId/summary', async (req: Request, res: Response) => {
     }
 
     const source = typeof req.query.source === 'string' ? req.query.source : 'db';
+    const method = (typeof req.query.method === 'string' ? req.query.method : 'auto') as
+      | 'heuristic'
+      | 'llm'
+      | 'auto';
 
-    // Check for cached summary first
-    const existingSummary = getSummary(sessionId);
-    if (existingSummary) {
-      res.json({
-        summary: existingSummary,
-        cached: true,
+    // Check for cached summary first (unless method=llm which forces regeneration)
+    if (method !== 'llm') {
+      const existingSummary = getSummary(sessionId);
+      if (existingSummary) {
+        res.json({
+          summary: existingSummary,
+          cached: true,
+        });
+        return;
+      }
+    }
+
+    // Check if LLM requested but not available
+    if (method === 'llm' && !llmSummaryGenerator.isAvailable()) {
+      res.status(402).json({
+        error: 'LLM summaries not available',
+        message: 'Set RECALL_ANTHROPIC_API_KEY environment variable to enable LLM summaries',
       });
       return;
     }
 
     // No cached summary, need to generate one
     let frames;
+    let sessionMeta;
 
     if (source === 'db') {
       // Check if session exists in database
-      const session = getTranscriptSessionById(sessionId);
-      if (!session) {
+      sessionMeta = getTranscriptSessionById(sessionId);
+      if (!sessionMeta) {
         res.status(404).json({ error: 'Session not found' });
         return;
       }
@@ -95,6 +116,10 @@ router.get('/:sessionId/summary', async (req: Request, res: Response) => {
       const transcript = await ParserFactory.parseFile(filePath);
       const timeline = await ParserFactory.buildTimeline(transcript, agentType);
       frames = timeline.frames;
+      sessionMeta = {
+        project: transcript.metadata.projectName || 'Unknown',
+        duration: 0, // Not available from filesystem parsing
+      };
     }
 
     if (!frames || frames.length === 0) {
@@ -102,8 +127,18 @@ router.get('/:sessionId/summary', async (req: Request, res: Response) => {
       return;
     }
 
-    // Generate summary
-    const summary = Summarizer.generateSummary(sessionId, frames);
+    // Generate summary using requested method
+    let summary;
+    if (method === 'llm') {
+      summary = await llmSummaryGenerator.generateSummary({
+        sessionId,
+        frames,
+        project: sessionMeta?.project || 'Unknown',
+        duration: sessionMeta?.duration || 0,
+      });
+    } else {
+      summary = Summarizer.generateSummary(sessionId, frames);
+    }
 
     // Store for future use
     storeSummary(summary);
@@ -132,6 +167,7 @@ router.get('/:sessionId/summary', async (req: Request, res: Response) => {
  *
  * Query Parameters:
  * - source: Data source ('db' or 'filesystem', default: 'db')
+ * - method: Summary method ('heuristic'|'llm', default: 'heuristic')
  *
  * Response:
  * - summary: SessionSummary object
@@ -139,6 +175,7 @@ router.get('/:sessionId/summary', async (req: Request, res: Response) => {
  *
  * @example
  * POST /api/sessions/4b198fdf-b80d-4bbc-806f-2900282cdc56/summary/regenerate
+ * POST /api/sessions/4b198fdf-b80d-4bbc-806f-2900282cdc56/summary/regenerate?method=llm
  */
 router.post('/:sessionId/summary/regenerate', async (req: Request, res: Response) => {
   try {
@@ -149,13 +186,26 @@ router.post('/:sessionId/summary/regenerate', async (req: Request, res: Response
     }
 
     const source = typeof req.query.source === 'string' ? req.query.source : 'db';
+    const method = (typeof req.query.method === 'string' ? req.query.method : 'heuristic') as
+      | 'heuristic'
+      | 'llm';
+
+    // Check if LLM requested but not available
+    if (method === 'llm' && !llmSummaryGenerator.isAvailable()) {
+      res.status(402).json({
+        error: 'LLM summaries not available',
+        message: 'Set RECALL_ANTHROPIC_API_KEY environment variable to enable LLM summaries',
+      });
+      return;
+    }
 
     let frames;
+    let sessionMeta;
 
     if (source === 'db') {
       // Check if session exists in database
-      const session = getTranscriptSessionById(sessionId);
-      if (!session) {
+      sessionMeta = getTranscriptSessionById(sessionId);
+      if (!sessionMeta) {
         res.status(404).json({ error: 'Session not found' });
         return;
       }
@@ -177,6 +227,10 @@ router.post('/:sessionId/summary/regenerate', async (req: Request, res: Response
       const transcript = await ParserFactory.parseFile(filePath);
       const timeline = await ParserFactory.buildTimeline(transcript, agentType);
       frames = timeline.frames;
+      sessionMeta = {
+        project: transcript.metadata.projectName || 'Unknown',
+        duration: 0,
+      };
     }
 
     if (!frames || frames.length === 0) {
@@ -184,8 +238,18 @@ router.post('/:sessionId/summary/regenerate', async (req: Request, res: Response
       return;
     }
 
-    // Generate fresh summary
-    const summary = Summarizer.generateSummary(sessionId, frames);
+    // Generate fresh summary using requested method
+    let summary;
+    if (method === 'llm') {
+      summary = await llmSummaryGenerator.generateSummary({
+        sessionId,
+        frames,
+        project: sessionMeta?.project || 'Unknown',
+        duration: sessionMeta?.duration || 0,
+      });
+    } else {
+      summary = Summarizer.generateSummary(sessionId, frames);
+    }
 
     // Store (overwrites any existing)
     storeSummary(summary);

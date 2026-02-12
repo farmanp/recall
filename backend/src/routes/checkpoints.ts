@@ -5,6 +5,8 @@ import { CheckpointManager } from '../services/checkpoint-manager';
 import { getSessionIndexer } from '../parser/session-indexer';
 import { ParserFactory } from '../parser/parser-factory';
 import { detectAgentFromPath } from '../parser/agent-detector';
+import { getTranscriptSessionById } from '../db/transcript-queries';
+import { importTranscript } from '../services/transcript-importer';
 import type { CreateCheckpointRequest, UpdateCheckpointRequest } from '../db/checkpoint-schema';
 
 const router = Router();
@@ -88,6 +90,24 @@ router.post(
           message: `Frame index ${body.frameIndex} is out of range (0-${timeline.frames.length - 1})`,
         });
         return;
+      }
+
+      // Auto-import session to database if not already imported
+      // Checkpoints require sessions to exist in the database (foreign key constraint)
+      const existingSession = getTranscriptSessionById(sessionId);
+      if (!existingSession) {
+        console.log(`[Checkpoints] Session ${sessionId} not in database, auto-importing...`);
+        try {
+          await importTranscript(filePath, { agent: agentType });
+          console.log(`[Checkpoints] Auto-imported session ${sessionId}`);
+        } catch (importError) {
+          console.error(`[Checkpoints] Failed to auto-import session:`, importError);
+          res.status(500).json({
+            error: 'Failed to import session',
+            message: 'Session must be imported before creating checkpoints. Auto-import failed.',
+          });
+          return;
+        }
       }
 
       // Create checkpoint

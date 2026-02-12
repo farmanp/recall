@@ -13,6 +13,8 @@ const mockedUseSessionFrames = vi.mocked(transcriptHooks.useSessionFrames);
 const mockedUseSessionCommentary = vi.mocked(transcriptHooks.useSessionCommentary);
 const mockedUseSessionGit = vi.mocked(transcriptHooks.useSessionGit);
 const mockedUseCheckpoints = vi.mocked(transcriptHooks.useCheckpoints);
+const mockedUseCreateCheckpoint = vi.mocked(transcriptHooks.useCreateCheckpoint);
+const mockedUseDeleteCheckpoint = vi.mocked(transcriptHooks.useDeleteCheckpoint);
 const mockedUseSessionSummary = vi.mocked(transcriptHooks.useSessionSummary);
 
 const sessionDetails: SessionDetailsResponse = {
@@ -89,6 +91,16 @@ describe('SessionPlayerPage', () => {
       isLoading: false,
       error: null,
     });
+    mockedUseCreateCheckpoint.mockReturnValue({
+      mutate: vi.fn(),
+      isPending: false,
+      error: null,
+    } as any);
+    mockedUseDeleteCheckpoint.mockReturnValue({
+      mutate: vi.fn(),
+      isPending: false,
+      error: null,
+    } as any);
     mockedUseSessionSummary.mockReturnValue({
       data: undefined,
       isLoading: false,

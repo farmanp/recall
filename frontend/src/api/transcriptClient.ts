@@ -28,6 +28,33 @@ import type {
 
 const API_BASE_URL = '/api';
 
+export interface ShareLinkOptions {
+  enableRedaction: boolean;
+  expiresIn: '1h' | '24h' | '7d' | 'never';
+}
+
+export interface ShareLinkResponse {
+  shareId: string;
+  url: string;
+  expiresAt: string | null;
+}
+
+export interface SharedSessionFrame {
+  type: string;
+  content: unknown;
+}
+
+export interface SharedSessionData {
+  session: {
+    slug: string;
+    project: string;
+    startedAt: string;
+  };
+  frames: SharedSessionFrame[];
+  expiresAt: string | null;
+  redactionEnabled?: boolean;
+}
+
 /**
  * Fetch all sessions
  */
@@ -120,6 +147,58 @@ export async function refreshSession(sessionId: string): Promise<{
   }
 
   return response.json();
+}
+
+/**
+ * Create a shareable link for a session
+ */
+export async function createShareLink(
+  sessionId: string,
+  options: ShareLinkOptions
+): Promise<ShareLinkResponse> {
+  const response = await fetch(`${API_BASE_URL}/sessions/${sessionId}/share`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(options),
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to create share link');
+  }
+
+  return response.json();
+}
+
+/**
+ * Fetch a shared session by share ID
+ */
+export async function getSharedSession(
+  shareId: string,
+  token?: string
+): Promise<SharedSessionData> {
+  const requestUrl = `${API_BASE_URL}/shared/${shareId}`;
+  const response = token
+    ? await fetch(requestUrl, { headers: { 'X-Share-Token': token } })
+    : await fetch(requestUrl);
+
+  if (!response.ok) {
+    throw new Error('Share link invalid or expired');
+  }
+
+  return response.json();
+}
+
+/**
+ * Revoke an existing share link
+ */
+export async function revokeShareLink(shareId: string): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/shares/${shareId}`, {
+    method: 'DELETE',
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to revoke share link');
+  }
 }
 
 /**

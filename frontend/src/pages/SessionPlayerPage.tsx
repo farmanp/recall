@@ -12,6 +12,8 @@ import {
   useSessionCommentary,
   useSessionGit,
   useCheckpoints,
+  useCreateCheckpoint,
+  useDeleteCheckpoint,
   useSessionSummary,
 } from '../hooks/useTranscriptApi';
 import type { PlaybackFrame, CommentaryData, SessionTimeline } from '../types/transcript';
@@ -57,10 +59,12 @@ import { ClaudeMdPanel } from '../components/session-player/ClaudeMdPanel';
 import { ArtifactsSidebar } from '../components/session-player/ArtifactsSidebar';
 import { FiltersPanel } from '../components/session-player/FiltersPanel';
 import { ExportModal } from '../components/session-player/ExportModal';
+import { ShareModal } from '../components/session-player/ShareModal';
 import { GitPanel } from '../components/session-player/GitPanel';
 import { GitBadge } from '../components/GitBadge';
 import { CheckpointPanel } from '../components/session-player/CheckpointPanel';
 import { CheckpointMarkers } from '../components/session-player/CheckpointMarker';
+import { CreateCheckpointDialog } from '../components/session-player/CreateCheckpointDialog';
 import { RewindPanel } from '../components/session-player/RewindPanel';
 import { SummaryCard } from '../components/session-player/SummaryCard';
 import { useSessionStats } from '../hooks/useSessionStats';
@@ -116,8 +120,10 @@ export const SessionPlayerPage: React.FC = () => {
   const [viewMode, setViewMode] = useState<'timeline' | 'chat'>('timeline');
   const [showFiltersPanel, setShowFiltersPanel] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
   const [showGitPanel, setShowGitPanel] = useState(false);
   const [showCheckpoints, setShowCheckpoints] = useState(false);
+  const [showCreateCheckpointDialog, setShowCreateCheckpointDialog] = useState(false);
   const [showRewind, setShowRewind] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
 
@@ -136,6 +142,10 @@ export const SessionPlayerPage: React.FC = () => {
 
   // Fetch checkpoints for the session
   const { data: checkpointsData } = useCheckpoints(sessionId);
+
+  // Checkpoint mutations
+  const createCheckpointMutation = useCreateCheckpoint(sessionId || '');
+  const deleteCheckpointMutation = useDeleteCheckpoint(sessionId || '');
 
   // Fetch session summary
   const { data: summaryData } = useSessionSummary(sessionId);
@@ -372,7 +382,9 @@ export const SessionPlayerPage: React.FC = () => {
           break;
         case 'Escape':
           e.preventDefault();
-          if (showHelp) {
+          if (showShareModal) {
+            setShowShareModal(false);
+          } else if (showHelp) {
             setShowHelp(false);
           } else if (showStats) {
             setShowStats(false);
@@ -461,6 +473,7 @@ export const SessionPlayerPage: React.FC = () => {
     showClaudeMd,
     showArtifacts,
     showFiltersPanel,
+    showShareModal,
     showGitPanel,
     showCheckpoints,
     showRewind,
@@ -528,12 +541,12 @@ export const SessionPlayerPage: React.FC = () => {
           </button>
 
           <div className="flex flex-col">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
               <h1 className="font-mono text-xl font-bold text-forensic-text-primary line-clamp-1">
                 {sessionDetails?.slug || 'Loading session...'}
               </h1>
               {sessionDetails && (
-                <div className="badge badge-green flex items-center gap-2">
+                <div className="badge badge-green flex items-center gap-2 ml-1 -mt-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-accent-green animate-pulse" />
                   Replay
                 </div>
@@ -567,7 +580,8 @@ export const SessionPlayerPage: React.FC = () => {
               <div className="mt-0.5 flex items-center gap-2">
                 <AgentBadge agent={sessionDetails?.agent} />
                 <ModelBadge model={sessionDetails?.metadata?.agentVersion} />
-                {gitData && (
+                {/* Show GitBadge from API data or fall back to metadata.gitBranch */}
+                {gitData ? (
                   <GitBadge
                     branch={gitData.branch}
                     commit={gitData.headCommit}
@@ -575,25 +589,29 @@ export const SessionPlayerPage: React.FC = () => {
                     onClick={() => setShowGitPanel(true)}
                     size="sm"
                   />
-                )}
+                ) : sessionDetails?.metadata?.gitBranch ? (
+                  <GitBadge branch={sessionDetails.metadata.gitBranch} size="sm" />
+                ) : null}
               </div>
             </div>
           </div>
 
+          {/* Share Button - Hidden until relay service is implemented (paid tier) */}
+          {/* TODO: Enable when RECALL_RELAY_URL is configured */}
+
           {/* Export Button */}
           <button
             onClick={() => setShowExportModal(true)}
-            className="inline-flex items-center gap-2 px-3 py-2 bg-forensic-bg-tertiary hover:bg-forensic-border text-forensic-text-secondary hover:text-forensic-text-primary border border-forensic-border font-mono text-xs uppercase tracking-wide transition-all"
+            className="inline-flex items-center justify-center w-9 h-9 bg-forensic-bg-tertiary hover:bg-forensic-border text-forensic-text-secondary hover:text-forensic-text-primary border border-forensic-border transition-all"
             title="Export session or frame"
             aria-label="Export"
           >
             <Download className="w-4 h-4" />
-            <span className="hidden xl:inline">Export</span>
           </button>
 
           <button
             onClick={() => setViewMode(viewMode === 'timeline' ? 'chat' : 'timeline')}
-            className={`inline-flex items-center gap-2 px-3 py-2 font-mono text-xs uppercase tracking-wide transition-all border ${
+            className={`inline-flex items-center justify-center w-9 h-9 transition-all border ${
               viewMode === 'chat'
                 ? 'bg-accent-purple/20 border-accent-purple/50 text-accent-purple'
                 : 'bg-forensic-bg-tertiary border-forensic-border text-forensic-text-secondary hover:text-forensic-text-primary'
@@ -605,9 +623,6 @@ export const SessionPlayerPage: React.FC = () => {
             ) : (
               <Layout className="w-4 h-4" />
             )}
-            <span className="hidden xl:inline">
-              {viewMode === 'timeline' ? 'Chat' : 'Timeline'}
-            </span>
           </button>
 
           {/* TODO: Bring back Docs button when CLAUDE.md panel feature is ready
@@ -630,7 +645,7 @@ export const SessionPlayerPage: React.FC = () => {
 
           <button
             onClick={() => setShowArtifacts(!showArtifacts)}
-            className={`inline-flex items-center gap-2 px-3 py-2 font-mono text-xs uppercase tracking-wide transition-all border ${
+            className={`inline-flex items-center justify-center w-9 h-9 transition-all border ${
               showArtifacts
                 ? 'bg-accent-amber/20 border-accent-amber/50 text-accent-amber'
                 : 'bg-forensic-bg-tertiary border-forensic-border text-forensic-text-secondary hover:text-forensic-text-primary'
@@ -638,29 +653,25 @@ export const SessionPlayerPage: React.FC = () => {
             title="File Artifacts (a)"
           >
             <FolderOpen className="w-4 h-4" />
-            <span className="hidden xl:inline">Artifacts</span>
           </button>
 
           <button
             onClick={() => setShowFiltersPanel(!showFiltersPanel)}
-            className={`inline-flex items-center gap-2 px-3 py-2 font-mono text-xs uppercase tracking-wide transition-all border ${
+            className={`inline-flex items-center justify-center w-9 h-9 transition-all border ${
               showFiltersPanel
                 ? 'bg-accent-green/20 border-accent-green/50 text-accent-green'
                 : activeFrameCount < 4
                   ? 'bg-accent-green/10 border-accent-green/30 text-accent-green'
                   : 'bg-forensic-bg-tertiary border-forensic-border text-forensic-text-secondary hover:text-forensic-text-primary'
             }`}
-            title="Frame filters (f)"
+            title={`Frame filters (f)${activeFrameCount < 4 ? ` - ${activeFrameCount}/4 active` : ''}`}
           >
             <SlidersHorizontal className="w-4 h-4" />
-            <span className="hidden xl:inline">
-              Filters{activeFrameCount < 4 ? ` ${activeFrameCount}/4` : ''}
-            </span>
           </button>
 
           <button
             onClick={() => setShowStats(!showStats)}
-            className={`inline-flex items-center gap-2 px-3 py-2 font-mono text-xs uppercase tracking-wide transition-all border ${
+            className={`inline-flex items-center justify-center w-9 h-9 transition-all border ${
               showStats
                 ? 'bg-accent-cyan/20 border-accent-cyan/50 text-accent-cyan'
                 : 'bg-forensic-bg-tertiary border-forensic-border text-forensic-text-secondary hover:text-forensic-text-primary'
@@ -668,14 +679,13 @@ export const SessionPlayerPage: React.FC = () => {
             title="Toggle statistics panel (s)"
           >
             <Settings className="w-4 h-4" />
-            <span className="hidden xl:inline">Stats</span>
           </button>
 
           {/* Git Context Button */}
           {gitData && (
             <button
               onClick={() => setShowGitPanel(!showGitPanel)}
-              className={`inline-flex items-center gap-2 px-3 py-2 font-mono text-xs uppercase tracking-wide transition-all border ${
+              className={`inline-flex items-center justify-center w-9 h-9 transition-all border ${
                 showGitPanel
                   ? 'bg-accent-purple/20 border-accent-purple/50 text-accent-purple'
                   : 'bg-forensic-bg-tertiary border-forensic-border text-forensic-text-secondary hover:text-forensic-text-primary'
@@ -683,34 +693,34 @@ export const SessionPlayerPage: React.FC = () => {
               title="Git context (g)"
             >
               <GitBranch className="w-4 h-4" />
-              <span className="hidden xl:inline">Git</span>
             </button>
           )}
 
           {/* Checkpoints Button */}
           <button
             onClick={() => setShowCheckpoints(!showCheckpoints)}
-            className={`inline-flex items-center gap-2 px-3 py-2 font-mono text-xs uppercase tracking-wide transition-all border ${
+            className={`relative inline-flex items-center justify-center w-9 h-9 transition-all border ${
               showCheckpoints
                 ? 'bg-accent-amber/20 border-accent-amber/50 text-accent-amber'
                 : checkpointsData && checkpointsData.length > 0
                   ? 'bg-accent-amber/10 border-accent-amber/30 text-accent-amber'
                   : 'bg-forensic-bg-tertiary border-forensic-border text-forensic-text-secondary hover:text-forensic-text-primary'
             }`}
-            title={`Checkpoints (k) - ${checkpointsData?.length || 0} saved`}
+            title={`Checkpoints (c) - ${checkpointsData?.length || 0} saved`}
           >
             <Bookmark className="w-4 h-4" />
-            <span className="hidden xl:inline">
-              Checkpoints
-              {checkpointsData && checkpointsData.length > 0 ? ` (${checkpointsData.length})` : ''}
-            </span>
+            {checkpointsData && checkpointsData.length > 0 && (
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-accent-amber text-forensic-bg-primary text-[10px] font-bold flex items-center justify-center rounded-full">
+                {checkpointsData.length}
+              </span>
+            )}
           </button>
 
           {/* Summary Button */}
           {summaryData && (
             <button
               onClick={() => setShowSummary(!showSummary)}
-              className={`inline-flex items-center gap-2 px-3 py-2 font-mono text-xs uppercase tracking-wide transition-all border ${
+              className={`inline-flex items-center justify-center w-9 h-9 transition-all border ${
                 showSummary
                   ? 'bg-accent-green/20 border-accent-green/50 text-accent-green'
                   : 'bg-forensic-bg-tertiary border-forensic-border text-forensic-text-secondary hover:text-forensic-text-primary'
@@ -718,7 +728,6 @@ export const SessionPlayerPage: React.FC = () => {
               title="Session summary (y)"
             >
               <AlignLeft className="w-4 h-4" />
-              <span className="hidden xl:inline">Summary</span>
             </button>
           )}
         </div>
@@ -1060,16 +1069,35 @@ export const SessionPlayerPage: React.FC = () => {
           totalFrames={frames.length}
           onNavigateToFrame={handleFrameChange}
           onCreate={() => {
-            // TODO: Implement checkpoint creation
-            console.log('Create checkpoint at frame', currentFrameIndex);
+            setShowCreateCheckpointDialog(true);
           }}
           onDelete={(checkpointId: string) => {
-            // TODO: Implement checkpoint deletion
-            console.log('Delete checkpoint', checkpointId);
+            if (confirm('Are you sure you want to delete this checkpoint?')) {
+              deleteCheckpointMutation.mutate(checkpointId);
+            }
           }}
           onClose={() => setShowCheckpoints(false)}
         />
       )}
+      {/* Create Checkpoint Dialog */}
+      <CreateCheckpointDialog
+        isOpen={showCreateCheckpointDialog}
+        currentFrameIndex={currentFrameIndex}
+        totalFrames={frames.length}
+        isCreating={createCheckpointMutation.isPending}
+        error={createCheckpointMutation.error?.message || null}
+        onClose={() => setShowCreateCheckpointDialog(false)}
+        onCreate={(name, notes) => {
+          createCheckpointMutation.mutate(
+            { name, frameIndex: currentFrameIndex, notes },
+            {
+              onSuccess: () => {
+                setShowCreateCheckpointDialog(false);
+              },
+            }
+          );
+        }}
+      />
       {showRewind && sessionId && (
         <RewindPanel
           sessionId={sessionId}
@@ -1087,6 +1115,14 @@ export const SessionPlayerPage: React.FC = () => {
           }}
         />
       )}
+      {/* ShareModal - Hidden until relay service is implemented (paid tier) */}
+      {/* <ShareModal
+        isOpen={showShareModal}
+        sessionId={sessionId || ''}
+        sessionName={sessionDetails?.slug || 'Session'}
+        onClose={() => setShowShareModal(false)}
+      /> */}
+
       {showSummary && summaryData && (
         <SummaryCard
           summary={summaryData}

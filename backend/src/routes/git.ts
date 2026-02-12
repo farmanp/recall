@@ -10,8 +10,14 @@
  */
 
 import { Router, Request, Response } from 'express';
-import { GitExtractor } from '../services/git-extractor';
 import { getTranscriptSessionById } from '../db/transcript-queries';
+import {
+  getGitActivity,
+  getSessionCommits,
+  findSessionsByCommit,
+  getBranchesWithCounts,
+  findSessionsByBranch,
+} from '../db/git-queries';
 import { z } from 'zod';
 import { validateQuery, validateParams } from '../middleware/validation';
 
@@ -86,7 +92,7 @@ router.get(
       }
 
       // Get git activity for session
-      const gitActivity = GitExtractor.getGitActivity(sessionId);
+      const gitActivity = getGitActivity(sessionId);
       if (!gitActivity) {
         res.status(404).json({
           error: 'No git context available for this session',
@@ -97,7 +103,7 @@ router.get(
       }
 
       // Get commits made during session
-      const sessionCommits = GitExtractor.getSessionCommits(sessionId);
+      const sessionCommits = getSessionCommits(sessionId);
 
       res.json({
         session_id: gitActivity.session_id,
@@ -152,7 +158,7 @@ router.get('/commits', validateQuery(commitSearchSchema), async (_req: Request, 
   try {
     const { hash } = res.locals.validatedQuery as { hash: string };
 
-    const sessionIds = GitExtractor.findSessionsByCommit(hash);
+    const sessionIds = findSessionsByCommit(hash);
 
     res.json({
       hash,
@@ -190,7 +196,7 @@ router.get('/commits', validateQuery(commitSearchSchema), async (_req: Request, 
  */
 router.get('/branches', async (_req: Request, res: Response) => {
   try {
-    const branches = GitExtractor.getBranchesWithCounts();
+    const branches = getBranchesWithCounts();
 
     res.json({
       branches,
@@ -238,7 +244,7 @@ router.get('/branches/:name/sessions', async (req: Request, res: Response) => {
       500
     );
 
-    const sessionIds = GitExtractor.findSessionsByBranch(branchName, limit);
+    const sessionIds = findSessionsByBranch(branchName, limit);
 
     res.json({
       branch: branchName,

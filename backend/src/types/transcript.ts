@@ -90,6 +90,7 @@ export interface TranscriptMetadata {
   projectName?: string;
   claudeVersion?: string;
   agentVersion?: string; // Generic version field for any agent
+  gitBranch?: string; // Git branch at session start (extracted from session file)
 }
 
 /**

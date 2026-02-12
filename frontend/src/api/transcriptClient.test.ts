@@ -100,4 +100,50 @@ describe('transcriptClient', () => {
       expect(fetchSpy).toHaveBeenCalledWith('/api/sessions/s1/git');
     });
   });
+
+  describe('createShareLink', () => {
+    it('sends POST request with options', async () => {
+      const options = {
+        enableRedaction: true,
+        expiresIn: '24h' as const,
+      };
+      await client.createShareLink('s1', options);
+      expect(fetchSpy).toHaveBeenCalledWith(
+        '/api/sessions/s1/share',
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify(options),
+        })
+      );
+    });
+  });
+
+  describe('getSharedSession', () => {
+    it('calls correct URL', async () => {
+      await client.getSharedSession('share-1');
+      expect(fetchSpy).toHaveBeenCalledWith('/api/shared/share-1');
+    });
+
+    it('sends share token in request header when provided', async () => {
+      await client.getSharedSession('share-1', 'token-123');
+      expect(fetchSpy).toHaveBeenCalledWith(
+        '/api/shared/share-1',
+        expect.objectContaining({
+          headers: { 'X-Share-Token': 'token-123' },
+        })
+      );
+    });
+  });
+
+  describe('revokeShareLink', () => {
+    it('sends DELETE request', async () => {
+      await client.revokeShareLink('share-1');
+      expect(fetchSpy).toHaveBeenCalledWith(
+        '/api/shares/share-1',
+        expect.objectContaining({
+          method: 'DELETE',
+        })
+      );
+    });
+  });
 });

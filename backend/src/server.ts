@@ -9,6 +9,10 @@ import gitRouter from './routes/git';
 import summariesRouter from './routes/summaries';
 import checkpointsRouter from './routes/checkpoints';
 import rewindRouter from './routes/rewind';
+import adminRouter from './routes/admin';
+import sharesRouter from './routes/shares';
+import { authGuard } from './middleware/auth';
+import { viewerModeGuard, isViewerModeEnabled } from './middleware/viewer-mode';
 import { getDbInstance, isClaudeMemAvailable } from './db/connection';
 import { getTranscriptDbInstance } from './db/transcript-connection';
 import { initializeTranscriptSchema } from './db/transcript-queries';
@@ -67,6 +71,10 @@ export function createServer(): Application {
     next();
   });
 
+  // Security middleware
+  app.use(authGuard());
+  app.use(viewerModeGuard());
+
   // Health check with DB status
   app.get('/api/health', (_req: Request, res: Response) => {
     try {
@@ -92,6 +100,10 @@ export function createServer(): Application {
           claude_mem: claudeMemStatus,
           transcripts: 'connected',
         },
+        security: {
+          viewerMode: isViewerModeEnabled(),
+          authDisabled: process.env.RECALL_DISABLE_AUTH === 'true',
+        },
       });
     } catch (err) {
       console.error('Health check failed:', err);
@@ -103,6 +115,8 @@ export function createServer(): Application {
   });
 
   // API Routes
+  app.use('/api/admin', adminRouter);
+  app.use('/api', sharesRouter);
   app.use('/api/sessions', sessionsRouter);
   app.use('/api/sessions', commentaryRouter);
   app.use('/api/sessions', summariesRouter); // Summary routes under /api/sessions/:sessionId/summary

@@ -291,11 +291,14 @@ router.get('/:id', async (req: Request, res: Response) => {
       return;
     }
 
-    // Return timeline without frames, but include claudeMdFiles from indexer metadata
+    // Return timeline without frames, but use indexer metadata for slug/project
     const { frames, ...timelineMetadata } = timeline;
 
     res.json({
       ...timelineMetadata,
+      // Use indexer metadata for accurate slug and project (timeline may have defaults)
+      slug: metadata.slug || timelineMetadata.slug,
+      project: metadata.project || timelineMetadata.project,
       metadata: {
         ...timelineMetadata.metadata,
         claudeMdFiles: metadata.claudeMdFiles || [],

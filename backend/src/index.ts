@@ -9,6 +9,9 @@ import {
 import { initializeTranscriptSchema } from './db/transcript-queries';
 import { startWatcher, stopWatcher } from './services/file-watcher';
 import { getSessionIndexer } from './parser/session-indexer';
+import { geminiHashMapper } from './services/gemini-hash-mapper';
+import { tokenManager } from './services/token-manager';
+import { isViewerModeEnabled } from './middleware/viewer-mode';
 
 // Load environment variables
 dotenv.config();
@@ -80,11 +83,28 @@ function start(): void {
       console.log(`⏸️  CWD filter disabled (RECALL_FILTER_CWD=false)`);
     }
 
-    // Start file watcher
+    // Initialize Gemini hash mapper with current working directory
+    // This captures the hash→project mapping for the current directory
+    // so that new Gemini sessions from this project are recognized
+    geminiHashMapper.setCwd(STARTUP_CWD);
+    console.log(`✅ Gemini hash mapper: initialized for ${STARTUP_CWD}`);
+
+    // Initialize authentication token
+    const shouldRegenerateToken = process.argv.includes('--regenerate-token');
+    const { token, isNew } = tokenManager.initialize(shouldRegenerateToken);
+    if (isNew || shouldRegenerateToken) {
+      console.log(`\n🔑 Authentication Token (save this - shown only once):`);
+      console.log(`   ${token}`);
+      console.log(`   Stored at: ${tokenManager.getTokenFilePath()}\n`);
+    } else {
+      console.log(`✅ Auth token: loaded from ${tokenManager.getTokenFilePath()}`);
+    }
+
+    // Start file watcher (monitors both Claude and Gemini sessions)
     if (AUTO_WATCH) {
-      console.log('Starting file watcher for auto-import...');
+      console.log('Starting file watchers for auto-import...');
       startWatcher();
-      console.log(`✅ File watcher: monitoring ~/.claude/projects/`);
+      console.log(`✅ File watcher: monitoring ~/.claude/projects/ and ~/.gemini/tmp/`);
     } else {
       console.log('⏸️  File watcher disabled (AUTO_WATCH=false)');
     }
@@ -96,6 +116,9 @@ function start(): void {
     const server = app.listen(Number(PORT), HOST, () => {
       console.log(`\n🚀 Recall Server`);
       console.log(`📡 Server running on http://${HOST}:${PORT}`);
+      console.log(
+        `🔒 Security: auth=${process.env.RECALL_DISABLE_AUTH === 'true' ? 'disabled' : 'enabled'}, viewer-mode=${isViewerModeEnabled() ? 'on' : 'off'}`
+      );
       if (isClaudeMemAvailable()) {
         console.log(`💾 Claude-mem DB: ~/.claude-mem/claude-mem.db`);
       } else {
