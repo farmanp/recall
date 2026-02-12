@@ -79,7 +79,10 @@ describe('Summary Routes', () => {
   it('generates and stores summary from filesystem frames', async () => {
     mocks.summaryQueries.getSummary.mockReturnValue(null);
     mocks.indexer.findSessionFile.mockResolvedValue('/tmp/session.jsonl');
-    mocks.parserFactory.parseFile.mockResolvedValue({ entries: [] });
+    mocks.parserFactory.parseFile.mockResolvedValue({
+      entries: [],
+      metadata: { projectName: 'test-project' },
+    });
     mocks.parserFactory.buildTimeline.mockResolvedValue({
       frames: [{ id: 'f1' }],
     });

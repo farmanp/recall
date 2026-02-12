@@ -70,7 +70,7 @@ function handleFileChange(filePath: string): void {
 function handleGeminiFileChange(filePath: string): void {
   // Extract hash from path like: ~/.gemini/tmp/{hash}/chats/session-001.json
   const parts = filePath.split(path.sep);
-  const tmpIndex = parts.indexOf('tmp');
+  const tmpIndex = parts.lastIndexOf('tmp');
   const hash = tmpIndex >= 0 && tmpIndex + 1 < parts.length ? parts[tmpIndex + 1] : undefined;
 
   if (!hash) {
