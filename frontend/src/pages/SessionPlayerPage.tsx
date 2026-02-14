@@ -48,7 +48,7 @@ import {
 } from 'lucide-react';
 import { CommentaryTimeline, CommentaryCard } from '../components/CommentaryBubble';
 import { TimelineScrubber } from '../components/session-player/TimelineScrubber';
-import { ChatView } from '../components/session-player/ChatView';
+import { TranscriptView } from '../components/session-player/TranscriptView';
 import {
   findNextVisibleFrame,
   findPrevVisibleFrame,
@@ -117,7 +117,7 @@ export const SessionPlayerPage: React.FC = () => {
   const [showArtifacts, setShowArtifacts] = useState(false);
   const [artifactViewMode, setArtifactViewMode] = useState<'cumulative' | 'full'>('cumulative');
   const [searchQuery, setSearchQuery] = useState('');
-  const [viewMode, setViewMode] = useState<'timeline' | 'chat'>('timeline');
+  const [viewMode, setViewMode] = useState<'timeline' | 'transcript'>('timeline');
   const [showFiltersPanel, setShowFiltersPanel] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
@@ -610,16 +610,16 @@ export const SessionPlayerPage: React.FC = () => {
           </button>
 
           <button
-            onClick={() => setViewMode(viewMode === 'timeline' ? 'chat' : 'timeline')}
+            onClick={() => setViewMode(viewMode === 'timeline' ? 'transcript' : 'timeline')}
             className={`inline-flex items-center justify-center w-9 h-9 transition-all border ${
-              viewMode === 'chat'
+              viewMode === 'transcript'
                 ? 'bg-accent-purple/20 border-accent-purple/50 text-accent-purple'
                 : 'bg-forensic-bg-tertiary border-forensic-border text-forensic-text-secondary hover:text-forensic-text-primary'
             }`}
-            title={`Switch to ${viewMode === 'timeline' ? 'Chat' : 'Timeline'} View`}
+            title={`Switch to ${viewMode === 'timeline' ? 'Transcript' : 'Timeline'} View`}
           >
             {viewMode === 'timeline' ? (
-              <MessageSquare className="w-4 h-4" />
+              <FileText className="w-4 h-4" />
             ) : (
               <Layout className="w-4 h-4" />
             )}
@@ -736,13 +736,14 @@ export const SessionPlayerPage: React.FC = () => {
       {/* Main Content Area with optional sidebar */}
       <div className="flex flex-1 overflow-hidden">
         {/* Content */}
-        {viewMode === 'chat' ? (
-          <ChatView
+        {viewMode === 'transcript' ? (
+          <TranscriptView
             frames={frames}
             currentFrameIndex={currentFrameIndex}
-            isPlaying={isPlaying}
             searchQuery={searchQuery}
             activeFrameTypes={activeFrameTypes}
+            isFrameVisible={isFrameVisible}
+            onNavigateToFrame={handleFrameChange}
           />
         ) : (
           <div className="flex-1 overflow-y-auto px-6 py-8">
