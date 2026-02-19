@@ -27,34 +27,85 @@ import {
   Search,
   X,
   Terminal,
+  LayoutGrid,
+  List,
 } from 'lucide-react';
+import { SessionListItem } from '../components/session-list/SessionListItem';
 
 type DateRange = 'all' | 'today' | 'week' | 'month';
+type ViewMode = 'grid' | 'list';
+
+const VIEW_MODE_KEY = 'recall-session-view-mode';
 
 export const SessionListPage: React.FC = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [offset, setOffset] = useState(0);
   const LIMIT = 20;
 
-  // Search and filter state
+  // Search state (local)
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
-  const [dateRange, setDateRange] = useState<DateRange>('all');
-  const [minDuration, setMinDuration] = useState<number>(0);
-  const [minEventCount, setMinEventCount] = useState<number>(0);
-  const [selectedAgent, setSelectedAgent] = useState<AgentType | 'all'>('all');
-  const [hasClaudeMdFilter, setHasClaudeMdFilter] = useState<boolean>(false);
-  const [showAllProjects, setShowAllProjects] = useState<boolean>(false);
   const [searchMode, setSearchMode] = useState<'sessions' | 'content'>(
     (searchParams.get('mode') as 'sessions' | 'content') || 'sessions'
   );
+
+  // Filter state from URL params (synced with sidebar filters)
+  const selectedAgent = (searchParams.get('agent') as AgentType | 'all') || 'all';
+  const dateRange = (searchParams.get('date') as DateRange) || 'all';
+  const minDuration = parseInt(searchParams.get('duration') || '0', 10);
+
+  // Local filter state (not in sidebar yet)
+  const [minEventCount, setMinEventCount] = useState<number>(0);
+  const [hasClaudeMdFilter, setHasClaudeMdFilter] = useState<boolean>(false);
+  const [showAllProjects, setShowAllProjects] = useState<boolean>(false);
+
+  // View mode (grid/list) with localStorage persistence
+  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    const saved = localStorage.getItem(VIEW_MODE_KEY);
+    return (saved as ViewMode) || 'grid';
+  });
+
+  const handleViewModeChange = (mode: ViewMode) => {
+    setViewMode(mode);
+    localStorage.setItem(VIEW_MODE_KEY, mode);
+  };
+
+  // URL param filter helpers
+  const updateUrlFilter = (key: string, value: string) => {
+    const newParams = new URLSearchParams(searchParams);
+    if (value === 'all' || value === '0') {
+      newParams.delete(key);
+    } else {
+      newParams.set(key, value);
+    }
+    setSearchParams(newParams);
+  };
+
+  const handleAgentChange = (agent: AgentType | 'all') => {
+    updateUrlFilter('agent', agent);
+  };
+
+  const handleDateRangeChange = (range: DateRange) => {
+    updateUrlFilter('date', range);
+  };
+
+  const handleDurationChange = (duration: number) => {
+    updateUrlFilter('duration', String(duration));
+  };
+
+  // Project filter from URL (from Folders page navigation)
+  const projectFilter = searchParams.get('project');
+
+  // Determine if we need to bypass CWD filter
+  const needsShowAll = showAllProjects || projectFilter || selectedAgent !== 'all';
 
   const { data, isLoading, error, refetch } = useSessions({
     offset,
     limit: LIMIT,
     ...(selectedAgent !== 'all' && { agent: selectedAgent }),
     ...(hasClaudeMdFilter && { hasClaudeMd: true }),
-    ...(showAllProjects && { showAll: true }),
+    ...(needsShowAll ? { showAll: true } : {}),
+    ...(projectFilter && { project: projectFilter }),
   });
 
   const { data: globalSearchData, isLoading: isSearchingContent } = useGlobalSearch({
@@ -155,13 +206,21 @@ export const SessionListPage: React.FC = () => {
   };
 
   const clearFilters = () => {
+    // Clear local state
     setSearchQuery('');
-    setDateRange('all');
-    setMinDuration(0);
     setMinEventCount(0);
-    setSelectedAgent('all');
     setHasClaudeMdFilter(false);
     setShowAllProjects(false);
+
+    // Clear URL params
+    navigate('/sessions');
+  };
+
+  const clearProjectFilter = () => {
+    // Keep other params, just remove project
+    const newParams = new URLSearchParams(searchParams);
+    newParams.delete('project');
+    setSearchParams(newParams);
   };
 
   const hasActiveFilters =
@@ -171,7 +230,8 @@ export const SessionListPage: React.FC = () => {
     minEventCount > 0 ||
     selectedAgent !== 'all' ||
     hasClaudeMdFilter ||
-    showAllProjects;
+    showAllProjects ||
+    projectFilter;
 
   return (
     <div className="min-h-screen bg-forensic-bg-primary">
@@ -186,12 +246,64 @@ export const SessionListPage: React.FC = () => {
               </div>
               <span className="badge badge-green">v{__APP_VERSION__}</span>
             </div>
-            <div className="font-mono text-sm text-forensic-text-secondary">
-              {filteredSessions.length} sessions
+            <div className="flex items-center gap-4">
+              <div className="font-mono text-sm text-forensic-text-secondary">
+                {filteredSessions.length} sessions
+              </div>
+              {/* View Mode Toggle */}
+              <div className="flex border border-forensic-border">
+                <button
+                  onClick={() => handleViewModeChange('grid')}
+                  className={`p-2 transition-colors ${
+                    viewMode === 'grid'
+                      ? 'bg-forensic-bg-tertiary text-accent-green'
+                      : 'text-forensic-text-muted hover:text-forensic-text-primary hover:bg-forensic-bg-secondary'
+                  }`}
+                  title="Grid view"
+                >
+                  <LayoutGrid className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => handleViewModeChange('list')}
+                  className={`p-2 transition-colors ${
+                    viewMode === 'list'
+                      ? 'bg-forensic-bg-tertiary text-accent-green'
+                      : 'text-forensic-text-muted hover:text-forensic-text-primary hover:bg-forensic-bg-secondary'
+                  }`}
+                  title="List view"
+                >
+                  <List className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </header>
+
+      {/* Project Filter Banner */}
+      {projectFilter && (
+        <div className="border-b border-forensic-border bg-accent-amber/10">
+          <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <FolderOpen className="w-4 h-4 text-accent-amber" />
+              <span className="font-mono text-sm text-forensic-text-primary">
+                Filtering by folder:{' '}
+                <span className="text-accent-amber">{projectFilter.split('/').pop()}</span>
+              </span>
+              <span className="font-mono text-xs text-forensic-text-muted truncate max-w-md">
+                {projectFilter}
+              </span>
+            </div>
+            <button
+              onClick={clearProjectFilter}
+              className="flex items-center gap-1 px-2 py-1 text-xs font-mono text-forensic-text-muted hover:text-forensic-text-primary hover:bg-forensic-bg-tertiary rounded transition-colors"
+            >
+              <X className="w-3 h-3" />
+              Clear
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Search and Filters */}
       <div className="border-b border-forensic-border bg-forensic-bg-secondary">
@@ -258,7 +370,7 @@ export const SessionListPage: React.FC = () => {
             {(['all', 'claude', 'codex', 'gemini'] as const).map((agent) => (
               <button
                 key={agent}
-                onClick={() => setSelectedAgent(agent)}
+                onClick={() => handleAgentChange(agent)}
                 className={`px-3 py-1.5 font-mono text-xs uppercase tracking-wider border transition-colors ${
                   selectedAgent === agent
                     ? agent === 'all'
@@ -287,7 +399,7 @@ export const SessionListPage: React.FC = () => {
                 {(['all', 'today', 'week', 'month'] as DateRange[]).map((range) => (
                   <button
                     key={range}
-                    onClick={() => setDateRange(range)}
+                    onClick={() => handleDateRangeChange(range)}
                     className={`px-2 py-1 font-mono text-xs border-y border-r first:border-l first:rounded-l last:rounded-r transition-colors ${
                       dateRange === range
                         ? 'bg-accent-green text-forensic-bg-primary border-accent-green'
@@ -313,7 +425,7 @@ export const SessionListPage: React.FC = () => {
               </label>
               <select
                 value={minDuration}
-                onChange={(e) => setMinDuration(Number(e.target.value))}
+                onChange={(e) => handleDurationChange(Number(e.target.value))}
                 className="px-2 py-1 font-mono text-xs bg-forensic-bg-primary border border-forensic-border text-forensic-text-secondary focus:outline-none focus:border-accent-green"
               >
                 <option value="0">Any</option>
@@ -434,7 +546,22 @@ export const SessionListPage: React.FC = () => {
             onClear={hasActiveFilters ? clearFilters : undefined}
             showQuickStart={!hasActiveFilters}
           />
+        ) : viewMode === 'list' ? (
+          /* List View */
+          <div className="space-y-1">
+            <AnimatePresence>
+              {filteredSessions.map((session: SessionMetadata, idx: number) => (
+                <SessionListItem
+                  key={session.sessionId}
+                  session={session}
+                  index={idx}
+                  onClick={() => handleSessionClick(session.sessionId)}
+                />
+              ))}
+            </AnimatePresence>
+          </div>
         ) : (
+          /* Grid View */
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <AnimatePresence>
               {filteredSessions.map((session: SessionMetadata, idx: number) => (
@@ -507,9 +634,17 @@ const SessionCard: React.FC<SessionCardProps> = ({ session, index, onClick }) =>
           <AgentBadge agent={session.agent} />
           <ModelBadge model={session.model} />
         </div>
-        <div className="flex items-center gap-1.5 text-[10px] font-mono text-accent-green uppercase tracking-wide">
-          <Activity className="w-3 h-3" />
-          {session.eventCount} events
+        <div className="flex items-center gap-3">
+          {session.isOngoing && (
+            <div className="flex items-center gap-1.5 px-2 py-0.5 bg-accent-red/20 border border-accent-red/50 text-accent-red text-[10px] font-mono uppercase tracking-wide">
+              <span className="w-1.5 h-1.5 rounded-full bg-accent-red animate-pulse" />
+              LIVE
+            </div>
+          )}
+          <div className="flex items-center gap-1.5 text-[10px] font-mono text-accent-green uppercase tracking-wide">
+            <Activity className="w-3 h-3" />
+            {session.eventCount} events
+          </div>
         </div>
       </div>
 

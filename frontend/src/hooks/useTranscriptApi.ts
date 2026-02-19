@@ -237,3 +237,30 @@ export function useRegenerateSummary(sessionId: string) {
     },
   });
 }
+
+// ----------------------------------------------------------------------------
+// Phase 5: Overview Stats Hooks
+// ----------------------------------------------------------------------------
+
+/**
+ * Fetch overview statistics for the dashboard
+ */
+export function useOverviewStats() {
+  return useQuery({
+    queryKey: ['overview-stats'],
+    queryFn: () => api.fetchOverviewStats(),
+    staleTime: 30000, // Cache for 30 seconds
+    refetchInterval: 60000, // Refetch every minute
+  });
+}
+
+/**
+ * Fetch folder statistics for project navigation
+ */
+export function useFolderStats() {
+  return useQuery({
+    queryKey: ['folder-stats'],
+    queryFn: () => api.fetchFolderStats(),
+    staleTime: 30000,
+  });
+}

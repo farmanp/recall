@@ -11,6 +11,7 @@ import checkpointsRouter from './routes/checkpoints';
 import rewindRouter from './routes/rewind';
 import adminRouter from './routes/admin';
 import sharesRouter from './routes/shares';
+import statsRouter from './routes/stats';
 import { authGuard } from './middleware/auth';
 import { viewerModeGuard, isViewerModeEnabled } from './middleware/viewer-mode';
 import { getDbInstance, isClaudeMemAvailable } from './db/connection';
@@ -117,6 +118,7 @@ export function createServer(): Application {
   // API Routes
   app.use('/api/admin', adminRouter);
   app.use('/api', sharesRouter);
+  app.use('/api/stats', statsRouter);
   app.use('/api/sessions', sessionsRouter);
   app.use('/api/sessions', commentaryRouter);
   app.use('/api/sessions', summariesRouter); // Summary routes under /api/sessions/:sessionId/summary

@@ -563,3 +563,57 @@ export async function regenerateSummary(sessionId: string): Promise<SessionSumma
 
   return response.json();
 }
+
+// ----------------------------------------------------------------------------
+// Phase 5: Stats/Overview API
+// ----------------------------------------------------------------------------
+
+import type { AgentType } from '../types/transcript';
+
+export interface OverviewStats {
+  totalSessions: number;
+  thisWeek: number;
+  avgDurationMs: number;
+  liveCount: number;
+  agentBreakdown: Record<AgentType, number>;
+  activityByDay: Array<{ date: string; count: number }>;
+}
+
+export interface FolderStats {
+  folders: Array<{
+    path: string;
+    name: string;
+    sessionCount: number;
+    liveCount: number;
+    lastActivity: string;
+  }>;
+  total: number;
+}
+
+/**
+ * Fetch overview statistics for the dashboard
+ */
+export async function fetchOverviewStats(): Promise<OverviewStats> {
+  const url = `${API_BASE_URL}/stats/overview`;
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch overview stats: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+/**
+ * Fetch folder statistics for project navigation
+ */
+export async function fetchFolderStats(): Promise<FolderStats> {
+  const url = `${API_BASE_URL}/stats/folders`;
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch folder stats: ${response.statusText}`);
+  }
+
+  return response.json();
+}
