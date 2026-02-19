@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.0] - 2026-02-18
+
+### Added
+
+- **Sidebar Navigation** - New collapsible sidebar with Overview, Sessions, Folders, and Work Units navigation. Replaces top-level routing with persistent sidebar layout.
+- **Overview Dashboard** - New landing page with stats cards (total sessions, this week, avg duration, live count), activity heatmap showing last 28 days, agent breakdown chart, and recent sessions list.
+- **Folders Page** - Browse sessions organized by project directory with session counts and live indicators.
+- **Sidebar Filters** - Agent type, date range, and duration filters in sidebar. Filter state stored in URL params for shareable/bookmarkable links.
+- **List View Toggle** - Switch between grid and list views on session list. Preference persisted in localStorage.
+- **Stats API** - New `/api/stats/overview` and `/api/stats/folders` endpoints for dashboard data.
+
+### Changed
+
+- **Transcript View** - Replaced Chat view with Transcript view as the default. Uses windowed rendering for performance with large sessions.
+- **Session List** - Moved from `/` to `/sessions`. Filters now sync with sidebar and URL params.
+- **Layout** - Sidebar hidden on session player and shared session pages for full-width playback.
+
+### Fixed
+
+- **Transcript Overlap** - Fixed frame overlapping in transcript view by switching from virtualization to windowed rendering with natural document flow.
+
+---
+
 ## [2.4.0] - 2026-02-11
 
 ### Added
