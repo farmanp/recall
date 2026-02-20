@@ -5,24 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.6.0] - 2026-02-20
-
-### Removed
-
-- **Series/Work Units Feature** - Removed the entire Series feature which attempted to automatically group related coding sessions. The correlation algorithm was unreliable and the feature caused more confusion than value.
-
-### Changed
-
-- **Empty Session Filtering** - Sessions without any user messages are now filtered from the session list. Previously, stub sessions (created when queued but never started) would appear in the list and fail to load.
-- **Empty Session Error** - When navigating directly to an empty session URL, shows "Session has no content" with amber styling instead of the misleading "Session not found" error.
-
-### Documentation
-
-- **Development Architecture** - Added new section to CLAUDE.md explaining the two-server development setup (Vite at 5174, Express at 3001) and how it differs from production.
-
----
-
-## [2.5.0] - 2026-02-18
+## [2.4.1] - 2026-02-20
 
 ### Added
 
@@ -38,10 +21,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Transcript View** - Replaced Chat view with Transcript view as the default. Uses windowed rendering for performance with large sessions.
 - **Session List** - Moved from `/` to `/sessions`. Filters now sync with sidebar and URL params.
 - **Layout** - Sidebar hidden on session player and shared session pages for full-width playback.
+- **Empty Session Filtering** - Sessions without any user messages are now filtered from the session list.
+- **Empty Session Error** - Shows "Session has no content" with amber styling instead of misleading "Session not found" error.
 
 ### Fixed
 
 - **Transcript Overlap** - Fixed frame overlapping in transcript view by switching from virtualization to windowed rendering with natural document flow.
+
+### Removed
+
+- **Series/Work Units Feature** - Removed the feature which attempted to automatically group related sessions. The correlation algorithm was unreliable.
+
+### Documentation
+
+- **Development Architecture** - Added section to CLAUDE.md explaining the two-server development setup (Vite at 5174, Express at 3001).
 
 ---
 
