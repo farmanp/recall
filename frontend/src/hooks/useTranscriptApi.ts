@@ -264,3 +264,42 @@ export function useFolderStats() {
     staleTime: 30000,
   });
 }
+
+// ----------------------------------------------------------------------------
+// Phase 6: Token Usage Stats Hooks
+// ----------------------------------------------------------------------------
+
+/**
+ * Fetch overall token usage statistics
+ */
+export function useTokenStats() {
+  return useQuery({
+    queryKey: ['token-stats'],
+    queryFn: () => api.fetchTokenStats(),
+    staleTime: 60000, // Cache for 1 minute
+    refetchInterval: 300000, // Refetch every 5 minutes
+  });
+}
+
+/**
+ * Fetch token usage for a specific folder
+ */
+export function useFolderTokenStats(folderPath: string | undefined) {
+  return useQuery({
+    queryKey: ['folder-token-stats', folderPath],
+    queryFn: () => api.fetchFolderTokenStats(folderPath!),
+    enabled: !!folderPath,
+    staleTime: 60000,
+  });
+}
+
+/**
+ * Fetch sessions with highest token usage
+ */
+export function useTopTokenSessions(limit: number = 10) {
+  return useQuery({
+    queryKey: ['top-token-sessions', limit],
+    queryFn: () => api.fetchTopTokenSessions(limit),
+    staleTime: 60000,
+  });
+}

@@ -159,6 +159,12 @@ export async function importTranscript(
 
     console.log(`[Import] Built timeline: ${timeline.frames.length} frames`);
 
+    // Calculate estimated cost based on token usage
+    const { calculateEstimatedCost } = await import('../db/token-queries');
+    const estimatedCostCents = timeline.tokenUsage
+      ? calculateEstimatedCost(timeline.tokenUsage.inputTokens, timeline.tokenUsage.outputTokens)
+      : 0;
+
     // Create session metadata
     const sessionMetadata: SessionMetadata = {
       sessionId: timeline.sessionId,
@@ -173,6 +179,15 @@ export async function importTranscript(
       eventCount: parsed.entries.length,
       cwd: timeline.metadata.cwd,
       firstUserMessage: extractFirstUserMessage(timeline.frames),
+      tokenUsage: timeline.tokenUsage
+        ? {
+            inputTokens: timeline.tokenUsage.inputTokens,
+            outputTokens: timeline.tokenUsage.outputTokens,
+            cacheCreationTokens: timeline.tokenUsage.cacheCreationTokens,
+            cacheReadTokens: timeline.tokenUsage.cacheReadTokens,
+            estimatedCostCents,
+          }
+        : undefined,
     };
 
     // Persist transcript rows atomically so partial imports don't leak stale data.

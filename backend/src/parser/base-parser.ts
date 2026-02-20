@@ -117,6 +117,9 @@ export abstract class AgentParser {
     // Calculate frame durations
     this.calculateFrameDurations(frames);
 
+    // Aggregate token usage from all frames
+    const tokenUsage = this.aggregateTokenUsage(frames);
+
     // Build timeline metadata
     const startedAt = new Date(transcript.metadata.startTime).getTime();
     const completedAt = transcript.metadata.endTime
@@ -145,6 +148,38 @@ export abstract class AgentParser {
         gitBranch: transcript.metadata.gitBranch,
         claudeMdFiles,
       },
+      tokenUsage,
+    };
+  }
+
+  /**
+   * Aggregate token usage from all frames in the session
+   */
+  protected aggregateTokenUsage(frames: PlaybackFrame[]): {
+    inputTokens: number;
+    outputTokens: number;
+    cacheCreationTokens: number;
+    cacheReadTokens: number;
+  } {
+    let inputTokens = 0;
+    let outputTokens = 0;
+    let cacheCreationTokens = 0;
+    let cacheReadTokens = 0;
+
+    for (const frame of frames) {
+      if (frame.tokenUsage) {
+        inputTokens += frame.tokenUsage.input_tokens || 0;
+        outputTokens += frame.tokenUsage.output_tokens || 0;
+        cacheCreationTokens += frame.tokenUsage.cache_creation_input_tokens || 0;
+        cacheReadTokens += frame.tokenUsage.cache_read_input_tokens || 0;
+      }
+    }
+
+    return {
+      inputTokens,
+      outputTokens,
+      cacheCreationTokens,
+      cacheReadTokens,
     };
   }
 

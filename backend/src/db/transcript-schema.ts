@@ -25,6 +25,12 @@ export interface SessionMetadataRow {
   cwd: string;
   first_user_message: string | null;
   parsed_at: string; // ISO 8601 timestamp when imported
+  // Token usage fields (added in migration 032)
+  total_input_tokens: number | null;
+  total_output_tokens: number | null;
+  cache_creation_tokens: number | null;
+  cache_read_tokens: number | null;
+  estimated_cost_cents: number | null;
 }
 
 /**

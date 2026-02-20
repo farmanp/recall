@@ -12,6 +12,7 @@ import { motion } from 'framer-motion';
 import { useSessions, useOverviewStats } from '../hooks/useTranscriptApi';
 import { LoadingSpinner } from '../components/shared/LoadingSpinner';
 import { ActivityHeatmap } from '../components/overview/ActivityHeatmap';
+import { TokenUsageCard } from '../components/overview/TokenUsageCard';
 
 export const OverviewPage: React.FC = () => {
   const navigate = useNavigate();
@@ -111,9 +112,10 @@ export const OverviewPage: React.FC = () => {
         />
       </div>
 
-      {/* Activity Heatmap & Agent Breakdown */}
+      {/* Activity Heatmap, Agent Breakdown & Token Usage */}
       <div className="grid lg:grid-cols-3 gap-4 mb-8">
-        <div className="lg:col-span-2">
+        {/* Left column: Heatmap + Agent Breakdown */}
+        <div className="lg:col-span-2 space-y-4">
           {statsLoading ? (
             <div className="bg-forensic-bg-secondary border border-forensic-border rounded-lg p-4 h-40 flex items-center justify-center">
               <LoadingSpinner size="md" />
@@ -121,57 +123,60 @@ export const OverviewPage: React.FC = () => {
           ) : (
             <ActivityHeatmap activityByDay={stats?.activityByDay ?? []} />
           )}
+
+          {/* Agent Breakdown */}
+          <div className="bg-forensic-bg-secondary border border-forensic-border rounded-lg p-4">
+            <h3 className="font-mono text-sm text-forensic-text-primary mb-4">Agent Breakdown</h3>
+            {statsLoading ? (
+              <div className="flex justify-center py-4">
+                <LoadingSpinner size="sm" />
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 gap-4">
+                {Object.entries(stats?.agentBreakdown ?? {})
+                  .filter(([, count]) => count > 0)
+                  .sort(([, a], [, b]) => b - a)
+                  .map(([agent, count]) => {
+                    const total = stats?.totalSessions ?? 1;
+                    const percentage = Math.round((count / total) * 100);
+                    const color =
+                      agent === 'claude'
+                        ? 'bg-agent-claude'
+                        : agent === 'gemini'
+                          ? 'bg-agent-gemini'
+                          : 'bg-agent-codex';
+
+                    return (
+                      <div key={agent} className="space-y-1">
+                        <div className="flex items-center justify-between text-xs font-mono">
+                          <span className="text-forensic-text-primary capitalize">{agent}</span>
+                          <span className="text-forensic-text-muted">
+                            {count} ({percentage}%)
+                          </span>
+                        </div>
+                        <div className="h-1.5 bg-forensic-bg-tertiary rounded-full overflow-hidden">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${percentage}%` }}
+                            transition={{ duration: 0.5, delay: 0.2 }}
+                            className={`h-full ${color} rounded-full`}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                {Object.values(stats?.agentBreakdown ?? {}).every((c) => c === 0) && (
+                  <p className="text-xs font-mono text-forensic-text-muted text-center py-2 col-span-full">
+                    No sessions yet
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Agent Breakdown */}
-        <div className="bg-forensic-bg-secondary border border-forensic-border rounded-lg p-4">
-          <h3 className="font-mono text-sm text-forensic-text-primary mb-4">Agent Breakdown</h3>
-          {statsLoading ? (
-            <div className="flex justify-center py-4">
-              <LoadingSpinner size="sm" />
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {Object.entries(stats?.agentBreakdown ?? {})
-                .filter(([, count]) => count > 0)
-                .sort(([, a], [, b]) => b - a)
-                .map(([agent, count]) => {
-                  const total = stats?.totalSessions ?? 1;
-                  const percentage = Math.round((count / total) * 100);
-                  const color =
-                    agent === 'claude'
-                      ? 'bg-agent-claude'
-                      : agent === 'gemini'
-                        ? 'bg-agent-gemini'
-                        : 'bg-agent-codex';
-
-                  return (
-                    <div key={agent} className="space-y-1">
-                      <div className="flex items-center justify-between text-xs font-mono">
-                        <span className="text-forensic-text-primary capitalize">{agent}</span>
-                        <span className="text-forensic-text-muted">
-                          {count} ({percentage}%)
-                        </span>
-                      </div>
-                      <div className="h-1.5 bg-forensic-bg-tertiary rounded-full overflow-hidden">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: `${percentage}%` }}
-                          transition={{ duration: 0.5, delay: 0.2 }}
-                          className={`h-full ${color} rounded-full`}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-              {Object.values(stats?.agentBreakdown ?? {}).every((c) => c === 0) && (
-                <p className="text-xs font-mono text-forensic-text-muted text-center py-2">
-                  No sessions yet
-                </p>
-              )}
-            </div>
-          )}
-        </div>
+        {/* Right column: Token Usage */}
+        <TokenUsageCard />
       </div>
 
       {/* Recent Sessions */}

@@ -331,6 +331,38 @@ export async function compareCheckpoints(
   return response.json();
 }
 
+/**
+ * Export a checkpoint to a named git branch
+ */
+export async function exportCheckpointToGit(
+  checkpointId: string,
+  branchName: string
+): Promise<{
+  success: boolean;
+  branchName?: string;
+  commitSha?: string;
+  message?: string;
+  error?: string;
+  redactionStats?: {
+    totalRedactions: number;
+    byPattern: Record<string, number>;
+  };
+}> {
+  const url = `${API_BASE_URL}/checkpoints/${checkpointId}/export`;
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ branchName }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: response.statusText }));
+    return { success: false, error: error.error || error.message || response.statusText };
+  }
+
+  return response.json();
+}
+
 // ----------------------------------------------------------------------------
 // Phase 3: Rewind API
 // ----------------------------------------------------------------------------
@@ -474,6 +506,56 @@ export async function fetchFolderStats(): Promise<FolderStats> {
 
   if (!response.ok) {
     throw new Error(`Failed to fetch folder stats: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+// ----------------------------------------------------------------------------
+// Phase 6: Token Usage Stats API
+// ----------------------------------------------------------------------------
+
+import type { TokenStatsResponse, FolderTokenStatsResponse } from '../types/tokens';
+
+/**
+ * Fetch overall token usage statistics
+ */
+export async function fetchTokenStats(): Promise<TokenStatsResponse> {
+  const url = `${API_BASE_URL}/stats/tokens`;
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch token stats: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+/**
+ * Fetch token usage for a specific folder
+ */
+export async function fetchFolderTokenStats(folderPath: string): Promise<FolderTokenStatsResponse> {
+  const url = `${API_BASE_URL}/stats/tokens/folder?path=${encodeURIComponent(folderPath)}`;
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch folder token stats: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+/**
+ * Fetch sessions with highest token usage
+ */
+export async function fetchTopTokenSessions(
+  limit: number = 10
+): Promise<{ sessions: Array<import('../types/tokens').SessionTokenUsage> }> {
+  const url = `${API_BASE_URL}/stats/tokens/top?limit=${limit}`;
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch top token sessions: ${response.statusText}`);
   }
 
   return response.json();

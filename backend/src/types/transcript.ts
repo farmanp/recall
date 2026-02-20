@@ -187,6 +187,13 @@ export interface SessionTimeline {
     cwd: string;
     claudeMdFiles?: ClaudeMdInfo[]; // CLAUDE.md files loaded during session
   };
+  // Aggregated token usage across all frames
+  tokenUsage?: {
+    inputTokens: number;
+    outputTokens: number;
+    cacheCreationTokens: number;
+    cacheReadTokens: number;
+  };
 }
 
 /**
@@ -217,6 +224,14 @@ export interface SessionMetadata {
   firstUserMessage?: string;
   claudeMdFiles?: ClaudeMdInfo[]; // CLAUDE.md files loaded during session
   isOngoing?: boolean; // True if session is still active (live)
+  // Token usage stats
+  tokenUsage?: {
+    inputTokens: number;
+    outputTokens: number;
+    cacheCreationTokens: number;
+    cacheReadTokens: number;
+    estimatedCostCents: number;
+  };
 }
 
 /**

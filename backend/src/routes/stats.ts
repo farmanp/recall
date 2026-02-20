@@ -7,6 +7,14 @@
 import { Router, Request, Response } from 'express';
 import { getSessionIndexer } from '../parser/session-indexer';
 import type { AgentType } from '../types/transcript';
+import {
+  getTokenOverview,
+  getTokensByFolder,
+  getTokensByAgent,
+  getTokensForFolder,
+  getTokenUsageOverTime,
+  getTopTokenSessions,
+} from '../db/token-queries';
 
 const router = Router();
 
@@ -199,6 +207,101 @@ router.get('/folders', async (_req: Request, res: Response) => {
     console.error('Error fetching folder stats:', error);
     res.status(500).json({
       error: 'Failed to fetch folder statistics',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+/**
+ * GET /api/stats/tokens
+ * Get aggregated token usage statistics
+ *
+ * Response:
+ * - overall: Total token usage across all sessions
+ * - byFolder: Top folders by token consumption
+ * - byAgent: Token usage broken down by agent type
+ */
+router.get('/tokens', async (_req: Request, res: Response) => {
+  try {
+    // Token stats always show ALL sessions (no CWD filter)
+    // This gives users a complete view of their token consumption
+    const overall = getTokenOverview();
+
+    // Get breakdown by folder (top 10)
+    const byFolder = getTokensByFolder(10);
+
+    // Get breakdown by agent
+    const byAgent = getTokensByAgent();
+
+    // Get usage over time (last 30 days)
+    const overTime = getTokenUsageOverTime(30);
+
+    res.json({
+      overall,
+      byFolder,
+      byAgent,
+      overTime,
+    });
+  } catch (error) {
+    console.error('Error fetching token stats:', error);
+    res.status(500).json({
+      error: 'Failed to fetch token statistics',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+/**
+ * GET /api/stats/tokens/folder
+ * Get token usage for a specific folder
+ *
+ * Query params:
+ * - path: Folder path (required)
+ *
+ * Response:
+ * - folder: Folder path
+ * - stats: Aggregate token stats
+ * - sessions: Individual session token usage
+ */
+router.get('/tokens/folder', async (req: Request, res: Response) => {
+  try {
+    const folderPath = req.query.path as string;
+
+    if (!folderPath) {
+      res.status(400).json({ error: 'Missing required query parameter: path' });
+      return;
+    }
+
+    const result = getTokensForFolder(folderPath);
+
+    res.json(result);
+  } catch (error) {
+    console.error('Error fetching folder token stats:', error);
+    res.status(500).json({
+      error: 'Failed to fetch folder token statistics',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+/**
+ * GET /api/stats/tokens/top
+ * Get sessions with highest token usage
+ *
+ * Query params:
+ * - limit: Number of sessions to return (default: 10)
+ */
+router.get('/tokens/top', async (req: Request, res: Response) => {
+  try {
+    const limit = parseInt(req.query.limit as string) || 10;
+
+    const sessions = getTopTokenSessions(limit);
+
+    res.json({ sessions });
+  } catch (error) {
+    console.error('Error fetching top token sessions:', error);
+    res.status(500).json({
+      error: 'Failed to fetch top token sessions',
       message: error instanceof Error ? error.message : 'Unknown error',
     });
   }

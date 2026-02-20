@@ -249,6 +249,34 @@ export function initializeTranscriptSchema(): void {
     CREATE INDEX IF NOT EXISTS idx_recall_summaries_by
       ON recall_summaries(generated_by);
   `);
+
+  // 8. TOKEN USAGE - add columns if they don't exist (migration 032)
+  const tokenColumns = db.pragma('table_info(session_metadata)') as Array<{ name: string }>;
+  const tokenColumnNames = tokenColumns.map((col) => col.name);
+
+  if (!tokenColumnNames.includes('total_input_tokens')) {
+    db.exec('ALTER TABLE session_metadata ADD COLUMN total_input_tokens INTEGER DEFAULT 0');
+  }
+  if (!tokenColumnNames.includes('total_output_tokens')) {
+    db.exec('ALTER TABLE session_metadata ADD COLUMN total_output_tokens INTEGER DEFAULT 0');
+  }
+  if (!tokenColumnNames.includes('cache_creation_tokens')) {
+    db.exec('ALTER TABLE session_metadata ADD COLUMN cache_creation_tokens INTEGER DEFAULT 0');
+  }
+  if (!tokenColumnNames.includes('cache_read_tokens')) {
+    db.exec('ALTER TABLE session_metadata ADD COLUMN cache_read_tokens INTEGER DEFAULT 0');
+  }
+  if (!tokenColumnNames.includes('estimated_cost_cents')) {
+    db.exec('ALTER TABLE session_metadata ADD COLUMN estimated_cost_cents INTEGER DEFAULT 0');
+  }
+
+  // Token usage indexes
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_sessions_folder_tokens
+      ON session_metadata(project, total_input_tokens, total_output_tokens);
+    CREATE INDEX IF NOT EXISTS idx_sessions_cost
+      ON session_metadata(estimated_cost_cents DESC);
+  `);
 }
 
 /**
@@ -640,7 +668,12 @@ export function insertSession(session: SessionMetadata): void {
       frame_count,
       cwd,
       first_user_message,
-      parsed_at
+      parsed_at,
+      total_input_tokens,
+      total_output_tokens,
+      cache_creation_tokens,
+      cache_read_tokens,
+      estimated_cost_cents
     ) VALUES (
       @sessionId,
       @slug,
@@ -653,7 +686,12 @@ export function insertSession(session: SessionMetadata): void {
       @frameCount,
       @cwd,
       @firstUserMessage,
-      @parsedAt
+      @parsedAt,
+      @totalInputTokens,
+      @totalOutputTokens,
+      @cacheCreationTokens,
+      @cacheReadTokens,
+      @estimatedCostCents
     )
   `
   ).run({
@@ -669,6 +707,11 @@ export function insertSession(session: SessionMetadata): void {
     cwd: session.cwd,
     firstUserMessage: session.firstUserMessage || null,
     parsedAt: new Date().toISOString(),
+    totalInputTokens: session.tokenUsage?.inputTokens || 0,
+    totalOutputTokens: session.tokenUsage?.outputTokens || 0,
+    cacheCreationTokens: session.tokenUsage?.cacheCreationTokens || 0,
+    cacheReadTokens: session.tokenUsage?.cacheReadTokens || 0,
+    estimatedCostCents: session.tokenUsage?.estimatedCostCents || 0,
   });
 }
 
