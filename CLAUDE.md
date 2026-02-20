@@ -75,13 +75,35 @@ npm run test:coverage # Tests with coverage report
 ```bash
 cd frontend
 npm install          # Install dependencies
-npm run dev          # Development server (port 5173)
+npm run dev          # Development server (port 5174)
 npm run build        # Build for production
 npm run lint         # Run ESLint
 npm run preview      # Preview production build
 npm test             # Run Vitest tests
 npm run test:e2e     # Run Playwright E2E tests
 ```
+
+### Development Architecture
+
+In development, two servers run simultaneously:
+
+| Server   | Port | Purpose                                 |
+| -------- | ---- | --------------------------------------- |
+| Backend  | 3001 | Express API server (`/api/*` endpoints) |
+| Frontend | 5174 | Vite dev server (React with hot reload) |
+
+**How it works:**
+
+- Open `http://localhost:5174` in your browser (the frontend)
+- Vite automatically proxies `/api/*` requests to the backend at port 3001
+- Changes to React components hot-reload instantly (no refresh needed)
+- Changes to backend `.ts` files auto-restart via `tsx watch`
+
+**In production** (via `npm start` or `npx recall-player`):
+
+- Only the backend runs on port 3001
+- It serves both the API and the pre-built frontend from `backend/public/`
+- No Vite, no hot reload - just the compiled static files
 
 ### Full Build & Publish
 
