@@ -5,11 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.6.0] - 2026-02-20
+
+### Removed
+
+- **Series/Work Units Feature** - Removed the entire Series feature which attempted to automatically group related coding sessions. The correlation algorithm was unreliable and the feature caused more confusion than value.
+
+### Changed
+
+- **Empty Session Filtering** - Sessions without any user messages are now filtered from the session list. Previously, stub sessions (created when queued but never started) would appear in the list and fail to load.
+- **Empty Session Error** - When navigating directly to an empty session URL, shows "Session has no content" with amber styling instead of the misleading "Session not found" error.
+
+### Documentation
+
+- **Development Architecture** - Added new section to CLAUDE.md explaining the two-server development setup (Vite at 5174, Express at 3001) and how it differs from production.
+
+---
+
 ## [2.5.0] - 2026-02-18
 
 ### Added
 
-- **Sidebar Navigation** - New collapsible sidebar with Overview, Sessions, Folders, and Work Units navigation. Replaces top-level routing with persistent sidebar layout.
+- **Sidebar Navigation** - New collapsible sidebar with Overview, Sessions, and Folders navigation. Replaces top-level routing with persistent sidebar layout.
 - **Overview Dashboard** - New landing page with stats cards (total sessions, this week, avg duration, live count), activity heatmap showing last 28 days, agent breakdown chart, and recent sessions list.
 - **Folders Page** - Browse sessions organized by project directory with session counts and live indicators.
 - **Sidebar Filters** - Agent type, date range, and duration filters in sidebar. Filter state stored in URL params for shareable/bookmarkable links.
