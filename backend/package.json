@@ -11,7 +11,8 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
-    "import": "ts-node src/services/import-cli.ts"
+    "import": "ts-node src/services/import-cli.ts",
+    "recall": "ts-node src/scripts/recall-cli.ts"
   },
   "keywords": [],
   "author": "",
