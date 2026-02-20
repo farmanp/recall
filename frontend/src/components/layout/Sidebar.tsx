@@ -7,7 +7,15 @@
 
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Folder, List, ChevronLeft, ChevronRight, Radio } from 'lucide-react';
+import {
+  LayoutDashboard,
+  Folder,
+  List,
+  ChevronLeft,
+  ChevronRight,
+  Radio,
+  GitCommit,
+} from 'lucide-react';
 import { motion } from 'framer-motion';
 import { SidebarFilters } from './SidebarFilters';
 
@@ -110,6 +118,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, liveCount
           to="/folders"
           icon={<Folder className="w-5 h-5" />}
           label="Folders"
+          collapsed={collapsed}
+        />
+        <NavItem
+          to="/relays"
+          icon={<GitCommit className="w-5 h-5" />}
+          label="Relays"
           collapsed={collapsed}
         />
       </nav>

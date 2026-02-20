@@ -560,3 +560,99 @@ export async function fetchTopTokenSessions(
 
   return response.json();
 }
+
+// ----------------------------------------------------------------------------
+// Phase 7: Relays API (Commit-Centric View)
+// ----------------------------------------------------------------------------
+
+import type {
+  RelaysStatus,
+  CommitsResponse,
+  CommitDetail,
+  CommitDiffResponse,
+  BranchesResponse,
+} from '../types/relays';
+
+/**
+ * Fetch relays status (git integration availability)
+ */
+export async function fetchRelaysStatus(): Promise<RelaysStatus> {
+  const url = `${API_BASE_URL}/relays/status`;
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch relays status: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+/**
+ * Fetch commits with linked sessions
+ */
+export async function fetchRelayCommits(
+  options: {
+    branch?: string;
+    limit?: number;
+    offset?: number;
+  } = {}
+): Promise<CommitsResponse> {
+  const params = new URLSearchParams();
+  if (options.branch) params.append('branch', options.branch);
+  if (options.limit !== undefined) params.append('limit', options.limit.toString());
+  if (options.offset !== undefined) params.append('offset', options.offset.toString());
+
+  const url = `${API_BASE_URL}/relays/commits?${params.toString()}`;
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch commits: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+/**
+ * Fetch commit detail with sessions
+ */
+export async function fetchCommitDetail(hash: string): Promise<CommitDetail> {
+  const url = `${API_BASE_URL}/relays/commits/${encodeURIComponent(hash)}`;
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch commit detail: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+/**
+ * Fetch commit diff (file changes)
+ */
+export async function fetchCommitDiff(hash: string, cwd?: string): Promise<CommitDiffResponse> {
+  const params = new URLSearchParams();
+  if (cwd) params.append('cwd', cwd);
+
+  const url = `${API_BASE_URL}/relays/commits/${encodeURIComponent(hash)}/diff?${params.toString()}`;
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch commit diff: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+/**
+ * Fetch branches with commit counts
+ */
+export async function fetchRelayBranches(): Promise<BranchesResponse> {
+  const url = `${API_BASE_URL}/relays/branches`;
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch branches: ${response.statusText}`);
+  }
+
+  return response.json();
+}

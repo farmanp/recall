@@ -12,6 +12,8 @@ import {
   SharedSessionPage,
   OverviewPage,
   FoldersPage,
+  RelaysPage,
+  CommitDetailPage,
 } from './pages';
 import { CommandPalette } from './components/CommandPalette';
 import { AppLayout } from './components/layout';
@@ -28,6 +30,10 @@ function App() {
           {/* Session Navigation */}
           <Route path="/sessions" element={<SessionListPage />} />
           <Route path="/folders" element={<FoldersPage />} />
+
+          {/* Relays (Commit-Centric View) */}
+          <Route path="/relays" element={<RelaysPage />} />
+          <Route path="/relays/:hash" element={<CommitDetailPage />} />
 
           {/* Session Player (full-screen, sidebar hidden) */}
           <Route path="/session/:sessionId/artifacts" element={<ArtifactsFullPage />} />

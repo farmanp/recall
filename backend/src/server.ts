@@ -5,6 +5,7 @@ import sessionsRouter from './routes/sessions';
 import commentaryRouter from './routes/commentary';
 import importRouter from './routes/import';
 import gitRouter from './routes/git';
+import relaysRouter from './routes/relays';
 import summariesRouter from './routes/summaries';
 import checkpointsRouter from './routes/checkpoints';
 import rewindRouter from './routes/rewind';
@@ -124,6 +125,7 @@ export function createServer(): Application {
   app.use('/api/summaries', summariesRouter); // Stats and batch routes under /api/summaries
   app.use('/api/import', importRouter);
   app.use('/api/git', gitRouter);
+  app.use('/api/relays', relaysRouter);
   // Checkpoint routes - mounted at /api for both session-specific and standalone endpoints
   app.use('/api', checkpointsRouter);
   // Rewind routes - mounted under /api/sessions/:sessionId/rewind/*

@@ -303,3 +303,71 @@ export function useTopTokenSessions(limit: number = 10) {
     staleTime: 60000,
   });
 }
+
+// ----------------------------------------------------------------------------
+// Phase 7: Relays Hooks (Commit-Centric View)
+// ----------------------------------------------------------------------------
+
+/**
+ * Fetch relays status (git integration availability)
+ */
+export function useRelaysStatus() {
+  return useQuery({
+    queryKey: ['relays-status'],
+    queryFn: () => api.fetchRelaysStatus(),
+    staleTime: 30000, // Cache for 30 seconds
+  });
+}
+
+/**
+ * Fetch commits with linked sessions
+ */
+export function useRelayCommits(
+  options: {
+    branch?: string;
+    limit?: number;
+    offset?: number;
+  } = {}
+) {
+  return useQuery({
+    queryKey: ['relay-commits', options],
+    queryFn: () => api.fetchRelayCommits(options),
+    staleTime: 30000,
+    placeholderData: (previousData) => previousData,
+  });
+}
+
+/**
+ * Fetch commit detail with sessions
+ */
+export function useCommitDetail(hash: string | undefined) {
+  return useQuery({
+    queryKey: ['commit-detail', hash],
+    queryFn: () => api.fetchCommitDetail(hash!),
+    enabled: !!hash,
+    staleTime: 30000,
+  });
+}
+
+/**
+ * Fetch commit diff (file changes)
+ */
+export function useCommitDiff(hash: string | undefined, cwd?: string) {
+  return useQuery({
+    queryKey: ['commit-diff', hash, cwd],
+    queryFn: () => api.fetchCommitDiff(hash!, cwd),
+    enabled: !!hash,
+    staleTime: 60000, // Cache longer since diffs don't change
+  });
+}
+
+/**
+ * Fetch branches with commit counts
+ */
+export function useRelayBranches() {
+  return useQuery({
+    queryKey: ['relay-branches'],
+    queryFn: () => api.fetchRelayBranches(),
+    staleTime: 60000,
+  });
+}
