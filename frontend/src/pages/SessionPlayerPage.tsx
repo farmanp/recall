@@ -508,13 +508,33 @@ export const SessionPlayerPage: React.FC = () => {
     );
   }
 
-  if (!sessionDetails || frames.length === 0) {
+  if (!sessionDetails) {
     return (
       <div className="flex items-center justify-center h-screen bg-forensic-bg-primary">
         <div className="evidence-card max-w-md text-center" data-id="ERR-404">
           <p className="font-mono text-xl text-accent-red mb-4">Session not found</p>
           <p className="font-mono text-sm text-forensic-text-secondary mb-6">
             The requested session could not be located in the database.
+          </p>
+          <button
+            onClick={() => navigate('/')}
+            className="px-6 py-2 bg-accent-green text-forensic-bg-primary font-mono text-sm font-semibold uppercase tracking-wider hover:bg-green-600 transition-colors"
+          >
+            Return to Dashboard
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (frames.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-forensic-bg-primary">
+        <div className="evidence-card max-w-md text-center" data-id="ERR-EMPTY">
+          <p className="font-mono text-xl text-accent-amber mb-4">Session has no content</p>
+          <p className="font-mono text-sm text-forensic-text-secondary mb-6">
+            This session exists but contains no playable frames. It may be an empty or corrupted
+            session file.
           </p>
           <button
             onClick={() => navigate('/')}

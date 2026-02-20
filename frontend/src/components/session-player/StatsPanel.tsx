@@ -12,7 +12,7 @@
 
 import React from 'react';
 import type { SessionStats } from '../../hooks/useSessionStats';
-import { BarChart2, Clock, Wrench, X } from 'lucide-react';
+import { BarChart2, Clock, Wrench, X, Zap } from 'lucide-react';
 
 interface StatsPanelProps {
   stats: SessionStats;
@@ -64,7 +64,7 @@ export const StatsPanel: React.FC<StatsPanelProps> = ({ stats, onClose }) => {
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {/* Frame Counts */}
           <div className="bg-forensic-bg-tertiary border border-forensic-border p-4">
             <h4 className="font-mono text-xs text-forensic-text-muted uppercase tracking-wide mb-3 flex items-center gap-2">
@@ -138,6 +138,50 @@ export const StatsPanel: React.FC<StatsPanelProps> = ({ stats, onClose }) => {
               ))}
               {stats.toolUsage.length === 0 && (
                 <span className="text-forensic-text-muted italic">// No tool executions</span>
+              )}
+            </div>
+          </div>
+
+          {/* Token Usage */}
+          <div className="bg-forensic-bg-tertiary border border-forensic-border p-4">
+            <h4 className="font-mono text-xs text-forensic-text-muted uppercase tracking-wide mb-3 flex items-center gap-2">
+              <Zap className="w-3 h-3" />
+              Token Usage
+            </h4>
+            <div className="space-y-2 font-mono text-sm">
+              {stats.tokenStats.responseCount > 0 ? (
+                <>
+                  <div className="flex items-center justify-between">
+                    <span className="text-accent-cyan">Input</span>
+                    <span className="text-forensic-text-secondary">
+                      {stats.tokenStats.totalInputTokens.toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-accent-green">Output</span>
+                    <span className="text-forensic-text-secondary">
+                      {stats.tokenStats.totalOutputTokens.toLocaleString()}
+                    </span>
+                  </div>
+                  {stats.tokenStats.totalCacheReadTokens > 0 && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-accent-purple">Cache Read</span>
+                      <span className="text-forensic-text-secondary">
+                        {stats.tokenStats.totalCacheReadTokens.toLocaleString()}
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between border-t border-forensic-border pt-2 mt-2">
+                    <span className="text-forensic-text-muted">Total</span>
+                    <span className="text-accent-yellow">
+                      {(
+                        stats.tokenStats.totalInputTokens + stats.tokenStats.totalOutputTokens
+                      ).toLocaleString()}
+                    </span>
+                  </div>
+                </>
+              ) : (
+                <span className="text-forensic-text-muted italic">// No token data</span>
               )}
             </div>
           </div>

@@ -15,6 +15,7 @@ import {
   ToolUseBlock,
   ToolResultBlock,
   ContentBlock,
+  TokenUsage,
 } from '../types/transcript';
 
 /**
@@ -78,6 +79,11 @@ export class ClaudeParser extends AgentParser {
     // Preserve model information if present (stored in message.model for Claude)
     if (rawEntry.message?.model) {
       (entry as any).model = rawEntry.message.model;
+    }
+
+    // Preserve token usage metrics if present (stored in message.usage for Claude)
+    if (rawEntry.message?.usage) {
+      (entry as any).usage = rawEntry.message.usage;
     }
 
     return entry;
@@ -223,6 +229,7 @@ export class ClaudeParser extends AgentParser {
                 text: textBlock.text,
               },
               context: { cwd },
+              tokenUsage: (entry as any).usage as TokenUsage | undefined,
             });
           }
           break;

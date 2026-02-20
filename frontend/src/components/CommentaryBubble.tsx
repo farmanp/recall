@@ -34,24 +34,27 @@ export const TimelineBubbleIcon: React.FC<CommentaryBubbleProps> = ({
 }) => {
   const [showPreview, setShowPreview] = useState(false);
 
+  // Use inline styles to avoid Tailwind purge issues
   const typeColors: Record<string, string> = {
-    decision: 'bg-purple-500 hover:bg-purple-600',
-    feature: 'bg-blue-500 hover:bg-blue-600',
-    bugfix: 'bg-red-500 hover:bg-red-600',
-    observation: 'bg-green-500 hover:bg-green-600',
-    insight: 'bg-yellow-500 hover:bg-yellow-600',
-    default: 'bg-gray-500 hover:bg-gray-600',
+    decision: '#a855f7', // purple
+    feature: '#3b82f6', // blue
+    bugfix: '#ef4444', // red
+    observation: '#22c55e', // green
+    discovery: '#22c55e', // green (alias)
+    insight: '#eab308', // yellow
+    change: '#f97316', // orange
+    default: '#6b7280', // gray
   };
 
   const bgColor = typeColors[commentary.type] || typeColors.default;
 
   return (
     <div
-      className="absolute"
+      className="absolute z-20"
       style={{
         left: `${position}%`,
-        top: '-8px',
-        transform: 'translateX(-50%)',
+        top: '50%',
+        transform: 'translate(-50%, -50%)',
       }}
       onMouseEnter={() => setShowPreview(true)}
       onMouseLeave={() => setShowPreview(false)}
@@ -59,22 +62,23 @@ export const TimelineBubbleIcon: React.FC<CommentaryBubbleProps> = ({
     >
       {/* Bubble Icon */}
       <button
-        className={`${bgColor} rounded-full w-4 h-4 border-2 border-white shadow-lg cursor-pointer transition-all hover:scale-125`}
+        className="rounded-full w-4 h-4 shadow-md cursor-pointer transition-all hover:scale-125 border border-white/30"
+        style={{ backgroundColor: bgColor }}
         aria-label={`Commentary: ${commentary.title}`}
       />
 
       {/* Hover Preview */}
       {showPreview && (
         <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-50 pointer-events-none">
-          <div className="bg-gray-800 text-white text-xs px-3 py-2 rounded shadow-lg whitespace-nowrap max-w-xs">
+          <div className="bg-forensic-bg-secondary border border-forensic-border text-forensic-text-primary text-xs px-3 py-2 rounded shadow-lg whitespace-nowrap max-w-xs">
             <div className="font-semibold">{commentary.title}</div>
-            <div className="text-gray-400 text-xs mt-1">
+            <div className="text-forensic-text-muted text-xs mt-1">
               {commentary.type} • {new Date(commentary.timestamp).toLocaleTimeString()}
             </div>
           </div>
           {/* Arrow pointing down */}
           <div className="absolute left-1/2 transform -translate-x-1/2 top-full">
-            <div className="border-8 border-transparent border-t-gray-800" />
+            <div className="border-8 border-transparent border-t-forensic-bg-secondary" />
           </div>
         </div>
       )}
@@ -171,22 +175,23 @@ export const CommentaryTimeline: React.FC<{
   onBubbleClick: (commentary: CommentaryData) => void;
 }> = ({ commentary, totalFrames, frames, onBubbleClick }) => {
   // Map commentary timestamps to timeline positions
+  // Clamp to 2-98% to prevent edge clipping
   const getBubblePosition = (timestamp: number): number => {
-    if (frames.length === 0) return 0;
+    if (frames.length === 0) return 2;
 
     const firstTimestamp = frames[0].timestamp;
     const lastTimestamp = frames[frames.length - 1].timestamp;
     const totalDuration = lastTimestamp - firstTimestamp;
 
-    if (totalDuration === 0) return 0;
+    if (totalDuration === 0) return 2;
 
     const position = ((timestamp - firstTimestamp) / totalDuration) * 100;
-    return Math.max(0, Math.min(100, position));
+    return Math.max(2, Math.min(98, position));
   };
 
   return (
-    <div className="absolute inset-0 pointer-events-none">
-      <div className="relative h-full pointer-events-auto">
+    <div className="absolute inset-0 pointer-events-none overflow-visible">
+      <div className="relative w-full h-full pointer-events-auto">
         {commentary.map((item) => (
           <TimelineBubbleIcon
             key={item.id}

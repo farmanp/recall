@@ -13,8 +13,6 @@ import {
   OverviewPage,
   FoldersPage,
 } from './pages';
-import { WorkUnitListPage } from './pages/WorkUnitListPage';
-import { WorkUnitPlayerPage } from './pages/WorkUnitPlayerPage';
 import { CommandPalette } from './components/CommandPalette';
 import { AppLayout } from './components/layout';
 
@@ -37,10 +35,6 @@ function App() {
 
           {/* Shared Sessions (full-screen, sidebar hidden) */}
           <Route path="/shared/:shareId" element={<SharedSessionPage />} />
-
-          {/* Work Units */}
-          <Route path="/work-units" element={<WorkUnitListPage />} />
-          <Route path="/work-units/:workUnitId" element={<WorkUnitPlayerPage />} />
         </Routes>
       </AppLayout>
     </Router>

@@ -25,6 +25,17 @@ export interface CompressionStats {
 }
 
 /**
+ * Token usage statistics
+ */
+export interface TokenStats {
+  totalInputTokens: number;
+  totalOutputTokens: number;
+  totalCacheReadTokens: number;
+  totalCacheCreationTokens: number;
+  responseCount: number; // Number of responses with token data
+}
+
+/**
  * Session statistics return type
  */
 export interface SessionStats {
@@ -32,6 +43,7 @@ export interface SessionStats {
   durationByType: Record<FrameType, number>;
   toolUsage: ToolUsageStat[];
   compressionStats: CompressionStats;
+  tokenStats: TokenStats;
   totalDuration: number;
 }
 
@@ -135,11 +147,38 @@ export function useSessionStats(frames: PlaybackFrame[]): SessionStats {
     return lastTimestamp - firstTimestamp;
   }, [frames]);
 
+  const tokenStats = useMemo(() => {
+    let totalInputTokens = 0;
+    let totalOutputTokens = 0;
+    let totalCacheReadTokens = 0;
+    let totalCacheCreationTokens = 0;
+    let responseCount = 0;
+
+    for (const frame of frames) {
+      if (frame.tokenUsage) {
+        totalInputTokens += frame.tokenUsage.input_tokens ?? 0;
+        totalOutputTokens += frame.tokenUsage.output_tokens ?? 0;
+        totalCacheReadTokens += frame.tokenUsage.cache_read_input_tokens ?? 0;
+        totalCacheCreationTokens += frame.tokenUsage.cache_creation_input_tokens ?? 0;
+        responseCount++;
+      }
+    }
+
+    return {
+      totalInputTokens,
+      totalOutputTokens,
+      totalCacheReadTokens,
+      totalCacheCreationTokens,
+      responseCount,
+    };
+  }, [frames]);
+
   return {
     frameCounts,
     durationByType,
     toolUsage,
     compressionStats,
+    tokenStats,
     totalDuration,
   };
 }

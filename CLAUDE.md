@@ -218,25 +218,23 @@ File Path → AgentDetector → ParserFactory → AgentParser → PlaybackFrames
 2. **Route Layer** (`src/routes/`): API handlers
    - `sessions.ts` - Session listing, frames, search, CLAUDE.md history
    - `import.ts` - Bulk and single transcript import
-   - `work-units.ts` - Work unit CRUD operations
    - `commentary.ts` - Claude-mem observations integration
 3. **Parser Layer** (`src/parser/`): Multi-agent session parsing
 4. **Database Layer** (`src/db/`): SQLite with dual-database architecture
 5. **Services Layer** (`src/services/`):
    - `file-watcher.ts` - Auto-import on file changes
    - `transcript-importer.ts` - Bulk/single import logic
-   - `work-unit-correlator.ts` - Groups related sessions
 
 ### Frontend Structure
 
 - **State**: Zustand for global state, React Query for server state
 - **Routing**: React Router with:
-  - `/` - Session list
+  - `/` - Overview dashboard
+  - `/sessions` - Session list
+  - `/folders` - Folder navigation
   - `/session/:sessionId` - Session player
-  - `/work-units` - Work unit list
-  - `/work-units/:workUnitId` - Work unit player
 - **Components**: `src/components/` with specialized viewers (DiffViewer, SyntaxHighlighter, TimelineScrubber)
-- **Pages**: SessionListPage, SessionPlayerPage, WorkUnitListPage, WorkUnitPlayerPage
+- **Pages**: OverviewPage, SessionListPage, SessionPlayerPage, FoldersPage
 - **Utilities**: `src/utils/` with shared helpers (tool-normalization)
 
 ### Tool Name Normalization
@@ -317,19 +315,6 @@ POST /api/import/start               # Start bulk import
 GET /api/import/status               # Get import job status
 GET /api/import/stats                # Get database import statistics
 POST /api/import/single              # Import single transcript file
-```
-
-### Work Units
-
-```bash
-GET /api/work-units                  # List work units
-GET /api/work-units/stats            # Work unit statistics
-GET /api/work-units/:id              # Get work unit details
-GET /api/work-units/:id/sessions     # Get sessions in work unit
-POST /api/work-units/recompute       # Trigger work unit recomputation
-PATCH /api/work-units/:id            # Add/remove session from work unit
-DELETE /api/work-units/:id           # Delete work unit
-GET /api/sessions/:id/work-unit      # Get work unit for a session
 ```
 
 ### Commentary

@@ -7,11 +7,13 @@
 
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
-import { User, MessageSquare, Clock } from 'lucide-react';
+import { User, MessageSquare, Clock, Copy, Check } from 'lucide-react';
 import type { PlaybackFrame } from '../../../types/transcript';
 import { ThinkingBlock } from './ThinkingBlock';
 import { ToolCard } from './ToolCard';
 import { highlightText } from '../../../lib/frameSearch';
+import { useClipboard } from '../../../hooks/useClipboard';
+import { frameToMarkdown } from '../../../lib/exportSession';
 
 interface TranscriptFrameProps {
   frame: PlaybackFrame;
@@ -23,6 +25,33 @@ interface TranscriptFrameProps {
   searchQuery?: string;
 }
 
+interface CopyButtonProps {
+  onClick: () => void;
+  copied: boolean;
+  colorClass?: string;
+}
+
+const CopyButton: React.FC<CopyButtonProps> = ({
+  onClick,
+  copied,
+  colorClass = 'text-forensic-text-muted',
+}) => (
+  <button
+    onClick={(e) => {
+      e.stopPropagation();
+      onClick();
+    }}
+    className={`p-1.5 rounded transition-all ${
+      copied
+        ? 'text-accent-green'
+        : `${colorClass} hover:text-forensic-text-primary hover:bg-forensic-bg-tertiary`
+    }`}
+    title={copied ? 'Copied!' : 'Copy frame content'}
+  >
+    {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+  </button>
+);
+
 export const TranscriptFrame: React.FC<TranscriptFrameProps> = ({
   frame,
   frameIndex,
@@ -32,8 +61,14 @@ export const TranscriptFrame: React.FC<TranscriptFrameProps> = ({
   onNavigateToFrame,
   searchQuery = '',
 }) => {
+  const { copy, copied } = useClipboard();
   const timestamp = new Date(frame.timestamp).toLocaleTimeString();
   const agentName = frame.agent ? frame.agent.charAt(0).toUpperCase() + frame.agent.slice(1) : 'AI';
+
+  const handleCopy = () => {
+    const markdown = frameToMarkdown(frame);
+    copy(markdown);
+  };
 
   // Current frame indicator styling
   const currentFrameClass = isCurrent ? 'border-l-4 border-l-accent-green bg-accent-green/5' : '';
@@ -57,9 +92,10 @@ export const TranscriptFrame: React.FC<TranscriptFrameProps> = ({
                 {timestamp}
               </span>
               <span className="font-mono text-xs text-forensic-text-muted">#{frameIndex}</span>
+              <CopyButton onClick={handleCopy} copied={copied} />
             </div>
 
-            <div className="bg-forensic-bg-secondary border border-forensic-border rounded-lg p-4 prose prose-invert prose-sm max-w-none">
+            <div className="bg-forensic-bg-secondary border border-forensic-border rounded-lg p-4 prose prose-invert prose-sm max-w-none overflow-hidden">
               {searchQuery ? (
                 <div className="whitespace-pre-wrap">
                   {highlightText(frame.userMessage.text, searchQuery)}
@@ -77,7 +113,10 @@ export const TranscriptFrame: React.FC<TranscriptFrameProps> = ({
   // Claude Thinking
   if (frame.type === 'claude_thinking' && frame.thinking) {
     return (
-      <div className={`mb-4 transition-all ${currentFrameClass}`}>
+      <div className={`mb-4 transition-all ${currentFrameClass} group relative`}>
+        <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+          <CopyButton onClick={handleCopy} copied={copied} />
+        </div>
         <ThinkingBlock
           text={frame.thinking.text}
           timestamp={timestamp}
@@ -110,9 +149,10 @@ export const TranscriptFrame: React.FC<TranscriptFrameProps> = ({
                 {timestamp}
               </span>
               <span className="font-mono text-xs text-forensic-text-muted">#{frameIndex}</span>
+              <CopyButton onClick={handleCopy} copied={copied} />
             </div>
 
-            <div className="bg-forensic-bg-secondary border border-forensic-border rounded-lg p-4 prose prose-invert prose-sm max-w-none">
+            <div className="bg-forensic-bg-secondary border border-forensic-border rounded-lg p-4 prose prose-invert prose-sm max-w-none overflow-hidden">
               {searchQuery ? (
                 <div className="whitespace-pre-wrap">
                   {highlightText(frame.claudeResponse.text, searchQuery)}
@@ -130,7 +170,10 @@ export const TranscriptFrame: React.FC<TranscriptFrameProps> = ({
   // Tool Execution
   if (frame.type === 'tool_execution' && frame.toolExecution) {
     return (
-      <div className={`mb-4 transition-all ${currentFrameClass}`}>
+      <div className={`mb-4 transition-all ${currentFrameClass} group relative`}>
+        <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+          <CopyButton onClick={handleCopy} copied={copied} />
+        </div>
         <ToolCard
           toolExecution={frame.toolExecution}
           timestamp={timestamp}

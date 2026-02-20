@@ -7,7 +7,7 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Activity, Clock, Radio, List, Layers, ArrowRight, Timer } from 'lucide-react';
+import { Activity, Clock, Radio, List, ArrowRight, Timer, Folder } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useSessions, useOverviewStats } from '../hooks/useTranscriptApi';
 import { LoadingSpinner } from '../components/shared/LoadingSpinner';
@@ -265,16 +265,16 @@ export const OverviewPage: React.FC = () => {
         </button>
 
         <button
-          onClick={() => navigate('/work-units')}
+          onClick={() => navigate('/folders')}
           className="flex items-center gap-3 p-4 bg-forensic-bg-secondary border border-forensic-border rounded-lg hover:border-accent-purple/50 transition-colors group"
         >
-          <Layers className="w-5 h-5 text-accent-purple" />
+          <Folder className="w-5 h-5 text-accent-purple" />
           <div className="text-left">
             <div className="font-mono text-forensic-text-primary group-hover:text-accent-purple transition-colors">
-              Work Units
+              Browse Folders
             </div>
             <div className="text-xs font-mono text-forensic-text-muted">
-              Grouped session analysis
+              Navigate by project directory
             </div>
           </div>
         </button>

@@ -122,8 +122,8 @@ export const TimelineScrubber: React.FC<TimelineScrubberProps> = ({
   );
 
   return (
-    <div className="bg-forensic-bg-secondary border-t border-forensic-border px-6 py-4">
-      <div className="max-w-6xl mx-auto">
+    <div className="bg-forensic-bg-secondary border-t border-forensic-border px-6 py-4 overflow-visible">
+      <div className="max-w-6xl mx-auto overflow-visible">
         <div className="flex items-center justify-between mb-3 font-mono text-xs uppercase tracking-wide">
           <div className="flex items-center gap-3">
             <span className="text-accent-green">{formatTimestamp(currentTimestampMs)}</span>
@@ -139,7 +139,7 @@ export const TimelineScrubber: React.FC<TimelineScrubberProps> = ({
         </div>
 
         {/* Timeline Container */}
-        <div className="relative group">
+        <div className="relative group overflow-visible py-2">
           {/* Timeline Track */}
           <div
             ref={timelineRef}
@@ -150,7 +150,7 @@ export const TimelineScrubber: React.FC<TimelineScrubberProps> = ({
             aria-valuenow={currentFrameIndex}
             aria-valuetext={`Frame ${currentFrameIndex + 1} of ${frames.length}`}
             tabIndex={0}
-            className="relative h-3 bg-forensic-bg-tertiary cursor-pointer overflow-hidden border border-forensic-border"
+            className="relative h-3 bg-forensic-bg-tertiary cursor-pointer border border-forensic-border overflow-visible"
             onClick={handleTimelineClick}
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
@@ -167,13 +167,13 @@ export const TimelineScrubber: React.FC<TimelineScrubberProps> = ({
             />
 
             {/* Frame Type Markers */}
-            <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
+            <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden">
               {frameMarkers}
             </div>
 
             {/* Current Position Handle */}
             <div
-              className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-accent-green border-2 border-forensic-bg-primary shadow-lg transition-all"
+              className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-accent-green border-2 border-forensic-bg-primary shadow-lg transition-all z-10"
               style={{
                 left: `${progress}%`,
                 transform: 'translate(-50%, -50%)',

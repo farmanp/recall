@@ -10,7 +10,6 @@ import { Request, Response, NextFunction } from 'express';
  * Blocked operations when enabled:
  * - POST /api/sessions/:id/rewind/* (file restoration)
  * - POST /api/import/* (transcript import)
- * - PATCH /api/work-units/* (work unit modifications)
  * - DELETE /* (any delete operation)
  * - POST /api/checkpoints/* (checkpoint creation)
  *
@@ -45,7 +44,6 @@ export function setViewerMode(enabled: boolean): void {
 const BLOCKED_PATH_PREFIXES = [
   '/api/sessions/', // Covers rewind operations
   '/api/import',
-  '/api/work-units',
   '/api/checkpoints',
 ];
 

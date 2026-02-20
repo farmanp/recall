@@ -1,21 +1,13 @@
 /**
  * Sidebar Component
  *
- * Collapsible navigation sidebar with Overview, Folders, Sessions, and Work Units
+ * Collapsible navigation sidebar with Overview, Folders, and Sessions
  * Maintains forensic/terminal aesthetic
  */
 
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import {
-  LayoutDashboard,
-  Folder,
-  List,
-  Layers,
-  ChevronLeft,
-  ChevronRight,
-  Radio,
-} from 'lucide-react';
+import { LayoutDashboard, Folder, List, ChevronLeft, ChevronRight, Radio } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { SidebarFilters } from './SidebarFilters';
 
@@ -118,12 +110,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, liveCount
           to="/folders"
           icon={<Folder className="w-5 h-5" />}
           label="Folders"
-          collapsed={collapsed}
-        />
-        <NavItem
-          to="/work-units"
-          icon={<Layers className="w-5 h-5" />}
-          label="Work Units"
           collapsed={collapsed}
         />
       </nav>

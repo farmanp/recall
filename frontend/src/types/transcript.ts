@@ -6,6 +6,17 @@
 export type AgentType = 'claude' | 'codex' | 'gemini' | 'unknown';
 
 /**
+ * Token usage metrics from API response
+ */
+export interface TokenUsage {
+  input_tokens?: number;
+  output_tokens?: number;
+  cache_creation_input_tokens?: number;
+  cache_read_input_tokens?: number;
+  service_tier?: string;
+}
+
+/**
  * Playback frame - the basic unit for video player
  */
 export interface PlaybackFrame {
@@ -16,6 +27,7 @@ export interface PlaybackFrame {
   originalDuration?: number; // uncompressed duration (for UI indicator)
   isCompressed?: boolean; // flag for visual indicator when dead air is compressed
   agent?: AgentType;
+  tokenUsage?: TokenUsage; // Token usage metrics from API response
 
   // User message
   userMessage?: {
@@ -114,6 +126,7 @@ export interface SessionMetadata {
   cwd: string;
   firstUserMessage?: string;
   claudeMdFiles?: ClaudeMdInfo[]; // CLAUDE.md files loaded during session
+  isOngoing?: boolean; // True if session is still active (live)
 }
 
 /**

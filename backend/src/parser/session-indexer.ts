@@ -4,6 +4,7 @@ import os from 'os';
 import { createHash } from 'crypto';
 import { SessionMetadata, AgentType, ClaudeMdInfo } from '../types/transcript';
 import { getGeminiMapping } from '../db/gemini-mapping-queries';
+import { checkSessionOngoingFromLines } from './session-state-detector';
 
 /**
  * Session indexer - scans agent session directories for all available sessions
@@ -530,6 +531,9 @@ export class SessionIndexer {
         }
       }
 
+      // Check if session is ongoing (live) using end chunk content
+      const isOngoing = checkSessionOngoingFromLines(endLines);
+
       return {
         sessionId,
         slug,
@@ -543,6 +547,7 @@ export class SessionIndexer {
         cwd: extractedCwd,
         firstUserMessage,
         claudeMdFiles,
+        isOngoing,
       };
     } finally {
       await fd.close();

@@ -19,7 +19,6 @@ describe('Viewer Mode Middleware', () => {
     app.get('/api/sessions', (_req, res) => res.json({ ok: true }));
     app.post('/api/sessions/123/rewind/preview', (_req, res) => res.json({ ok: true }));
     app.post('/api/import/start', (_req, res) => res.json({ ok: true }));
-    app.patch('/api/work-units/123', (_req, res) => res.json({ ok: true }));
     app.delete('/api/sessions/123', (_req, res) => res.json({ ok: true }));
     app.post('/api/checkpoints/create', (_req, res) => res.json({ ok: true }));
     app.post('/api/admin/viewer-mode', (_req, res) => res.json({ ok: true }));
@@ -64,11 +63,6 @@ describe('Viewer Mode Middleware', () => {
       expect(response.status).toBe(200);
     });
 
-    it('allows PATCH requests', async () => {
-      const response = await request(app).patch('/api/work-units/123');
-      expect(response.status).toBe(200);
-    });
-
     it('allows DELETE requests', async () => {
       const response = await request(app).delete('/api/sessions/123');
       expect(response.status).toBe(200);
@@ -93,12 +87,6 @@ describe('Viewer Mode Middleware', () => {
 
     it('blocks POST to import endpoints', async () => {
       const response = await request(app).post('/api/import/start');
-      expect(response.status).toBe(403);
-      expect(response.body.error).toBe('Viewer mode enabled');
-    });
-
-    it('blocks PATCH to work-units', async () => {
-      const response = await request(app).patch('/api/work-units/123');
       expect(response.status).toBe(403);
       expect(response.body.error).toBe('Viewer mode enabled');
     });

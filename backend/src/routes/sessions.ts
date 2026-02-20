@@ -162,6 +162,10 @@ router.get('/', validateQuery(sessionListSchema), async (_req: Request, res: Res
       const indexer = getSessionIndexer();
       let sessions = await indexer.getAllSessions();
 
+      // Filter out empty sessions (sessions with only queue operations, no actual content)
+      // Check for firstUserMessage - if there's no user message, the session has no meaningful content
+      sessions = sessions.filter((s) => s.firstUserMessage);
+
       // Filter by project if specified
       if (projectFilter) {
         sessions = sessions.filter((s) => s.project.includes(projectFilter));
