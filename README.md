@@ -119,6 +119,15 @@ npm install -g recall-player
 recall
 ```
 
+**Enable Git Tracking** (optional but recommended)
+
+```bash
+cd /path/to/your/project
+recall enable
+```
+
+This links your AI sessions to git commits. See the [Git Tracking Guide](docs/GIT_TRACKING.md) for details.
+
 **Option 3: Development Setup**
 
 ```bash
@@ -172,6 +181,13 @@ npm start
 - **Zero Cloud**: 100% local—your code and sessions never leave your machine
 - **Read-Only**: Recall never modifies your original session files
 - **No Telemetry**: No analytics, no external API calls, no tracking
+
+### 🔗 Git Tracking
+
+- **Commit Linking**: See which sessions contributed to each git commit
+- **Branch Filtering**: Browse sessions by git branch
+- **File Diffs**: View code changes with side-by-side diff viewer
+- **Relays Page**: Commit-centric view of your development work
 
 ---
 
@@ -296,6 +312,42 @@ curl 'http://localhost:3001/api/sessions/{sessionId}'
 ```bash
 curl 'http://localhost:3001/api/sessions/{sessionId}/frames'
 ```
+
+---
+
+## CLI Reference
+
+Recall provides CLI commands for both starting the server and managing git tracking.
+
+### Server Commands
+
+```bash
+recall              # Start the web server (default)
+recall start        # Same as above
+recall serve        # Same as above
+```
+
+### Git Tracking Commands
+
+```bash
+recall enable       # Enable git tracking for current repository
+recall disable      # Disable git tracking for current repository
+recall status       # Show tracking status for current repository
+recall list         # List all enabled repositories
+```
+
+### Example: Enable Git Tracking
+
+```bash
+cd ~/projects/my-app
+recall enable
+# ✓ Git tracking enabled for my-app
+
+recall status
+# Shows: branch, tracking status, session/commit counts
+```
+
+For detailed git tracking documentation, see [docs/GIT_TRACKING.md](docs/GIT_TRACKING.md).
 
 ---
 
@@ -492,6 +544,7 @@ Built with:
 
 ## Roadmap
 
+- [x] **Git Tracking**: Link sessions to git commits with branch filtering
 - [ ] **More Agents**: Support for GitHub Copilot CLI and Aider
 - [ ] **Live Mode**: Watch sessions in real-time as the AI works
 - [ ] **Annotations**: Add comments and notes to sessions

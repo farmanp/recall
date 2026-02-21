@@ -216,6 +216,33 @@ Use the search bar on the Session List page to:
 2. Reduce sessions shown with `RECALL_FILTER_CWD=true`
 3. Exclude large directories with `RECALL_EXCLUDE_PATTERNS`
 
+## Git Tracking (Optional)
+
+Link your AI sessions to git commits for a commit-centric view of your work.
+
+### Enable Tracking
+
+```bash
+cd /path/to/your/project
+recall enable
+```
+
+### Check Status
+
+```bash
+recall status
+# Shows: branch, tracking status, session/commit counts
+```
+
+### View Commits with Sessions
+
+1. Start Recall: `recall`
+2. Click "Relays" in the sidebar
+3. Browse commits that have linked AI sessions
+4. Click any commit to see contributing sessions and file diffs
+
+For detailed documentation, see [GIT_TRACKING.md](GIT_TRACKING.md).
+
 ## Next Steps
 
 - Read the full [README](../README.md) for all features
