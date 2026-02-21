@@ -68,6 +68,7 @@ export interface CreateCheckpointRequest {
   frameIndex: number;
   gitCommit?: string;
   notes?: string;
+  syncToGit?: boolean;
 }
 
 /**

@@ -44,4 +44,10 @@
 | #4609 | 10:12 PM | 🔵  | CLAUDE.md snapshot query layer with deduplication and session linking               | ~723 |
 | #4577 | "        | 🔵  | Core database query layer structure for session and event retrieval                 | ~634 |
 
+### Feb 20, 2026
+
+| ID    | Time     | T   | Title                                                           | Read |
+| ----- | -------- | --- | --------------------------------------------------------------- | ---- |
+| #7004 | 12:25 PM | ⚖️  | Plan: Git-based checkpoint storage adopting Entire CLI patterns | ~221 |
+
 </claude-mem-context>

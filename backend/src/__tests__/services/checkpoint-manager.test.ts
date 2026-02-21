@@ -97,7 +97,7 @@ describe('checkpoint-manager', () => {
       },
     ];
 
-    const checkpoint = CheckpointManager.createCheckpoint('session-1', 0, 'before', frames);
+    const checkpoint = await CheckpointManager.createCheckpoint('session-1', 0, 'before', frames);
 
     expect(mocks.checkpointQueries.initializeCheckpointSchema).toHaveBeenCalledTimes(1);
     expect(mocks.checkpointQueries.insertCheckpoint).toHaveBeenCalledTimes(1);

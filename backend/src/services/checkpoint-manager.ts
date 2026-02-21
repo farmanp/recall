@@ -20,6 +20,11 @@ import {
   updateCheckpoint as updateCheckpointQuery,
   checkpointExists,
 } from '../db/checkpoint-queries';
+import { GitCheckpointService, type GitCheckpointResult } from './git-checkpoint-service';
+import {
+  updateCheckpointGitStorage,
+  updateCheckpointExportBranch,
+} from '../db/git-checkpoint-queries';
 
 /**
  * File state during reconstruction
@@ -27,6 +32,16 @@ import {
 interface FileState {
   content: string;
   status: 'created' | 'modified' | 'deleted';
+}
+
+/**
+ * Options for checkpoint creation
+ */
+export interface CreateCheckpointOptions {
+  /** Sync checkpoint to git branch after creation */
+  syncToGit?: boolean;
+  /** Working directory for git operations */
+  cwd?: string;
 }
 
 /**
@@ -67,16 +82,18 @@ export class CheckpointManager {
    * @param frames - All playback frames for the session
    * @param gitCommit - Optional git commit SHA at checkpoint time
    * @param notes - Optional user notes
+   * @param options - Optional settings for git sync
    * @returns Created checkpoint with files
    */
-  static createCheckpoint(
+  static async createCheckpoint(
     sessionId: string,
     frameIndex: number,
     name: string,
     frames: PlaybackFrame[],
     gitCommit?: string,
-    notes?: string
-  ): CheckpointWithFiles {
+    notes?: string,
+    options?: CreateCheckpointOptions
+  ): Promise<CheckpointWithFiles> {
     this.ensureInitialized();
 
     const id = uuidv4();
@@ -110,6 +127,37 @@ export class CheckpointManager {
     // Insert files in a transaction
     if (files.length > 0) {
       insertCheckpointFiles(id, files);
+    }
+
+    // Sync to git if requested
+    if (options?.syncToGit && options?.cwd) {
+      try {
+        const gitResult = await GitCheckpointService.storeCheckpoint(
+          options.cwd,
+          id,
+          files.map((f) => ({ path: f.path, content: f.content })),
+          {
+            checkpointId: id,
+            sessionId,
+            name,
+            frameIndex,
+            createdAt,
+            originalBranch: '',
+            projectPath: options.cwd,
+            fileCount: files.length,
+          }
+        );
+
+        if (gitResult.success && gitResult.commitSha) {
+          updateCheckpointGitStorage(id, gitResult.commitSha);
+          console.log(`[CheckpointManager] Synced checkpoint ${id} to git: ${gitResult.commitSha}`);
+        } else if (gitResult.error) {
+          console.warn(`[CheckpointManager] Git sync failed: ${gitResult.error}`);
+        }
+      } catch (error) {
+        console.warn('[CheckpointManager] Git sync failed:', error);
+        // Continue - SQLite is primary storage, git is secondary
+      }
     }
 
     return {
@@ -413,5 +461,69 @@ export class CheckpointManager {
 
     const files = getCheckpointFiles(checkpointId);
     return files.find((f) => f.path === filePath) || null;
+  }
+
+  /**
+   * Export a checkpoint to a named git branch
+   *
+   * Creates a branch like `recall/checkpoint/<name>` with the checkpoint files
+   * at their actual file paths, ready for checkout and use.
+   *
+   * @param checkpointId - Checkpoint UUID
+   * @param branchName - Branch name (will be prefixed with recall/checkpoint/)
+   * @param cwd - Working directory for git operations
+   * @returns Result with branch name if successful
+   */
+  static async exportToGitBranch(
+    checkpointId: string,
+    branchName: string,
+    cwd: string
+  ): Promise<GitCheckpointResult> {
+    this.ensureInitialized();
+
+    // Get checkpoint with files
+    const checkpoint = getCheckpointWithFiles(checkpointId);
+    if (!checkpoint) {
+      return { success: false, error: 'Checkpoint not found' };
+    }
+
+    // Export to git
+    const result = await GitCheckpointService.exportToBranch(
+      cwd,
+      checkpointId,
+      branchName,
+      checkpoint.files.map((f) => ({ path: f.path, content: f.content })),
+      {
+        name: checkpoint.name,
+        sessionId: checkpoint.sessionId,
+        frameIndex: checkpoint.frameIndex,
+        createdAt: checkpoint.createdAt,
+      }
+    );
+
+    // Update database with export branch
+    if (result.success && result.branchName) {
+      updateCheckpointExportBranch(checkpointId, result.branchName);
+    }
+
+    return result;
+  }
+
+  /**
+   * Check if git checkpoint storage is available for a directory
+   */
+  static isGitAvailable(cwd: string): boolean {
+    return GitCheckpointService.isAvailable(cwd);
+  }
+
+  /**
+   * Get git checkpoint storage status for a repository
+   */
+  static getGitStatus(cwd: string): {
+    available: boolean;
+    storageBranchExists: boolean;
+    checkpointCount: number;
+  } {
+    return GitCheckpointService.getStatus(cwd);
   }
 }

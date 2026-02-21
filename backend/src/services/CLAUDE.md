@@ -30,4 +30,10 @@
 | #4657 | "        | 🔵  | Transcript importer service orchestrates bulk session import pipeline               | ~783  |
 | #4530 | 6:02 PM  | 🔵  | Services Layer Architecture Patterns and Conventions                                | ~589  |
 
+### Feb 20, 2026
+
+| ID    | Time     | T   | Title                                                           | Read |
+| ----- | -------- | --- | --------------------------------------------------------------- | ---- |
+| #7004 | 12:25 PM | ⚖️  | Plan: Git-based checkpoint storage adopting Entire CLI patterns | ~221 |
+
 </claude-mem-context>

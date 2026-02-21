@@ -55,7 +55,59 @@ RECALL_FILTER_CWD=false npx recall-player@latest
 # Shows all sessions from all directories
 ```
 
+### Server Configuration
+
+| Variable                    | Default   | Description                                      |
+| --------------------------- | --------- | ------------------------------------------------ |
+| `PORT`                      | `3001`    | Server port                                      |
+| `HOST`                      | `0.0.0.0` | Server host binding                              |
+| `NODE_ENV`                  | —         | Set to `production` for production mode          |
+| `AUTO_WATCH`                | `true`    | Enable/disable file watcher on startup           |
+| `RECALL_USER_CWD`           | —         | Override working directory for session filtering |
+| `RECALL_CORS_ORIGINS`       | —         | Comma-separated list of allowed CORS origins     |
+| `RECALL_DISABLE_CLAUDE_MEM` | `false`   | Disable claude-mem database integration          |
+
+### Security & Authentication
+
+| Variable                        | Default | Description                                     |
+| ------------------------------- | ------- | ----------------------------------------------- |
+| `RECALL_VIEWER_MODE`            | `false` | Start in read-only viewer mode                  |
+| `RECALL_LOCALHOST_BYPASS`       | `true`  | Allow localhost requests without authentication |
+| `RECALL_TRUST_LOCALHOST_BYPASS` | `true`  | Trust localhost origin for CORS                 |
+
+### Sharing
+
+| Variable                         | Default | Description                             |
+| -------------------------------- | ------- | --------------------------------------- |
+| `RECALL_SHARE_SIGNING_KEY`       | —       | Secret key for signing share links      |
+| `RECALL_ALLOW_UNREDACTED_SHARES` | `false` | Allow sharing without content redaction |
+
+### LLM Summaries
+
+| Variable                   | Default          | Description                         |
+| -------------------------- | ---------------- | ----------------------------------- |
+| `RECALL_ANTHROPIC_API_KEY` | —                | Anthropic API key for LLM summaries |
+| `RECALL_LLM_MODEL`         | `claude-3-haiku` | Model for summary generation        |
+| `RECALL_LLM_MAX_TOKENS`    | `1024`           | Max tokens for summary response     |
+
 ## Development Commands
+
+### Root (Monorepo)
+
+```bash
+npm install          # Install all dependencies
+npm run dev          # Start both backend and frontend in parallel
+npm run dev:backend  # Start backend only
+npm run dev:frontend # Start frontend only
+npm run build        # Build backend + frontend (cleans and copies)
+npm start            # Start production server
+npm test             # Run all tests
+npm run lint         # Run all linters
+npm run lint:backend # Backend-only linting
+npm run lint:frontend # Frontend-only linting
+npm run format       # Format code with Prettier
+npm run format:check # Check formatting without changes
+```
 
 ### Backend (Express + TypeScript)
 
@@ -68,6 +120,9 @@ npm start            # Production (from dist/)
 npm test             # Run Vitest tests
 npm run test:ui      # Tests with UI
 npm run test:coverage # Tests with coverage report
+npm run import       # CLI: bulk import all transcripts
+npm run import -- --single <file>  # Import single file
+npm run import -- --stats          # Show import statistics
 ```
 
 ### Frontend (React + Vite + TypeScript)
@@ -81,6 +136,8 @@ npm run lint         # Run ESLint
 npm run preview      # Preview production build
 npm test             # Run Vitest tests
 npm run test:e2e     # Run Playwright E2E tests
+npm run format       # Format with Prettier
+npm run format:check # Check formatting
 ```
 
 ### Development Architecture
@@ -134,7 +191,7 @@ For development iteration without full rebuild:
 npm run build:frontend && npm run copy:frontend
 
 # Then restart backend to serve new files
-# Or use frontend dev server at :5173 for hot reload
+# Or use frontend dev server at :5174 for hot reload
 ```
 
 ## Publishing Process
@@ -241,11 +298,28 @@ File Path → AgentDetector → ParserFactory → AgentParser → PlaybackFrames
    - `sessions.ts` - Session listing, frames, search, CLAUDE.md history
    - `import.ts` - Bulk and single transcript import
    - `commentary.ts` - Claude-mem observations integration
+   - `admin.ts` - Viewer mode toggle and status
+   - `checkpoints.ts` - Checkpoint creation and management
+   - `git.ts` - Git context tracking for sessions
+   - `rewind.ts` - File state restoration
+   - `shares.ts` - Session sharing with expiry
+   - `stats.ts` - Overview and folder statistics
+   - `summaries.ts` - Session summary generation
 3. **Parser Layer** (`src/parser/`): Multi-agent session parsing
 4. **Database Layer** (`src/db/`): SQLite with dual-database architecture
 5. **Services Layer** (`src/services/`):
    - `file-watcher.ts` - Auto-import on file changes
    - `transcript-importer.ts` - Bulk/single import logic
+   - `checkpoint-manager.ts` - Checkpoint creation and file capture
+   - `rewind-engine.ts` - File state restoration from session history
+   - `share-links.ts` - Shareable link generation with expiry
+   - `summarizer.ts` - Heuristic-based session summaries
+   - `llm-summary-generator.ts` - LLM-powered summary generation
+   - `gemini-hash-mapper.ts` - Maps Gemini CLI session hashes
+6. **Middleware Layer** (`src/middleware/`):
+   - `auth.ts` - Authentication guard for protected routes
+   - `viewer-mode.ts` - Read-only mode enforcement
+   - `validation.ts` - Request validation helpers
 
 ### Frontend Structure
 
@@ -255,8 +329,10 @@ File Path → AgentDetector → ParserFactory → AgentParser → PlaybackFrames
   - `/sessions` - Session list
   - `/folders` - Folder navigation
   - `/session/:sessionId` - Session player
+  - `/session/:sessionId/artifacts` - Artifacts full page view
+  - `/shared/:shareId` - Shared session viewer
 - **Components**: `src/components/` with specialized viewers (DiffViewer, SyntaxHighlighter, TimelineScrubber)
-- **Pages**: OverviewPage, SessionListPage, SessionPlayerPage, FoldersPage
+- **Pages**: OverviewPage, SessionListPage, SessionPlayerPage, FoldersPage, SharedSessionPage
 - **Utilities**: `src/utils/` with shared helpers (tool-normalization)
 
 ### Tool Name Normalization
@@ -289,6 +365,63 @@ The backend (`base-parser.ts`) has equivalent methods for server-side normalizat
 | Claude | `~/.claude/projects/{project}/` | JSONL  | One event per line        |
 | Codex  | `~/.codex/sessions/YYYY/MM/`    | JSONL  | `{type, payload}` wrapper |
 | Gemini | `~/.gemini/tmp/{hash}/chats/`   | JSON   | `session-*.json` files    |
+
+## Features
+
+### Checkpoints
+
+Checkpoints capture the complete file state at any point in a session. Useful for comparing code states or restoring to a known-good state.
+
+- **Create checkpoints** at any frame in the session timeline
+- **Capture file contents** - stores all files touched in the session up to that point
+- **Compare checkpoints** - diff two checkpoints to see what changed
+- **Name and annotate** - add custom names and notes to checkpoints
+
+### Session Sharing
+
+Share sessions with others via expiring links. Useful for code reviews or debugging discussions.
+
+- **Generate share links** with configurable expiry (1h, 24h, 7d, 30d)
+- **Content redaction** - optionally redact sensitive content before sharing
+- **Public access** - shared links don't require authentication
+- **Revocable** - delete share links at any time
+
+Requires `RECALL_SHARE_SIGNING_KEY` environment variable for secure link generation.
+
+### Session Summaries
+
+Automatically generate human-readable summaries of coding sessions.
+
+- **Heuristic summaries** - fast, rule-based summaries from session metadata
+- **LLM summaries** - AI-powered summaries using Claude (requires `RECALL_ANTHROPIC_API_KEY`)
+- **Batch generation** - generate summaries for multiple sessions at once
+- **Caching** - summaries are cached in the database for fast retrieval
+
+### Git Context Tracking
+
+Track git state (branch, commit, dirty files) for each session.
+
+- **Branch tracking** - see which branch each session was on
+- **Commit correlation** - link sessions to git commits
+- **Branch filtering** - view all sessions for a specific branch
+- **Dirty file detection** - know if uncommitted changes existed
+
+### Rewind (File Restoration)
+
+Restore files to their exact state at any point in a session.
+
+- **Preview changes** - see what files would be modified before executing
+- **Backup creation** - automatic backups before any file changes
+- **Undo support** - revert the last rewind operation
+- **Selective restoration** - choose which files to restore
+
+### Viewer Mode
+
+Read-only mode for safely browsing sessions without risk of modifications.
+
+- **Toggle via admin API** - enable/disable at runtime
+- **Environment variable** - start in viewer mode with `RECALL_VIEWER_MODE=true`
+- **Blocks mutations** - prevents checkpoints, rewinds, and other write operations
 
 ## API Reference
 
@@ -357,6 +490,61 @@ POST /api/sessions/:id/rewind/undo       # Undo the last rewind (restore from ba
 GET /api/sessions/:id/rewind/history     # Get rewind history for session
 GET /api/sessions/:id/rewind/undo-info   # Check if undo is available
 GET /api/sessions/:id/rewind/stats       # Get rewind statistics
+```
+
+### Admin
+
+```bash
+GET /api/admin/viewer-mode               # Get viewer mode status
+POST /api/admin/viewer-mode              # Toggle viewer mode (body: {enabled: boolean})
+GET /api/admin/status                    # Get admin status info
+```
+
+### Checkpoints
+
+```bash
+POST /api/sessions/:id/checkpoints       # Create checkpoint at frame
+GET /api/sessions/:id/checkpoints        # List checkpoints for session
+GET /api/checkpoints/:id                 # Get checkpoint metadata
+GET /api/checkpoints/:id/full            # Get checkpoint with all file contents
+GET /api/checkpoints/:id/files/*         # Get specific file from checkpoint
+PATCH /api/checkpoints/:id               # Update checkpoint (name, notes)
+DELETE /api/checkpoints/:id              # Delete checkpoint
+GET /api/checkpoints/:id/diff/:otherId   # Compare two checkpoints
+GET /api/checkpoints                     # List all checkpoints
+```
+
+### Git
+
+```bash
+GET /api/sessions/:id/git                # Get git context for session
+GET /api/git/commits                     # List commits with session activity
+GET /api/git/branches                    # List branches with session counts
+GET /api/git/branches/:name/sessions     # Get sessions for a branch
+```
+
+### Shares
+
+```bash
+POST /api/sessions/:id/share             # Create shareable link
+GET /api/shared/:shareId                 # Get shared session (public)
+DELETE /api/shared/:shareId              # Delete share link
+```
+
+### Stats
+
+```bash
+GET /api/stats/overview                  # Dashboard statistics
+GET /api/stats/folders                   # Folder-level statistics
+```
+
+### Summaries
+
+```bash
+GET /api/sessions/:id/summary            # Get session summary
+POST /api/sessions/:id/summary/regenerate # Regenerate summary
+GET /api/summaries/stats                 # Summary generation statistics
+POST /api/summaries/generate-batch       # Batch generate summaries
 ```
 
 ## Keyboard Shortcuts

@@ -20,6 +20,7 @@ import {
   ChevronDown,
   ChevronRight,
   GitCommit,
+  GitBranch,
 } from 'lucide-react';
 import type { Checkpoint } from '../../types/competitive';
 
@@ -34,6 +35,7 @@ interface CheckpointPanelProps {
   onCreate: () => void;
   onDelete: (checkpointId: string) => void;
   onCompare?: (checkpoint1Id: string, checkpoint2Id: string) => void;
+  onExport?: (checkpointId: string) => void;
 }
 
 export const CheckpointPanel: React.FC<CheckpointPanelProps> = ({
@@ -47,6 +49,7 @@ export const CheckpointPanel: React.FC<CheckpointPanelProps> = ({
   onCreate,
   onDelete,
   onCompare,
+  onExport,
 }) => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [compareMode, setCompareMode] = useState(false);
@@ -284,7 +287,7 @@ export const CheckpointPanel: React.FC<CheckpointPanelProps> = ({
                         </p>
                       )}
 
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -295,6 +298,19 @@ export const CheckpointPanel: React.FC<CheckpointPanelProps> = ({
                           <Play className="w-3 h-3" />
                           Go to Frame
                         </button>
+                        {onExport && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onExport(checkpoint.id);
+                            }}
+                            className="flex items-center gap-1 px-2 py-1 bg-accent-cyan/10 border border-accent-cyan/30 text-accent-cyan text-[10px] font-mono hover:bg-accent-cyan/20 transition-colors"
+                            title="Export to git branch"
+                          >
+                            <GitBranch className="w-3 h-3" />
+                            Export
+                          </button>
+                        )}
                         <button
                           onClick={(e) => {
                             e.stopPropagation();

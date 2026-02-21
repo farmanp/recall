@@ -28,6 +28,18 @@ const createCheckpointSchema = z.object({
   frameIndex: z.number().int().min(0),
   gitCommit: z.string().optional(),
   notes: z.string().optional(),
+  syncToGit: z.boolean().optional(),
+});
+
+const exportCheckpointSchema = z.object({
+  branchName: z
+    .string()
+    .min(1)
+    .max(100)
+    .regex(
+      /^[a-zA-Z0-9._-]+$/,
+      'Branch name must contain only alphanumeric characters, dots, underscores, or hyphens'
+    ),
 });
 
 const updateCheckpointSchema = z.object({
@@ -110,14 +122,21 @@ router.post(
         }
       }
 
+      // Get session cwd for git sync (if requested)
+      const sessionCwd = existingSession?.cwd || timeline.metadata?.cwd;
+
       // Create checkpoint
-      const checkpoint = CheckpointManager.createCheckpoint(
+      const checkpoint = await CheckpointManager.createCheckpoint(
         sessionId,
         body.frameIndex,
         body.name,
         timeline.frames,
         body.gitCommit,
-        body.notes
+        body.notes,
+        {
+          syncToGit: body.syncToGit,
+          cwd: sessionCwd,
+        }
       );
 
       res.status(201).json(checkpoint);
@@ -410,6 +429,88 @@ router.delete(
       console.error('Error deleting checkpoint:', error);
       res.status(500).json({
         error: 'Failed to delete checkpoint',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+);
+
+/**
+ * POST /api/checkpoints/:id/export
+ * Export a checkpoint to a named git branch
+ *
+ * Creates a branch like `recall/checkpoint/<name>` with the checkpoint files
+ * at their actual file paths, ready for checkout and use.
+ *
+ * Request Body:
+ * - branchName (string, required): Branch name (alphanumeric, dots, underscores, hyphens only)
+ *
+ * Response:
+ * - success: boolean
+ * - branchName: Full branch name (e.g., recall/checkpoint/my-checkpoint)
+ * - commitSha: Git commit SHA
+ * - message: Success/error message
+ *
+ * @example
+ * POST /api/checkpoints/550e8400-e29b-41d4-a716-446655440000/export
+ * { "branchName": "before-refactor" }
+ */
+router.post(
+  '/checkpoints/:id/export',
+  validateParams(checkpointIdSchema),
+  validateBody(exportCheckpointSchema),
+  async (_req: Request, res: Response) => {
+    try {
+      const { id } = res.locals.validatedParams;
+      const { branchName } = _req.body as { branchName: string };
+
+      // Get checkpoint to find session
+      const checkpoint = CheckpointManager.getCheckpointById(id);
+      if (!checkpoint) {
+        res.status(404).json({ error: 'Checkpoint not found' });
+        return;
+      }
+
+      // Get session to find cwd
+      const session = getTranscriptSessionById(checkpoint.sessionId);
+      if (!session?.cwd) {
+        res.status(400).json({
+          error: 'Cannot export checkpoint',
+          message: 'Session has no working directory',
+        });
+        return;
+      }
+
+      // Check if git is available
+      if (!CheckpointManager.isGitAvailable(session.cwd)) {
+        res.status(400).json({
+          error: 'Cannot export checkpoint',
+          message: 'Working directory is not a git repository',
+        });
+        return;
+      }
+
+      // Export to git branch
+      const result = await CheckpointManager.exportToGitBranch(id, branchName, session.cwd);
+
+      if (result.success) {
+        res.json({
+          success: true,
+          branchName: result.branchName,
+          commitSha: result.commitSha,
+          message: `Exported to branch: ${result.branchName}`,
+          redactionStats: result.redactionStats,
+        });
+      } else {
+        res.status(400).json({
+          success: false,
+          error: result.error || 'Export failed',
+        });
+      }
+    } catch (error) {
+      console.error('Error exporting checkpoint:', error);
+      res.status(500).json({
+        error: 'Failed to export checkpoint',
         message: error instanceof Error ? error.message : 'Unknown error',
       });
     }
