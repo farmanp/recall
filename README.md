@@ -474,14 +474,14 @@ Only sessions from `/Users/me/projects/myapp` will be shown. Disable with `RECAL
 
 ### Is my data sent to the cloud?
 
-**Absolutely not.** Recall is 100% local-first with:
+**Recall has no ability to send data anywhere.**
 
-- No analytics
-- No external API calls
-- No telemetry
-- No cloud storage
+- No HTTP clients (except localhost server)
+- No WebSockets to external services
+- No telemetry or analytics
+- No background sync
 
-All data stays on your machine.
+All data stays on your machine. You can verify this by running Recall with a firewall or network monitor.
 
 ---
 
@@ -517,11 +517,24 @@ See the [full troubleshooting guide](docs/TROUBLESHOOTING.md) for more solutions
 
 ---
 
-## Security Notes
+## Security
 
-- **Local-only**: This app is designed for local use only
-- **Read-only**: Session files are read but never modified
-- **Sensitive data**: Session files may contain API keys, credentials, or sensitive code - do not expose this app to the internet
+Recall is a **passive, read-only log indexer**. It has no ability to send data anywhere.
+
+- **No network egress**: No HTTP clients, WebSockets, telemetry, or external API calls
+- **No interception**: Does not proxy API calls, install certificates, or inspect traffic
+- **Read-only**: Session files are never modified
+- **Cache-only persistence**: SQLite database is a cache, safe to delete anytime
+- **Localhost-only**: Server binds to localhost by default
+
+Recall is in the same risk class as `ripgrep`, `less`, or `git log`.
+
+For enterprise security reviews, see [SECURITY.md](SECURITY.md) with:
+
+- Threat model
+- Compliance FAQ (SOC 2, HIPAA, GDPR)
+- Verification commands
+- Data flow diagrams
 
 ---
 
