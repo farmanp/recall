@@ -4,7 +4,7 @@
  * Determines if a Claude session is still ongoing (AI still responding)
  * based on content analysis, not file modification times.
  *
- * Approach inspired by claude-devtools:
+ * Approach:
  * - Track activity types in order: thinking, tool_use, tool_result, text output
  * - Find the last "ending" event (text output, interruption, ExitPlanMode, etc.)
  * - Session is ongoing if AI activities exist AFTER the last ending event
