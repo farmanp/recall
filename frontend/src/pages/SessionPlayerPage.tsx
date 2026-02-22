@@ -791,8 +791,8 @@ export const SessionPlayerPage: React.FC = () => {
             </button>
           )}
 
-          {/* Checkpoints Button */}
-          <button
+          {/* Checkpoints Button - Hidden for now */}
+          {/* <button
             onClick={() => setShowCheckpoints(!showCheckpoints)}
             className={`relative inline-flex items-center justify-center w-9 h-9 transition-all border ${
               showCheckpoints
@@ -809,10 +809,10 @@ export const SessionPlayerPage: React.FC = () => {
                 {checkpointsData.length}
               </span>
             )}
-          </button>
+          </button> */}
 
-          {/* Summary Button */}
-          {summaryData && (
+          {/* Summary Button - Hidden for now */}
+          {/* {summaryData && (
             <button
               onClick={() => setShowSummary(!showSummary)}
               className={`inline-flex items-center justify-center w-9 h-9 transition-all border ${
@@ -824,7 +824,7 @@ export const SessionPlayerPage: React.FC = () => {
             >
               <AlignLeft className="w-4 h-4" />
             </button>
-          )}
+          )} */}
 
           {/* Impact Analysis Button */}
           <button
