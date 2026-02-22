@@ -663,14 +663,6 @@
         transform: translateY(-2px);
       }
 
-      /* Feature benefits */
-      .feature-benefit {
-        margin-top: 12px;
-        color: var(--green);
-        font-size: 0.8rem;
-        font-family: 'JetBrains Mono', monospace;
-      }
-
       /* Use Cases */
       .use-cases {
         padding: 80px 0;
@@ -718,14 +710,6 @@
       .use-case-solution {
         color: var(--text-primary);
         font-size: 0.85rem;
-      }
-
-      /* Step benefits */
-      .step-benefit {
-        margin-top: 8px;
-        color: var(--green);
-        font-size: 0.8rem;
-        font-family: 'JetBrains Mono', monospace;
       }
     </style>
   </head>
@@ -947,67 +931,46 @@
             <div class="cap-icon">▶️</div>
             <h3>Playback</h3>
             <p>Scrub through sessions at variable speeds. Skip dead air automatically.</p>
-            <p class="feature-benefit">
-              → Debug bugs faster by pinpointing exactly when something broke.
-            </p>
           </div>
           <div class="cap-item">
             <div class="cap-icon">📂</div>
             <h3>File Tracking</h3>
-            <p>See every file read, write, and edit. Syntax-highlighted diffs included.</p>
-            <p class="feature-benefit">
-              → See the ripple effect of every AI edit across your codebase.
-            </p>
+            <p>See every file read, write, and edit. Syntax-highlighted diffs.</p>
           </div>
           <div class="cap-item">
             <div class="cap-icon">🔍</div>
             <h3>Search</h3>
-            <p>Full-text search across all sessions. Find any conversation in milliseconds.</p>
-            <p class="feature-benefit">
-              → Instantly recall how your AI solved a similar problem weeks ago.
-            </p>
+            <p>Full-text search across all sessions. Find anything in milliseconds.</p>
           </div>
           <div class="cap-item">
             <div class="cap-icon">🎯</div>
             <h3>Impact Analysis</h3>
-            <p>Detect drift from repo conventions. See blast radius and affected directories.</p>
-            <p class="feature-benefit">
-              → Catch repo-norm deviations before they become tech debt.
-            </p>
+            <p>Detect drift from repo conventions. See blast radius.</p>
           </div>
           <div class="cap-item">
             <div class="cap-icon">📊</div>
-            <h3>Context Visualization</h3>
-            <p>Real-time context window fill meter. See token attribution by category.</p>
-            <p class="feature-benefit">
-              → Understand what's consuming your context and optimize usage.
-            </p>
+            <h3>Context Meter</h3>
+            <p>Real-time context window fill. Token attribution by category.</p>
           </div>
           <div class="cap-item">
             <div class="cap-icon">🌳</div>
-            <h3>Subagent Tree View</h3>
-            <p>Visualize Task tool spawns as hierarchical trees. Drill into any subagent.</p>
-            <p class="feature-benefit">→ Understand complex multi-agent workflows at a glance.</p>
+            <h3>Subagent Tree</h3>
+            <p>Hierarchical view of Task tool spawns. Drill into any subagent.</p>
           </div>
           <div class="cap-item">
             <div class="cap-icon">⚡</div>
             <h3>Token Tracking</h3>
-            <p>Per-turn token breakdown with cost estimates. See where your tokens go.</p>
-            <p class="feature-benefit">→ Identify expensive operations and optimize API costs.</p>
+            <p>Per-turn breakdown with cost estimates.</p>
           </div>
           <div class="cap-item">
             <div class="cap-icon">🔗</div>
             <h3>Git Integration</h3>
-            <p>Link sessions to commits and branches. Commit-centric Relays view.</p>
-            <p class="feature-benefit">→ See exactly which AI sessions shaped each commit.</p>
+            <p>Link sessions to commits and branches.</p>
           </div>
           <div class="cap-item">
             <div class="cap-icon">🔒</div>
             <h3>Private & Local</h3>
-            <p>100% local. Your code never leaves your machine. Read-only, never modifies files.</p>
-            <p class="feature-benefit">
-              → Zero security risk. No telemetry, no cloud, no external calls.
-            </p>
+            <p>100% local. No telemetry, no cloud.</p>
           </div>
         </div>
       </div>
@@ -1016,10 +979,6 @@
     <section class="agents" id="agents">
       <div class="container">
         <h2>// One Timeline, All Your AI Agents</h2>
-        <p class="subtitle">
-          Recall automatically unifies sessions from Claude Code, Gemini CLI, and Codex CLI into a
-          single searchable timeline. No more switching between tools to track down what happened.
-        </p>
         <div class="agents-list">
           <div class="agent">
             <div class="agent-name claude">Claude Code</div>
@@ -1045,19 +1004,14 @@
             <div class="step-marker">01</div>
             <div class="step-content">
               <h3>Run with npx</h3>
-              <p>No installation required. Opens in your browser automatically.</p>
               <code>npx recall-player@latest</code>
-              <p class="step-benefit">→ Automatically scans ~/.claude, ~/.gemini, ~/.codex</p>
             </div>
           </div>
           <div class="install-step">
             <div class="step-marker">02</div>
             <div class="step-content">
               <h3>Browse & Replay</h3>
-              <p>Search your sessions, click to open, and replay like a video.</p>
-              <p class="step-benefit">
-                → Start understanding what your AI actually did in under a minute
-              </p>
+              <p>Search sessions, click to open, replay like a video.</p>
             </div>
           </div>
         </div>
