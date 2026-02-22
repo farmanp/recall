@@ -236,22 +236,44 @@ function extractFileDiff(
   _toolResult: ToolResultBlock
 ): FileDiff | undefined {
   const input = toolUse.input;
+  const filePath = extractFilePath(input);
 
-  if (toolUse.name === 'Write' && input.file_path && input.content) {
-    return {
-      filePath: input.file_path,
-      newContent: input.content,
-      language: inferLanguage(input.file_path),
-    };
+  if (!filePath) {
+    return undefined;
   }
 
-  if (toolUse.name === 'Edit' && input.file_path && input.old_string && input.new_string) {
-    return {
-      filePath: input.file_path,
-      oldContent: input.old_string,
-      newContent: input.new_string,
-      language: inferLanguage(input.file_path),
-    };
+  // Write operations (Claude: Write, Gemini: write_file/create_file)
+  if (isWriteTool(toolUse.name)) {
+    const content = input.content || input.contents;
+    if (content) {
+      return {
+        filePath,
+        newContent: String(content),
+        language: inferLanguage(filePath),
+      };
+    }
+  }
+
+  // Edit operations (Claude: Edit, Gemini: replace)
+  if (isEditTool(toolUse.name)) {
+    // Claude format: old_string, new_string
+    if (input.old_string && input.new_string) {
+      return {
+        filePath,
+        oldContent: String(input.old_string),
+        newContent: String(input.new_string),
+        language: inferLanguage(filePath),
+      };
+    }
+    // Gemini format: old_text, new_text
+    if (input.old_text && input.new_text) {
+      return {
+        filePath,
+        oldContent: String(input.old_text),
+        newContent: String(input.new_text),
+        language: inferLanguage(filePath),
+      };
+    }
   }
 
   return undefined;
@@ -297,6 +319,36 @@ function inferLanguage(filePath: string): string {
   return languageMap[ext || ''] || 'text';
 }
 
+// Tool name normalization for multi-agent support
+const READ_TOOLS = ['Read', 'Glob', 'Grep', 'NotebookRead', 'read_file', 'glob', 'list_directory'];
+const WRITE_TOOLS = ['Write', 'NotebookEdit', 'write_file', 'create_file'];
+const EDIT_TOOLS = ['Edit', 'replace'];
+
+function isReadTool(toolName: string): boolean {
+  return READ_TOOLS.includes(toolName);
+}
+
+function isWriteTool(toolName: string): boolean {
+  return WRITE_TOOLS.includes(toolName);
+}
+
+function isEditTool(toolName: string): boolean {
+  return EDIT_TOOLS.includes(toolName);
+}
+
+/**
+ * Extract file path from tool input (handles different agent formats)
+ */
+function extractFilePath(input: Record<string, unknown>): string | undefined {
+  // Claude format
+  if (typeof input.file_path === 'string') return input.file_path;
+  // Gemini format
+  if (typeof input.path === 'string') return input.path;
+  // Codex format
+  if (typeof input.filename === 'string') return input.filename;
+  return undefined;
+}
+
 /**
  * Extract file context (files read/modified) from tool use
  */
@@ -305,13 +357,18 @@ function extractFileContext(toolUse: ToolUseBlock): {
   filesModified?: string[];
 } {
   const context: { filesRead?: string[]; filesModified?: string[] } = {};
+  const filePath = extractFilePath(toolUse.input);
 
-  if (toolUse.name === 'Read' && toolUse.input.file_path) {
-    context.filesRead = [toolUse.input.file_path];
+  if (!filePath) {
+    return context;
   }
 
-  if ((toolUse.name === 'Write' || toolUse.name === 'Edit') && toolUse.input.file_path) {
-    context.filesModified = [toolUse.input.file_path];
+  if (isReadTool(toolUse.name)) {
+    context.filesRead = [filePath];
+  }
+
+  if (isWriteTool(toolUse.name) || isEditTool(toolUse.name)) {
+    context.filesModified = [filePath];
   }
 
   return context;
