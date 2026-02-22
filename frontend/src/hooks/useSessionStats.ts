@@ -60,6 +60,7 @@ export function useSessionStats(frames: PlaybackFrame[]): SessionStats {
       claude_thinking: 0,
       claude_response: 0,
       tool_execution: 0,
+      context_compaction: 0,
     };
 
     for (const frame of frames) {
@@ -75,6 +76,7 @@ export function useSessionStats(frames: PlaybackFrame[]): SessionStats {
       claude_thinking: 0,
       claude_response: 0,
       tool_execution: 0,
+      context_compaction: 0,
     };
 
     for (const frame of frames) {

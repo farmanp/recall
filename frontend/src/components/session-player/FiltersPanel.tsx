@@ -7,10 +7,8 @@
 
 import React, { useEffect } from 'react';
 import { SlidersHorizontal } from 'lucide-react';
-import type { PlaybackFrame } from '../../types/transcript';
+import type { PlaybackFrame, FrameType } from '../../types/transcript';
 import { FrameTypeFilters } from './FrameTypeFilters';
-
-type FrameType = 'user_message' | 'claude_thinking' | 'claude_response' | 'tool_execution';
 
 interface FiltersPanelProps {
   frames: PlaybackFrame[];

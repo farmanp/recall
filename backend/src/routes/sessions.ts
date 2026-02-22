@@ -3,7 +3,7 @@ import { LRUCache } from 'lru-cache';
 import { getSessionIndexer } from '../parser/session-indexer';
 import { ParserFactory } from '../parser/parser-factory';
 import { detectAgentFromPath } from '../parser/agent-detector';
-import { SessionTimeline } from '../types/transcript';
+import { SessionTimeline, SubagentDetail, PlaybackFrame } from '../types/transcript';
 import {
   getTranscriptSessions,
   getTranscriptFrames,
@@ -451,6 +451,106 @@ router.get('/:id/frames/:frameId', async (req: Request, res: Response) => {
     });
   }
 });
+
+/**
+ * GET /api/sessions/:id/subagents/:agentId
+ * Get details for a specific subagent within a session
+ *
+ * URL Parameters:
+ * - id: Session UUID
+ * - agentId: Subagent identifier
+ *
+ * Response:
+ * - SubagentDetail object with filtered frames and metrics
+ *
+ * Status Codes:
+ * - 200: Success
+ * - 404: Session or subagent not found
+ * - 500: Internal error
+ *
+ * @example
+ * GET /api/sessions/4b198fdf-b80d-4bbc-806f-2900282cdc56/subagents/task-abc123
+ */
+router.get('/:id/subagents/:agentId', async (req: Request, res: Response) => {
+  try {
+    const sessionId = req.params.id as string;
+    const agentId = req.params.agentId as string;
+
+    if (!sessionId || !agentId) {
+      res.status(400).json({ error: 'Session ID and Agent ID are required' });
+      return;
+    }
+
+    // Build or get cached timeline
+    const timeline = await getOrBuildTimeline(sessionId);
+    if (!timeline) {
+      res.status(404).json({ error: 'Session not found' });
+      return;
+    }
+
+    // Filter frames by agentId
+    const filteredFrames = timeline.frames.filter((f) => f.agentId === agentId);
+
+    if (filteredFrames.length === 0) {
+      res.status(404).json({ error: 'Subagent not found' });
+      return;
+    }
+
+    // Calculate metrics
+    const metrics = calculateSubagentMetrics(filteredFrames);
+
+    // Get task description from the first frame (if available)
+    const taskDescription = filteredFrames[0]?.taskDescription;
+
+    const detail: SubagentDetail = {
+      agentId,
+      taskDescription,
+      frames: filteredFrames,
+      metrics,
+    };
+
+    res.json(detail);
+  } catch (error) {
+    console.error('Error fetching subagent details:', error);
+    res.status(500).json({
+      error: 'Failed to fetch subagent details',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+/**
+ * Helper: Calculate metrics for a set of subagent frames
+ */
+function calculateSubagentMetrics(frames: PlaybackFrame[]): SubagentDetail['metrics'] {
+  let inputTokens = 0;
+  let outputTokens = 0;
+  let durationMs = 0;
+
+  if (frames.length > 0) {
+    // Calculate duration from first to last frame
+    const firstFrame = frames[0];
+    const lastFrame = frames[frames.length - 1];
+    if (firstFrame && lastFrame) {
+      durationMs = lastFrame.timestamp - firstFrame.timestamp;
+    }
+
+    // Sum up token usage across all frames
+    for (const frame of frames) {
+      if (frame.tokenUsage) {
+        inputTokens += frame.tokenUsage.input_tokens || 0;
+        outputTokens += frame.tokenUsage.output_tokens || 0;
+      }
+    }
+  }
+
+  return {
+    durationMs,
+    inputTokens,
+    outputTokens,
+    frameCount: frames.length,
+  };
+}
 
 /**
  * POST /api/sessions/:id/refresh

@@ -12,6 +12,7 @@ import rewindRouter from './routes/rewind';
 import adminRouter from './routes/admin';
 import sharesRouter from './routes/shares';
 import statsRouter from './routes/stats';
+import analysisRouter from './routes/analysis';
 import { authGuard } from './middleware/auth';
 import { viewerModeGuard, isViewerModeEnabled } from './middleware/viewer-mode';
 import { getDbInstance, isClaudeMemAvailable } from './db/connection';
@@ -134,6 +135,9 @@ export function createServer(): Application {
   app.use('/api', sessionsRouter);
   // Mount git router for session-specific git endpoint
   app.use('/api', gitRouter);
+  // Analysis routes - session-specific (/api/sessions/:sessionId/analysis) and standalone (/api/analysis)
+  app.use('/api/sessions', analysisRouter);
+  app.use('/api/analysis', analysisRouter);
 
   // Serve built frontend (for production)
   const publicDir = path.join(__dirname, '..', 'public');

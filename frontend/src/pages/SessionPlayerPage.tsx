@@ -16,7 +16,13 @@ import {
   useDeleteCheckpoint,
   useSessionSummary,
 } from '../hooks/useTranscriptApi';
-import type { PlaybackFrame, CommentaryData, SessionTimeline } from '../types/transcript';
+import { useAnalysis, useRefreshAnalysis } from '../hooks/useAnalysis';
+import type {
+  PlaybackFrame,
+  CommentaryData,
+  SessionTimeline,
+  FrameType,
+} from '../types/transcript';
 import ReactMarkdown from 'react-markdown';
 import { CodeBlock } from '../components/CodeBlock';
 import { DiffViewer } from '../components/DiffViewer';
@@ -45,10 +51,14 @@ import {
   Bookmark,
   RotateCcw,
   AlignLeft,
+  Layers,
+  List,
+  Gauge,
 } from 'lucide-react';
 import { CommentaryTimeline, CommentaryCard } from '../components/CommentaryBubble';
 import { TimelineScrubber } from '../components/session-player/TimelineScrubber';
 import { TranscriptView } from '../components/session-player/TranscriptView';
+import { SubagentTreeView } from '../components/session-player/SubagentTreeView';
 import {
   findNextVisibleFrame,
   findPrevVisibleFrame,
@@ -67,6 +77,10 @@ import { CheckpointMarkers } from '../components/session-player/CheckpointMarker
 import { CreateCheckpointDialog } from '../components/session-player/CreateCheckpointDialog';
 import { RewindPanel } from '../components/session-player/RewindPanel';
 import { SummaryCard } from '../components/session-player/SummaryCard';
+import { ImpactPanel } from '../components/session-player/ImpactPanel';
+import { InsightsConfigModal } from '../components/session-player/InsightsConfigModal';
+import { ContextMeter } from '../components/session-player/ContextMeter';
+import { SessionContextPanel } from '../components/session-player/SessionContextPanel';
 import { useSessionStats } from '../hooks/useSessionStats';
 import {
   findMatchingFrameIndices,
@@ -81,8 +95,6 @@ import {
   frameToHTML,
   downloadFile,
 } from '../lib/exportSession';
-
-type FrameType = 'user_message' | 'claude_thinking' | 'claude_response' | 'tool_execution';
 
 export const SessionPlayerPage: React.FC = () => {
   const { sessionId, frameIndex } = useParams<{ sessionId: string; frameIndex?: string }>();
@@ -105,7 +117,13 @@ export const SessionPlayerPage: React.FC = () => {
   const [showCommentary, setShowCommentary] = useState(true);
   const [selectedCommentary, setSelectedCommentary] = useState<CommentaryData | null>(null);
   const [activeFrameTypes, setActiveFrameTypes] = useState<Set<FrameType>>(
-    new Set(['user_message', 'claude_response', 'tool_execution', 'claude_thinking'])
+    new Set<FrameType>([
+      'user_message',
+      'claude_response',
+      'tool_execution',
+      'claude_thinking',
+      'context_compaction',
+    ])
   );
   const [toolFilterEnabled, setToolFilterEnabled] = useState(true);
   const [activeToolNames, setActiveToolNames] = useState<Set<string>>(new Set());
@@ -117,7 +135,7 @@ export const SessionPlayerPage: React.FC = () => {
   const [showArtifacts, setShowArtifacts] = useState(false);
   const [artifactViewMode, setArtifactViewMode] = useState<'cumulative' | 'full'>('cumulative');
   const [searchQuery, setSearchQuery] = useState('');
-  const [viewMode, setViewMode] = useState<'timeline' | 'transcript'>('timeline');
+  const [viewMode, setViewMode] = useState<'timeline' | 'transcript' | 'tree'>('transcript');
   const [showFiltersPanel, setShowFiltersPanel] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
@@ -126,6 +144,10 @@ export const SessionPlayerPage: React.FC = () => {
   const [showCreateCheckpointDialog, setShowCreateCheckpointDialog] = useState(false);
   const [showRewind, setShowRewind] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
+  const [showImpact, setShowImpact] = useState(false);
+  const [showInsightsConfig, setShowInsightsConfig] = useState(false);
+  const [enabledAnalyzers, setEnabledAnalyzers] = useState<string[]>([]);
+  const [showContextPanel, setShowContextPanel] = useState(false);
 
   // Fetch session details and all frames
   const { data: sessionDetails, isLoading: loadingDetails } = useSessionDetails(sessionId);
@@ -149,6 +171,14 @@ export const SessionPlayerPage: React.FC = () => {
 
   // Fetch session summary
   const { data: summaryData } = useSessionSummary(sessionId);
+
+  // Fetch drift analysis (on-demand when panel is shown)
+  const {
+    data: analysisData,
+    isLoading: analysisLoading,
+    error: analysisError,
+  } = useAnalysis(sessionId, { enabled: showImpact });
+  const refreshAnalysisMutation = useRefreshAnalysis();
 
   const frames = useMemo(() => framesData?.frames ?? [], [framesData?.frames]);
   const currentFrame = useMemo(() => frames[currentFrameIndex], [frames, currentFrameIndex]);
@@ -372,6 +402,20 @@ export const SessionPlayerPage: React.FC = () => {
           e.preventDefault();
           setShowSummary((prev) => !prev);
           break;
+        case 'i':
+        case 'I':
+          e.preventDefault();
+          // If already showing panel, close it. Otherwise show config modal.
+          if (showImpact) {
+            setShowImpact(false);
+          } else if (analysisData) {
+            // Analysis exists, show panel directly
+            setShowImpact(true);
+          } else {
+            // No analysis yet, show config modal
+            setShowInsightsConfig(true);
+          }
+          break;
         case '1':
         case '2':
         case '3':
@@ -382,7 +426,9 @@ export const SessionPlayerPage: React.FC = () => {
           break;
         case 'Escape':
           e.preventDefault();
-          if (showShareModal) {
+          if (showInsightsConfig) {
+            setShowInsightsConfig(false);
+          } else if (showShareModal) {
             setShowShareModal(false);
           } else if (showHelp) {
             setShowHelp(false);
@@ -402,6 +448,8 @@ export const SessionPlayerPage: React.FC = () => {
             setShowRewind(false);
           } else if (showSummary) {
             setShowSummary(false);
+          } else if (showImpact) {
+            setShowImpact(false);
           } else {
             navigate('/');
           }
@@ -478,7 +526,10 @@ export const SessionPlayerPage: React.FC = () => {
     showCheckpoints,
     showRewind,
     showSummary,
+    showImpact,
+    showInsightsConfig,
     isFrameVisible,
+    analysisData,
   ]);
 
   if (loadingDetails || loadingFrames) {
@@ -629,21 +680,32 @@ export const SessionPlayerPage: React.FC = () => {
             <Download className="w-4 h-4" />
           </button>
 
-          <button
-            onClick={() => setViewMode(viewMode === 'timeline' ? 'transcript' : 'timeline')}
-            className={`inline-flex items-center justify-center w-9 h-9 transition-all border ${
-              viewMode === 'transcript'
-                ? 'bg-accent-purple/20 border-accent-purple/50 text-accent-purple'
-                : 'bg-forensic-bg-tertiary border-forensic-border text-forensic-text-secondary hover:text-forensic-text-primary'
-            }`}
-            title={`Switch to ${viewMode === 'timeline' ? 'Transcript' : 'Timeline'} View`}
-          >
-            {viewMode === 'timeline' ? (
-              <FileText className="w-4 h-4" />
-            ) : (
-              <Layout className="w-4 h-4" />
-            )}
-          </button>
+          {/* View Mode Toggle */}
+          <div className="flex items-center bg-forensic-bg-tertiary border border-forensic-border">
+            <button
+              onClick={() => setViewMode('transcript')}
+              className={`inline-flex items-center justify-center w-9 h-9 transition-all ${
+                viewMode === 'transcript'
+                  ? 'bg-accent-green/20 text-accent-green'
+                  : 'text-forensic-text-secondary hover:text-forensic-text-primary'
+              }`}
+              title="Transcript View"
+            >
+              <List className="w-4 h-4" />
+            </button>
+            <div className="w-px h-5 bg-forensic-border" />
+            <button
+              onClick={() => setViewMode('tree')}
+              className={`inline-flex items-center justify-center w-9 h-9 transition-all ${
+                viewMode === 'tree'
+                  ? 'bg-accent-purple/20 text-accent-purple'
+                  : 'text-forensic-text-secondary hover:text-forensic-text-primary'
+              }`}
+              title="Tree View (Subagent Hierarchy)"
+            >
+              <GitBranch className="w-4 h-4" />
+            </button>
+          </div>
 
           {/* TODO: Bring back Docs button when CLAUDE.md panel feature is ready
           <button
@@ -701,6 +763,19 @@ export const SessionPlayerPage: React.FC = () => {
             <Settings className="w-4 h-4" />
           </button>
 
+          {/* Context Panel Button */}
+          <button
+            onClick={() => setShowContextPanel(!showContextPanel)}
+            className={`inline-flex items-center justify-center w-9 h-9 transition-all border ${
+              showContextPanel
+                ? 'bg-accent-amber/20 border-accent-amber/50 text-accent-amber'
+                : 'bg-forensic-bg-tertiary border-forensic-border text-forensic-text-secondary hover:text-forensic-text-primary'
+            }`}
+            title="Context attribution (c)"
+          >
+            <Gauge className="w-4 h-4" />
+          </button>
+
           {/* Git Context Button */}
           {gitData && (
             <button
@@ -750,8 +825,57 @@ export const SessionPlayerPage: React.FC = () => {
               <AlignLeft className="w-4 h-4" />
             </button>
           )}
+
+          {/* Impact Analysis Button */}
+          <button
+            onClick={() => {
+              if (showImpact) {
+                setShowImpact(false);
+              } else if (analysisData) {
+                setShowImpact(true);
+              } else {
+                setShowInsightsConfig(true);
+              }
+            }}
+            className={`inline-flex items-center justify-center w-9 h-9 transition-all border ${
+              showImpact
+                ? 'bg-accent-cyan/20 border-accent-cyan/50 text-accent-cyan'
+                : analysisData?.findings && analysisData.findings.length > 0
+                  ? 'bg-accent-cyan/10 border-accent-cyan/30 text-accent-cyan'
+                  : 'bg-forensic-bg-tertiary border-forensic-border text-forensic-text-secondary hover:text-forensic-text-primary'
+            }`}
+            title="Session insights (i)"
+          >
+            <Layers className="w-4 h-4" />
+          </button>
         </div>
       </div>
+
+      {/* Impact Analysis Panel - slides down from header */}
+      {showImpact && (
+        <ImpactPanel
+          analysis={analysisData}
+          isLoading={analysisLoading}
+          error={analysisError}
+          onRefresh={() => sessionId && refreshAnalysisMutation.mutate(sessionId)}
+          isRefreshing={refreshAnalysisMutation.isPending}
+          onClose={() => setShowImpact(false)}
+          onJumpToFrame={handleFrameChange}
+          enabledAnalyzers={enabledAnalyzers.length > 0 ? enabledAnalyzers : undefined}
+        />
+      )}
+
+      {/* Context Meter - shows accumulated context for current frame (toggle with context panel button) */}
+      {showContextPanel && currentFrame?.accumulatedContext !== undefined && (
+        <div className="border-b border-forensic-border bg-forensic-bg-secondary px-6 py-2">
+          <div className="max-w-6xl mx-auto">
+            <ContextMeter
+              accumulatedContext={currentFrame.accumulatedContext}
+              phaseNumber={currentFrame.phaseNumber}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Main Content Area with optional sidebar */}
       <div className="flex flex-1 overflow-hidden">
@@ -764,6 +888,12 @@ export const SessionPlayerPage: React.FC = () => {
             activeFrameTypes={activeFrameTypes}
             isFrameVisible={isFrameVisible}
             onNavigateToFrame={handleFrameChange}
+          />
+        ) : viewMode === 'tree' ? (
+          <SubagentTreeView
+            frames={frames}
+            currentFrameIndex={currentFrameIndex}
+            onFrameSelect={handleFrameChange}
           />
         ) : (
           <div className="flex-1 overflow-y-auto px-6 py-8">
@@ -823,174 +953,176 @@ export const SessionPlayerPage: React.FC = () => {
         )}
       </div>
 
-      {/* Footer Area: Scrubber + Controls */}
-      <div className="relative z-30 border-t border-forensic-border bg-forensic-bg-secondary px-6 py-4">
-        <div className="mx-auto max-w-6xl">
-          <div className="min-w-0">
-            <div className="mb-2 flex items-center justify-between font-mono text-xs text-forensic-text-secondary">
-              <span>
-                {searchQuery.trim().length > 0
-                  ? searchMatches.length > 0
-                    ? `// Search: ${searchMatches.length} matches`
-                    : '// Search: no matches'
-                  : '// Search: off'}
-              </span>
-              <span>// Filters: {activeFrameCount}/4 active</span>
-            </div>
+      {/* Footer Area: Scrubber + Controls (hidden in transcript mode) */}
+      {viewMode === 'timeline' && (
+        <div className="relative z-30 border-t border-forensic-border bg-forensic-bg-secondary px-6 py-4">
+          <div className="mx-auto max-w-6xl">
+            <div className="min-w-0">
+              <div className="mb-2 flex items-center justify-between font-mono text-xs text-forensic-text-secondary">
+                <span>
+                  {searchQuery.trim().length > 0
+                    ? searchMatches.length > 0
+                      ? `// Search: ${searchMatches.length} matches`
+                      : '// Search: no matches'
+                    : '// Search: off'}
+                </span>
+                <span>// Filters: {activeFrameCount}/4 active</span>
+              </div>
 
-            <div className="relative">
-              <TimelineScrubber
-                frames={frames}
-                currentFrameIndex={currentFrameIndex}
-                onSeek={handleFrameChange}
-                showCommentary={showCommentary}
-                commentary={commentaryData?.commentary}
-                activeFrameTypes={activeFrameTypes}
-                isFrameVisible={isFrameVisible}
-              />
-              {checkpointsData && checkpointsData.length > 0 && (
-                <CheckpointMarkers
-                  checkpoints={checkpointsData}
-                  totalFrames={frames.length}
-                  onNavigateToFrame={handleFrameChange}
+              <div className="relative">
+                <TimelineScrubber
+                  frames={frames}
+                  currentFrameIndex={currentFrameIndex}
+                  onSeek={handleFrameChange}
+                  showCommentary={showCommentary}
+                  commentary={commentaryData?.commentary}
+                  activeFrameTypes={activeFrameTypes}
+                  isFrameVisible={isFrameVisible}
                 />
-              )}
-            </div>
+                {checkpointsData && checkpointsData.length > 0 && (
+                  <CheckpointMarkers
+                    checkpoints={checkpointsData}
+                    totalFrames={frames.length}
+                    onNavigateToFrame={handleFrameChange}
+                  />
+                )}
+              </div>
 
-            {/* Playback Controls Bar */}
-            <div className="bg-forensic-bg-tertiary border-t border-forensic-border px-6 py-5 transition-all duration-300">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => {
-                      const prevFrame = findPrevVisibleFrame(
-                        currentFrameIndex - 1,
-                        frames,
-                        activeFrameTypes,
-                        isFrameVisible
-                      );
-                      handleFrameChange(prevFrame);
-                      setIsPlaying(false);
-                    }}
-                    className="p-2.5 bg-forensic-bg-secondary hover:bg-forensic-border text-forensic-text-muted hover:text-forensic-text-primary border border-forensic-border transition-all disabled:opacity-20"
-                    disabled={currentFrameIndex === 0}
-                    title="Previous Frame (Left Arrow)"
-                  >
-                    <ChevronLeft className="w-5 h-5" />
-                  </button>
+              {/* Playback Controls Bar */}
+              <div className="bg-forensic-bg-tertiary border-t border-forensic-border px-6 py-5 transition-all duration-300">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => {
+                        const prevFrame = findPrevVisibleFrame(
+                          currentFrameIndex - 1,
+                          frames,
+                          activeFrameTypes,
+                          isFrameVisible
+                        );
+                        handleFrameChange(prevFrame);
+                        setIsPlaying(false);
+                      }}
+                      className="p-2.5 bg-forensic-bg-secondary hover:bg-forensic-border text-forensic-text-muted hover:text-forensic-text-primary border border-forensic-border transition-all disabled:opacity-20"
+                      disabled={currentFrameIndex === 0}
+                      title="Previous Frame (Left Arrow)"
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </button>
 
-                  <button
-                    onClick={() => setIsPlaying(!isPlaying)}
-                    className={`px-6 py-2.5 font-mono font-semibold uppercase tracking-wider text-sm flex items-center gap-3 transition-all ${
-                      isPlaying
-                        ? 'bg-accent-amber text-forensic-bg-primary hover:bg-amber-600'
-                        : 'bg-accent-green text-forensic-bg-primary hover:bg-green-600'
-                    }`}
-                  >
-                    {isPlaying ? (
-                      <Pause className="w-5 h-5 fill-current" />
-                    ) : (
-                      <Play className="w-5 h-5 fill-current" />
-                    )}
-                    {isPlaying ? 'Pause' : 'Play'}
-                  </button>
+                    <button
+                      onClick={() => setIsPlaying(!isPlaying)}
+                      className={`px-6 py-2.5 font-mono font-semibold uppercase tracking-wider text-sm flex items-center gap-3 transition-all ${
+                        isPlaying
+                          ? 'bg-accent-amber text-forensic-bg-primary hover:bg-amber-600'
+                          : 'bg-accent-green text-forensic-bg-primary hover:bg-green-600'
+                      }`}
+                    >
+                      {isPlaying ? (
+                        <Pause className="w-5 h-5 fill-current" />
+                      ) : (
+                        <Play className="w-5 h-5 fill-current" />
+                      )}
+                      {isPlaying ? 'Pause' : 'Play'}
+                    </button>
 
-                  <div className="ml-2 font-mono text-xs text-forensic-text-secondary">
-                    {isPlaying ? `// ${playbackSpeed}x` : isEndOfSession ? '// End' : '// Paused'}
+                    <div className="ml-2 font-mono text-xs text-forensic-text-secondary">
+                      {isPlaying ? `// ${playbackSpeed}x` : isEndOfSession ? '// End' : '// Paused'}
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        const nextFrame = findNextVisibleFrame(
+                          currentFrameIndex + 1,
+                          frames,
+                          activeFrameTypes,
+                          isFrameVisible
+                        );
+                        handleFrameChange(nextFrame);
+                        setIsPlaying(false);
+                      }}
+                      className="p-2.5 bg-forensic-bg-secondary hover:bg-forensic-border text-forensic-text-muted hover:text-forensic-text-primary border border-forensic-border transition-all disabled:opacity-20"
+                      disabled={currentFrameIndex >= frames.length - 1}
+                      title="Next Frame (Right Arrow)"
+                    >
+                      <div className="rotate-180">
+                        <ChevronLeft className="w-5 h-5" />
+                      </div>
+                    </button>
                   </div>
 
-                  <button
-                    onClick={() => {
-                      const nextFrame = findNextVisibleFrame(
-                        currentFrameIndex + 1,
-                        frames,
-                        activeFrameTypes,
-                        isFrameVisible
-                      );
-                      handleFrameChange(nextFrame);
-                      setIsPlaying(false);
-                    }}
-                    className="p-2.5 bg-forensic-bg-secondary hover:bg-forensic-border text-forensic-text-muted hover:text-forensic-text-primary border border-forensic-border transition-all disabled:opacity-20"
-                    disabled={currentFrameIndex >= frames.length - 1}
-                    title="Next Frame (Right Arrow)"
-                  >
-                    <div className="rotate-180">
-                      <ChevronLeft className="w-5 h-5" />
-                    </div>
-                  </button>
-                </div>
-
-                <div className="flex items-center gap-4">
-                  <label className="flex items-center gap-3 cursor-pointer group select-none">
-                    <div
-                      className={`w-10 h-5 p-0.5 transition-all duration-300 border ${showCommentary ? 'bg-accent-green/20 border-accent-green' : 'bg-forensic-bg-secondary border-forensic-border'}`}
-                    >
+                  <div className="flex items-center gap-4">
+                    <label className="flex items-center gap-3 cursor-pointer group select-none">
                       <div
-                        className={`w-4 h-4 transition-transform duration-300 ${showCommentary ? 'translate-x-5 bg-accent-green' : 'bg-forensic-text-muted'}`}
+                        className={`w-10 h-5 p-0.5 transition-all duration-300 border ${showCommentary ? 'bg-accent-green/20 border-accent-green' : 'bg-forensic-bg-secondary border-forensic-border'}`}
+                      >
+                        <div
+                          className={`w-4 h-4 transition-transform duration-300 ${showCommentary ? 'translate-x-5 bg-accent-green' : 'bg-forensic-text-muted'}`}
+                        />
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={showCommentary}
+                        onChange={(e) => setShowCommentary(e.target.checked)}
+                        className="hidden"
                       />
+                      <span className="font-mono text-[10px] uppercase tracking-wide text-forensic-text-muted group-hover:text-forensic-text-primary transition-colors">
+                        Commentary
+                      </span>
+                    </label>
+
+                    <div className="flex items-center gap-1 bg-forensic-bg-secondary p-1 border border-forensic-border">
+                      <button
+                        onClick={() => setCompressionEnabled(!compressionEnabled)}
+                        className={`p-2 transition-all ${
+                          compressionEnabled
+                            ? 'bg-accent-amber/20 text-accent-amber'
+                            : 'text-forensic-text-muted hover:text-forensic-text-secondary'
+                        }`}
+                        title={
+                          compressionEnabled
+                            ? 'Disable dead air compression'
+                            : 'Enable dead air compression'
+                        }
+                      >
+                        <Zap className={`w-4 h-4 ${compressionEnabled ? 'fill-current' : ''}`} />
+                      </button>
+
+                      <div className="w-[1px] h-4 bg-forensic-border mx-1" />
+
+                      <div className="flex items-center">
+                        {[0.5, 1, 2, 5].map((speed) => (
+                          <button
+                            key={speed}
+                            onClick={() => setPlaybackSpeed(speed)}
+                            className={`px-2 py-1 font-mono text-[10px] transition-all ${
+                              playbackSpeed === speed
+                                ? 'bg-accent-green text-forensic-bg-primary font-semibold'
+                                : 'text-forensic-text-muted hover:text-forensic-text-secondary'
+                            }`}
+                          >
+                            {speed}x
+                          </button>
+                        ))}
+                      </div>
+
+                      <div className="w-[1px] h-4 bg-forensic-border mx-1" />
+
+                      <button
+                        onClick={() => setShowHelp(true)}
+                        className="p-2 text-forensic-text-muted hover:text-accent-green transition-all"
+                        title="Keyboard shortcuts (?)"
+                      >
+                        <Info className="w-4 h-4" />
+                      </button>
                     </div>
-                    <input
-                      type="checkbox"
-                      checked={showCommentary}
-                      onChange={(e) => setShowCommentary(e.target.checked)}
-                      className="hidden"
-                    />
-                    <span className="font-mono text-[10px] uppercase tracking-wide text-forensic-text-muted group-hover:text-forensic-text-primary transition-colors">
-                      Commentary
-                    </span>
-                  </label>
-
-                  <div className="flex items-center gap-1 bg-forensic-bg-secondary p-1 border border-forensic-border">
-                    <button
-                      onClick={() => setCompressionEnabled(!compressionEnabled)}
-                      className={`p-2 transition-all ${
-                        compressionEnabled
-                          ? 'bg-accent-amber/20 text-accent-amber'
-                          : 'text-forensic-text-muted hover:text-forensic-text-secondary'
-                      }`}
-                      title={
-                        compressionEnabled
-                          ? 'Disable dead air compression'
-                          : 'Enable dead air compression'
-                      }
-                    >
-                      <Zap className={`w-4 h-4 ${compressionEnabled ? 'fill-current' : ''}`} />
-                    </button>
-
-                    <div className="w-[1px] h-4 bg-forensic-border mx-1" />
-
-                    <div className="flex items-center">
-                      {[0.5, 1, 2, 5].map((speed) => (
-                        <button
-                          key={speed}
-                          onClick={() => setPlaybackSpeed(speed)}
-                          className={`px-2 py-1 font-mono text-[10px] transition-all ${
-                            playbackSpeed === speed
-                              ? 'bg-accent-green text-forensic-bg-primary font-semibold'
-                              : 'text-forensic-text-muted hover:text-forensic-text-secondary'
-                          }`}
-                        >
-                          {speed}x
-                        </button>
-                      ))}
-                    </div>
-
-                    <div className="w-[1px] h-4 bg-forensic-border mx-1" />
-
-                    <button
-                      onClick={() => setShowHelp(true)}
-                      className="p-2 text-forensic-text-muted hover:text-accent-green transition-all"
-                      title="Keyboard shortcuts (?)"
-                    >
-                      <Info className="w-4 h-4" />
-                    </button>
                   </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Floating Overlays */}
       {selectedCommentary && (
@@ -1001,6 +1133,16 @@ export const SessionPlayerPage: React.FC = () => {
       )}
       {showHelp && <HelpPanel onClose={() => setShowHelp(false)} />}
       {showStats && <StatsPanel stats={stats} onClose={() => setShowStats(false)} />}
+      {showContextPanel && (
+        <SessionContextPanel
+          frames={frames}
+          onNavigateToFrame={(index) => {
+            handleFrameChange(index);
+            setShowContextPanel(false);
+          }}
+          onClose={() => setShowContextPanel(false)}
+        />
+      )}
       {showClaudeMd && (
         <ClaudeMdPanel
           claudeMdFiles={sessionDetails?.metadata?.claudeMdFiles || []}
@@ -1022,7 +1164,13 @@ export const SessionPlayerPage: React.FC = () => {
           onToggleAll={(showAll) => {
             if (showAll)
               setActiveFrameTypes(
-                new Set(['user_message', 'claude_response', 'tool_execution', 'claude_thinking'])
+                new Set<FrameType>([
+                  'user_message',
+                  'claude_response',
+                  'tool_execution',
+                  'claude_thinking',
+                  'context_compaction',
+                ])
               );
             else setActiveFrameTypes(new Set());
           }}
@@ -1154,6 +1302,18 @@ export const SessionPlayerPage: React.FC = () => {
           onClose={() => setShowSummary(false)}
         />
       )}
+
+      {/* Insights Config Modal */}
+      <InsightsConfigModal
+        isOpen={showInsightsConfig}
+        onClose={() => setShowInsightsConfig(false)}
+        onGenerate={(analyzers) => {
+          setEnabledAnalyzers(analyzers);
+          setShowInsightsConfig(false);
+          setShowImpact(true);
+        }}
+        isGenerating={analysisLoading}
+      />
     </div>
   );
 };
@@ -1292,34 +1452,38 @@ const FrameRenderer: React.FC<{
   searchQuery?: string;
   sessionMeta?: Partial<SessionTimeline>;
 }> = ({ frame, searchQuery = '', sessionMeta }) => {
-  const frameTypeColors = {
+  const frameTypeColors: Record<FrameType, string> = {
     user_message: 'bg-accent-cyan/5 border-accent-cyan/30',
     claude_thinking: 'bg-accent-purple/5 border-accent-purple/30',
     claude_response: 'bg-accent-green/5 border-accent-green/30',
     tool_execution: 'bg-accent-amber/5 border-accent-amber/30',
+    context_compaction: 'bg-accent-amber/10 border-accent-amber/40',
   };
 
   const agentName = frame.agent ? frame.agent.charAt(0).toUpperCase() + frame.agent.slice(1) : 'AI';
 
-  const frameTypeIcons = {
+  const frameTypeIcons: Record<FrameType, React.ReactNode> = {
     user_message: <Hash className="w-4 h-4 text-accent-cyan" />,
     claude_thinking: <Zap className="w-4 h-4 text-accent-purple" />,
     claude_response: <Zap className="w-4 h-4 text-accent-green" />,
     tool_execution: <Settings className="w-4 h-4 text-accent-amber" />,
+    context_compaction: <Zap className="w-4 h-4 text-accent-amber" />,
   };
 
-  const frameTypeLabels = {
+  const frameTypeLabels: Record<FrameType, string> = {
     user_message: 'USER MESSAGE',
     claude_thinking: `${agentName.toUpperCase()} THINKING`,
     claude_response: `${agentName.toUpperCase()} RESPONSE`,
     tool_execution: 'TOOL EXECUTION',
+    context_compaction: 'CONTEXT COMPACTION',
   };
 
-  const frameTypeAccent = {
+  const frameTypeAccent: Record<FrameType, string> = {
     user_message: 'text-accent-cyan',
     claude_thinking: 'text-accent-purple',
     claude_response: 'text-accent-green',
     tool_execution: 'text-accent-amber',
+    context_compaction: 'text-accent-amber',
   };
 
   return (

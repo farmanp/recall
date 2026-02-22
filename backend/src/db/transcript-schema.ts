@@ -40,7 +40,12 @@ export interface SessionMetadataRow {
 export interface PlaybackFrameRow {
   id: string;
   session_id: string;
-  frame_type: 'user_message' | 'claude_thinking' | 'claude_response' | 'tool_execution';
+  frame_type:
+    | 'user_message'
+    | 'claude_thinking'
+    | 'claude_response'
+    | 'tool_execution'
+    | 'context_compaction';
   timestamp_ms: number; // epoch milliseconds
   duration_ms: number | null; // duration to next frame
   user_message_text: string | null;
@@ -51,6 +56,24 @@ export interface PlaybackFrameRow {
   files_read: string | null; // JSON array
   files_modified: string | null; // JSON array
   agent_type: string; // 'claude', 'codex', 'gemini', 'unknown'
+
+  // Token usage per frame (migration 034)
+  input_tokens: number | null;
+  output_tokens: number | null;
+  cache_read_tokens: number | null;
+  cache_creation_tokens: number | null;
+  estimated_cost_cents: number | null;
+
+  // Hierarchy for subagent trees (migration 034)
+  parent_frame_id: string | null;
+  is_subagent: number; // SQLite boolean (0 or 1)
+  agent_id: string | null;
+  task_description: string | null;
+
+  // Context window tracking (migration 034)
+  phase_number: number;
+  accumulated_context: number | null;
+  is_compaction: number; // SQLite boolean (0 or 1)
 }
 
 /**

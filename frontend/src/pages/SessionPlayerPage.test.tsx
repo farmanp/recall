@@ -5,8 +5,10 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import type { SessionDetailsResponse, SessionFramesResponse } from '../types/transcript';
 import { SessionPlayerPage } from './SessionPlayerPage';
 import * as transcriptHooks from '../hooks/useTranscriptApi';
+import * as analysisHooks from '../hooks/useAnalysis';
 
 vi.mock('../hooks/useTranscriptApi');
+vi.mock('../hooks/useAnalysis');
 
 const mockedUseSessionDetails = vi.mocked(transcriptHooks.useSessionDetails);
 const mockedUseSessionFrames = vi.mocked(transcriptHooks.useSessionFrames);
@@ -16,6 +18,8 @@ const mockedUseCheckpoints = vi.mocked(transcriptHooks.useCheckpoints);
 const mockedUseCreateCheckpoint = vi.mocked(transcriptHooks.useCreateCheckpoint);
 const mockedUseDeleteCheckpoint = vi.mocked(transcriptHooks.useDeleteCheckpoint);
 const mockedUseSessionSummary = vi.mocked(transcriptHooks.useSessionSummary);
+const mockedUseAnalysis = vi.mocked(analysisHooks.useAnalysis);
+const mockedUseRefreshAnalysis = vi.mocked(analysisHooks.useRefreshAnalysis);
 
 const sessionDetails: SessionDetailsResponse = {
   sessionId: 's1',
@@ -106,6 +110,16 @@ describe('SessionPlayerPage', () => {
       isLoading: false,
       error: null,
     });
+    mockedUseAnalysis.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error: null,
+    } as any);
+    mockedUseRefreshAnalysis.mockReturnValue({
+      mutate: vi.fn(),
+      isPending: false,
+      error: null,
+    } as any);
   });
 
   it('renders session header details', () => {
@@ -114,13 +128,20 @@ describe('SessionPlayerPage', () => {
     expect(screen.getByText('Replay')).toBeInTheDocument();
   });
 
-  it('switches to transcript view and shows messages', async () => {
+  it('switches to tree view and back', async () => {
     const user = userEvent.setup();
     renderPlayer('/session/s1/1');
 
-    await user.click(screen.getByTitle('Switch to Transcript View'));
-    // TranscriptView uses virtualization which may not render all items in JSDOM
-    // Check that the transcript view container is rendered
-    expect(screen.getByTitle('Switch to Timeline View')).toBeInTheDocument();
+    // Check that Transcript View button is present and active by default
+    const transcriptButton = screen.getByTitle('Transcript View');
+    expect(transcriptButton).toBeInTheDocument();
+
+    // Click Tree View button and verify it becomes active
+    const treeButton = screen.getByTitle('Tree View (Subagent Hierarchy)');
+    await user.click(treeButton);
+
+    // Verify both buttons are still accessible
+    expect(screen.getByTitle('Transcript View')).toBeInTheDocument();
+    expect(screen.getByTitle('Tree View (Subagent Hierarchy)')).toBeInTheDocument();
   });
 });

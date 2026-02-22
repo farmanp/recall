@@ -7,10 +7,25 @@
 
 import React, { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Zap, DollarSign, Database, TrendingUp, ChevronRight, Bot } from 'lucide-react';
+import { Zap, DollarSign, Database, TrendingUp, ChevronRight, Bot, HelpCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTokenStats } from '../../hooks/useTranscriptApi';
 import { LoadingSpinner } from '../shared/LoadingSpinner';
+
+/**
+ * Simple tooltip component
+ */
+const Tooltip: React.FC<{ content: string; children: React.ReactNode }> = ({
+  content,
+  children,
+}) => (
+  <span className="relative group cursor-help">
+    {children}
+    <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1.5 bg-forensic-bg-primary border border-forensic-border rounded text-[10px] font-mono text-forensic-text-secondary opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 w-48 text-center leading-relaxed">
+      {content}
+    </span>
+  </span>
+);
 
 /**
  * Format large numbers with K/M/B suffixes
@@ -45,12 +60,36 @@ function formatCost(cents: number): string {
   return `$${dollars.toFixed(2)}`;
 }
 
+/**
+ * Calculate estimated savings from prompt caching
+ * Standard input: $3/MTok, Cached: $0.30/MTok (90% discount)
+ * Savings = cacheRead * $2.70/MTok
+ */
+function calculateCacheSavings(cacheReadTokens: number): number {
+  const savingsPerMillion = 2.7; // $3.00 - $0.30
+  return (cacheReadTokens / 1_000_000) * savingsPerMillion;
+}
+
+function formatSavings(dollars: number): string {
+  if (dollars >= 1000) {
+    return `$${(dollars / 1000).toFixed(1)}K`;
+  }
+  if (dollars >= 100) {
+    return `$${Math.round(dollars)}`;
+  }
+  if (dollars >= 1) {
+    return `$${dollars.toFixed(0)}`;
+  }
+  return `$${dollars.toFixed(2)}`;
+}
+
 interface StatBoxProps {
   label: string;
   value: string;
   subValue?: string;
   icon: React.ReactNode;
   color?: string;
+  tooltip?: string;
 }
 
 const StatBox: React.FC<StatBoxProps> = ({
@@ -59,6 +98,7 @@ const StatBox: React.FC<StatBoxProps> = ({
   subValue,
   icon,
   color = 'text-accent-green',
+  tooltip,
 }) => (
   <div className="flex flex-col">
     <div className="flex items-center gap-1.5 mb-1">
@@ -66,6 +106,11 @@ const StatBox: React.FC<StatBoxProps> = ({
       <span className="text-[10px] font-mono text-forensic-text-muted uppercase tracking-wide">
         {label}
       </span>
+      {tooltip && (
+        <Tooltip content={tooltip}>
+          <HelpCircle className="w-3 h-3 text-forensic-text-muted hover:text-forensic-text-secondary" />
+        </Tooltip>
+      )}
     </div>
     <div className={`text-xl font-mono font-semibold ${color}`}>{value}</div>
     {subValue && (
@@ -197,6 +242,7 @@ export const TokenUsageCard: React.FC = () => {
           subValue={`${formatNumber(overall.total.input)} in / ${formatNumber(overall.total.output)} out`}
           icon={<Zap className="w-3.5 h-3.5" />}
           color="text-accent-amber"
+          tooltip="Billed tokens across all sessions. Input = new prompts. Output = AI responses. Cache reads are separate."
         />
         <StatBox
           label="Est. Cost"
@@ -204,6 +250,7 @@ export const TokenUsageCard: React.FC = () => {
           subValue="Based on Sonnet pricing"
           icon={<DollarSign className="w-3.5 h-3.5" />}
           color="text-accent-green"
+          tooltip="Estimated API cost based on Claude Sonnet pricing ($3/M input, $15/M output). Actual costs may vary."
         />
       </div>
 
@@ -216,6 +263,9 @@ export const TokenUsageCard: React.FC = () => {
               <span className="text-[10px] font-mono text-forensic-text-muted uppercase tracking-wide">
                 Cache Efficiency
               </span>
+              <Tooltip content="Prompt caching reduces costs by reusing repeated context (system prompts, CLAUDE.md). Higher % = more savings.">
+                <HelpCircle className="w-3 h-3 text-forensic-text-muted hover:text-forensic-text-secondary" />
+              </Tooltip>
             </div>
             <span className="text-xs font-mono font-semibold text-accent-purple">
               {overall.cache.hitRate}%
@@ -230,7 +280,11 @@ export const TokenUsageCard: React.FC = () => {
             />
           </div>
           <div className="flex justify-between mt-1.5 text-[10px] font-mono text-forensic-text-muted">
-            <span>{formatNumber(overall.cache.read)} tokens from cache</span>
+            <Tooltip content="Estimated savings from prompt caching vs re-sending context each time.">
+              <span className="cursor-help border-b border-dotted border-forensic-text-muted text-accent-green">
+                ~{formatSavings(calculateCacheSavings(overall.cache.read))} saved
+              </span>
+            </Tooltip>
             <span>{cacheDescription}</span>
           </div>
         </div>

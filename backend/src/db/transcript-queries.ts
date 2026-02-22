@@ -97,9 +97,52 @@ export function initializeTranscriptSchema(): void {
 
   // Migration: Add agent_type column to playback_frames if it doesn't exist
   const frameColumns = db.pragma('table_info(playback_frames)') as Array<{ name: string }>;
-  const hasAgentTypeInFrames = frameColumns.some((col) => col.name === 'agent_type');
-  if (!hasAgentTypeInFrames) {
+  const columnNames = new Set(frameColumns.map((col) => col.name));
+
+  if (!columnNames.has('agent_type')) {
     db.exec(`ALTER TABLE playback_frames ADD COLUMN agent_type TEXT NOT NULL DEFAULT 'claude'`);
+  }
+
+  // Migration: Add token usage columns for per-turn attribution
+  if (!columnNames.has('input_tokens')) {
+    db.exec(`ALTER TABLE playback_frames ADD COLUMN input_tokens INTEGER`);
+  }
+  if (!columnNames.has('output_tokens')) {
+    db.exec(`ALTER TABLE playback_frames ADD COLUMN output_tokens INTEGER`);
+  }
+  if (!columnNames.has('cache_read_tokens')) {
+    db.exec(`ALTER TABLE playback_frames ADD COLUMN cache_read_tokens INTEGER`);
+  }
+  if (!columnNames.has('cache_creation_tokens')) {
+    db.exec(`ALTER TABLE playback_frames ADD COLUMN cache_creation_tokens INTEGER`);
+  }
+  if (!columnNames.has('estimated_cost_cents')) {
+    db.exec(`ALTER TABLE playback_frames ADD COLUMN estimated_cost_cents INTEGER`);
+  }
+
+  // Migration: Add hierarchy columns for subagent tree view
+  if (!columnNames.has('parent_frame_id')) {
+    db.exec(`ALTER TABLE playback_frames ADD COLUMN parent_frame_id TEXT`);
+  }
+  if (!columnNames.has('is_subagent')) {
+    db.exec(`ALTER TABLE playback_frames ADD COLUMN is_subagent INTEGER DEFAULT 0`);
+  }
+  if (!columnNames.has('agent_id')) {
+    db.exec(`ALTER TABLE playback_frames ADD COLUMN agent_id TEXT`);
+  }
+  if (!columnNames.has('task_description')) {
+    db.exec(`ALTER TABLE playback_frames ADD COLUMN task_description TEXT`);
+  }
+
+  // Migration: Add context window tracking columns
+  if (!columnNames.has('phase_number')) {
+    db.exec(`ALTER TABLE playback_frames ADD COLUMN phase_number INTEGER DEFAULT 1`);
+  }
+  if (!columnNames.has('accumulated_context')) {
+    db.exec(`ALTER TABLE playback_frames ADD COLUMN accumulated_context INTEGER`);
+  }
+  if (!columnNames.has('is_compaction')) {
+    db.exec(`ALTER TABLE playback_frames ADD COLUMN is_compaction INTEGER DEFAULT 0`);
   }
 
   // Create indexes after migration
@@ -112,6 +155,18 @@ export function initializeTranscriptSchema(): void {
 
     CREATE INDEX IF NOT EXISTS idx_frame_type
       ON playback_frames(frame_type);
+
+    CREATE INDEX IF NOT EXISTS idx_frames_tokens
+      ON playback_frames(session_id, input_tokens);
+
+    CREATE INDEX IF NOT EXISTS idx_frames_parent
+      ON playback_frames(parent_frame_id);
+
+    CREATE INDEX IF NOT EXISTS idx_frames_agent
+      ON playback_frames(agent_id);
+
+    CREATE INDEX IF NOT EXISTS idx_frames_phase
+      ON playback_frames(session_id, phase_number);
   `);
 
   // 3. TOOL_EXECUTIONS
@@ -276,6 +331,65 @@ export function initializeTranscriptSchema(): void {
       ON session_metadata(project, total_input_tokens, total_output_tokens);
     CREATE INDEX IF NOT EXISTS idx_sessions_cost
       ON session_metadata(estimated_cost_cents DESC);
+  `);
+
+  // 9. MIGRATION 034: Token Attribution and Frame Hierarchy
+  // Add per-frame token columns and hierarchy support
+  const frameColumnsFor034 = db.pragma('table_info(playback_frames)') as Array<{ name: string }>;
+  const frameColumnNamesFor034 = frameColumnsFor034.map((col) => col.name);
+
+  // Token columns
+  if (!frameColumnNamesFor034.includes('input_tokens')) {
+    db.exec('ALTER TABLE playback_frames ADD COLUMN input_tokens INTEGER');
+  }
+  if (!frameColumnNamesFor034.includes('output_tokens')) {
+    db.exec('ALTER TABLE playback_frames ADD COLUMN output_tokens INTEGER');
+  }
+  if (!frameColumnNamesFor034.includes('cache_read_tokens')) {
+    db.exec('ALTER TABLE playback_frames ADD COLUMN cache_read_tokens INTEGER');
+  }
+  if (!frameColumnNamesFor034.includes('cache_creation_tokens')) {
+    db.exec('ALTER TABLE playback_frames ADD COLUMN cache_creation_tokens INTEGER');
+  }
+  if (!frameColumnNamesFor034.includes('estimated_cost_cents')) {
+    db.exec('ALTER TABLE playback_frames ADD COLUMN estimated_cost_cents INTEGER');
+  }
+
+  // Hierarchy columns
+  if (!frameColumnNamesFor034.includes('parent_frame_id')) {
+    db.exec('ALTER TABLE playback_frames ADD COLUMN parent_frame_id TEXT');
+  }
+  if (!frameColumnNamesFor034.includes('is_subagent')) {
+    db.exec('ALTER TABLE playback_frames ADD COLUMN is_subagent INTEGER DEFAULT 0');
+  }
+  if (!frameColumnNamesFor034.includes('agent_id')) {
+    db.exec('ALTER TABLE playback_frames ADD COLUMN agent_id TEXT');
+  }
+  if (!frameColumnNamesFor034.includes('task_description')) {
+    db.exec('ALTER TABLE playback_frames ADD COLUMN task_description TEXT');
+  }
+
+  // Context tracking columns
+  if (!frameColumnNamesFor034.includes('phase_number')) {
+    db.exec('ALTER TABLE playback_frames ADD COLUMN phase_number INTEGER DEFAULT 1');
+  }
+  if (!frameColumnNamesFor034.includes('accumulated_context')) {
+    db.exec('ALTER TABLE playback_frames ADD COLUMN accumulated_context INTEGER');
+  }
+  if (!frameColumnNamesFor034.includes('is_compaction')) {
+    db.exec('ALTER TABLE playback_frames ADD COLUMN is_compaction INTEGER DEFAULT 0');
+  }
+
+  // Indexes for migration 034
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_frames_tokens
+      ON playback_frames(session_id, input_tokens);
+    CREATE INDEX IF NOT EXISTS idx_frames_parent
+      ON playback_frames(parent_frame_id);
+    CREATE INDEX IF NOT EXISTS idx_frames_agent
+      ON playback_frames(agent_id);
+    CREATE INDEX IF NOT EXISTS idx_frames_phase
+      ON playback_frames(session_id, phase_number);
   `);
 }
 
@@ -742,7 +856,19 @@ export function insertFrame(sessionId: string, frame: PlaybackFrame): void {
       cwd,
       files_read,
       files_modified,
-      agent_type
+      agent_type,
+      input_tokens,
+      output_tokens,
+      cache_read_tokens,
+      cache_creation_tokens,
+      estimated_cost_cents,
+      parent_frame_id,
+      is_subagent,
+      agent_id,
+      task_description,
+      phase_number,
+      accumulated_context,
+      is_compaction
     ) VALUES (
       @id,
       @sessionId,
@@ -756,7 +882,19 @@ export function insertFrame(sessionId: string, frame: PlaybackFrame): void {
       @cwd,
       @filesRead,
       @filesModified,
-      @agentType
+      @agentType,
+      @inputTokens,
+      @outputTokens,
+      @cacheReadTokens,
+      @cacheCreationTokens,
+      @estimatedCostCents,
+      @parentFrameId,
+      @isSubagent,
+      @agentId,
+      @taskDescription,
+      @phaseNumber,
+      @accumulatedContext,
+      @isCompaction
     )
   `
   ).run({
@@ -773,6 +911,21 @@ export function insertFrame(sessionId: string, frame: PlaybackFrame): void {
     filesRead: frame.context.filesRead ? JSON.stringify(frame.context.filesRead) : null,
     filesModified: frame.context.filesModified ? JSON.stringify(frame.context.filesModified) : null,
     agentType: frame.agent || 'claude',
+    // Token usage
+    inputTokens: frame.tokenUsage?.input_tokens ?? null,
+    outputTokens: frame.tokenUsage?.output_tokens ?? null,
+    cacheReadTokens: frame.tokenUsage?.cache_read_input_tokens ?? null,
+    cacheCreationTokens: frame.tokenUsage?.cache_creation_input_tokens ?? null,
+    estimatedCostCents: frame.estimatedCostCents ?? null,
+    // Hierarchy
+    parentFrameId: frame.parentFrameId ?? null,
+    isSubagent: frame.isSubagent ? 1 : 0,
+    agentId: frame.agentId ?? null,
+    taskDescription: frame.taskDescription ?? null,
+    // Context tracking
+    phaseNumber: frame.phaseNumber ?? 1,
+    accumulatedContext: frame.accumulatedContext ?? null,
+    isCompaction: frame.type === 'context_compaction' ? 1 : 0,
   });
 }
 
@@ -1043,6 +1196,41 @@ function convertRowToFrame(row: PlaybackFrameRow): PlaybackFrame {
     if (toolExecution) {
       frame.toolExecution = toolExecution;
     }
+  }
+
+  // Token usage from database
+  if (row.input_tokens !== null || row.output_tokens !== null) {
+    frame.tokenUsage = {
+      input_tokens: row.input_tokens ?? undefined,
+      output_tokens: row.output_tokens ?? undefined,
+      cache_read_input_tokens: row.cache_read_tokens ?? undefined,
+      cache_creation_input_tokens: row.cache_creation_tokens ?? undefined,
+    };
+  }
+  if (row.estimated_cost_cents !== null) {
+    frame.estimatedCostCents = row.estimated_cost_cents;
+  }
+
+  // Hierarchy fields
+  if (row.parent_frame_id) {
+    frame.parentFrameId = row.parent_frame_id;
+  }
+  if (row.is_subagent === 1) {
+    frame.isSubagent = true;
+  }
+  if (row.agent_id) {
+    frame.agentId = row.agent_id;
+  }
+  if (row.task_description) {
+    frame.taskDescription = row.task_description;
+  }
+
+  // Context tracking
+  if (row.phase_number !== undefined && row.phase_number !== null) {
+    frame.phaseNumber = row.phase_number;
+  }
+  if (row.accumulated_context !== null) {
+    frame.accumulatedContext = row.accumulated_context;
   }
 
   return frame;

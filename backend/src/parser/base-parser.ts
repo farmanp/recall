@@ -22,6 +22,7 @@ import {
   FileDiff,
   ClaudeMdInfo,
 } from '../types/transcript';
+import { trackContextPhases } from '../services/context-phase-tracker';
 
 // Dead air compression constants
 const DEAD_AIR_THRESHOLD = 5000; // 5 seconds - compress gaps longer than this
@@ -117,8 +118,11 @@ export abstract class AgentParser {
     // Calculate frame durations
     this.calculateFrameDurations(frames);
 
+    // Track context phases (accumulated context and phase numbers)
+    const trackedFrames = trackContextPhases(frames);
+
     // Aggregate token usage from all frames
-    const tokenUsage = this.aggregateTokenUsage(frames);
+    const tokenUsage = this.aggregateTokenUsage(trackedFrames);
 
     // Build timeline metadata
     const startedAt = new Date(transcript.metadata.startTime).getTime();
@@ -139,8 +143,8 @@ export abstract class AgentParser {
       agent: this.agentType,
       startedAt,
       completedAt,
-      frames,
-      totalFrames: frames.length,
+      frames: trackedFrames,
+      totalFrames: trackedFrames.length,
       metadata: {
         cwd: transcript.metadata.cwd || '',
         claudeVersion: transcript.metadata.claudeVersion,

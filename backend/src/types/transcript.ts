@@ -105,6 +105,27 @@ export interface TranscriptMetadata {
 }
 
 /**
+ * Token attribution by category for detailed breakdown
+ */
+export interface TokenAttribution {
+  userInput: number; // Tokens from user messages
+  toolOutput: number; // Tokens from tool results
+  thinking: number; // Tokens from thinking blocks
+  response: number; // Tokens from assistant responses
+  claudeMd: number; // Tokens from CLAUDE.md context injection
+  cache: number; // Tokens read from cache
+}
+
+/**
+ * Context compaction event data
+ */
+export interface CompactionInfo {
+  tokensBefore: number; // Context size before compaction
+  tokensAfter: number; // Context size after compaction
+  summarizedFrames?: number; // How many frames were compacted
+}
+
+/**
  * Playback frame - the basic unit for video player
  */
 export interface PlaybackFrame {
@@ -137,11 +158,33 @@ export interface PlaybackFrame {
   // Tool execution
   toolExecution?: ToolExecution;
 
+  // Context compaction event (when type === 'context_compaction')
+  compaction?: CompactionInfo;
+
   // Context
   context: FrameContext;
+
+  // Hierarchy fields for subagent trees
+  parentFrameId?: string; // Parent frame that spawned this frame/subagent
+  isSubagent?: boolean; // Whether this frame belongs to a subagent
+  agentId?: string; // Unique identifier for subagent (for grouping)
+  taskDescription?: string; // Description from Task tool when spawning subagent
+
+  // Context window tracking
+  phaseNumber?: number; // Context phase (1-based, increments after compaction)
+  accumulatedContext?: number; // Running total of context tokens at this frame
+
+  // Token attribution
+  tokenAttribution?: TokenAttribution; // Per-category token breakdown
+  estimatedCostCents?: number; // Estimated cost for this turn
 }
 
-export type FrameType = 'user_message' | 'claude_thinking' | 'claude_response' | 'tool_execution';
+export type FrameType =
+  | 'user_message'
+  | 'claude_thinking'
+  | 'claude_response'
+  | 'tool_execution'
+  | 'context_compaction';
 
 export interface ToolExecution {
   tool: string; // "Bash", "Read", "Write", "Edit", etc.
@@ -282,4 +325,19 @@ export interface SearchGlobalResponse {
   query: string;
   limit: number;
   offset: number;
+}
+
+/**
+ * Subagent detail with filtered frames and metrics
+ */
+export interface SubagentDetail {
+  agentId: string;
+  taskDescription?: string;
+  frames: PlaybackFrame[];
+  metrics: {
+    durationMs: number;
+    inputTokens: number;
+    outputTokens: number;
+    frameCount: number;
+  };
 }

@@ -62,7 +62,7 @@ export const SessionListPage: React.FC = () => {
   // View mode (grid/list) with localStorage persistence
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
     const saved = localStorage.getItem(VIEW_MODE_KEY);
-    return (saved as ViewMode) || 'grid';
+    return (saved as ViewMode) || 'list';
   });
 
   const handleViewModeChange = (mode: ViewMode) => {

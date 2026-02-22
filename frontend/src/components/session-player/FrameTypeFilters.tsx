@@ -5,9 +5,7 @@
  */
 
 import React, { useMemo } from 'react';
-import type { PlaybackFrame } from '../../types/transcript';
-
-type FrameType = 'user_message' | 'claude_thinking' | 'claude_response' | 'tool_execution';
+import type { PlaybackFrame, FrameType } from '../../types/transcript';
 
 interface FrameTypeFiltersProps {
   frames: PlaybackFrame[];
@@ -57,6 +55,7 @@ export const FrameTypeFilters: React.FC<FrameTypeFiltersProps> = ({
       claude_response: 0,
       tool_execution: 0,
       claude_thinking: 0,
+      context_compaction: 0,
     };
 
     frames.forEach((f) => {
@@ -70,7 +69,7 @@ export const FrameTypeFilters: React.FC<FrameTypeFiltersProps> = ({
   }, [frames]);
 
   // Check if all types are active
-  const allActive = activeFrameTypes.size === 4;
+  const allActive = activeFrameTypes.size === 5;
   const activeFilterCount = activeFrameTypes.size;
   const allToolsActive =
     availableToolNames.length > 0 && activeToolNames.size === availableToolNames.length;
@@ -96,6 +95,11 @@ export const FrameTypeFilters: React.FC<FrameTypeFiltersProps> = ({
       label: 'Thinking',
       icon: '🧠',
       color: 'text-accent-purple',
+    },
+    context_compaction: {
+      label: 'Context Compaction',
+      icon: '📦',
+      color: 'text-accent-amber',
     },
   };
 
