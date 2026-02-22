@@ -189,6 +189,37 @@ npm start
 - **File Diffs**: View code changes with side-by-side diff viewer
 - **Relays Page**: Commit-centric view of your development work
 
+### 📊 Impact Analysis
+
+- **Drift Detection**: Identify deviations from repository conventions
+- **Blast Radius**: Visualize which directories were affected
+- **Baseline Comparison**: Compare changes against repo-specific baselines
+- **Neutral Findings**: Non-judgmental observations like "Uncommon in this repo..."
+- **See [Drift Analysis Docs](docs/DRIFT_ANALYSIS.md)**
+
+### 🎯 Context Window Visualization
+
+- **Context Meter**: Real-time fill level with color-coded thresholds
+- **Compaction Markers**: Visual boundaries when context is compressed
+- **Token Attribution**: See what's consuming context (tools, thinking, messages)
+- **Phase Tracking**: Track context lifecycle across compaction events
+- **See [Context Visualization Docs](docs/CONTEXT_VISUALIZATION.md)**
+
+### 🌳 Subagent Tree View
+
+- **Hierarchical Display**: See Task tool spawns as collapsible tree nodes
+- **Subtree Metrics**: Duration, tokens, and frame counts per subagent
+- **Drill-Down Modal**: Detailed view of individual subagent execution
+- **View Toggle**: Switch between Transcript (linear) and Tree (hierarchical) views
+- **See [Subagent Hierarchy Docs](docs/SUBAGENT_HIERARCHY.md)**
+
+### ⚡ Per-Turn Token Tracking
+
+- **Token Badges**: Click to see token breakdown on any frame
+- **Category Attribution**: User input, tool output, thinking, response, cache
+- **Cost Estimation**: Per-turn cost estimates based on model pricing
+- **Session Totals**: Aggregate token usage across entire session
+
 ---
 
 ## Use Cases
@@ -210,8 +241,23 @@ Review session duration, frame counts, and tool executions to understand product
 
 ### 🔄 Resuming Interrupted Work
 
-**"What was I working on yesterday?"**  
+**"What was I working on yesterday?"**
 Quickly review your last session's work to pick up where you left off.
+
+### 🎯 Pre-Merge Review
+
+**"Does this follow our repo conventions?"**
+Run Impact Analysis to check for drift from established patterns before committing.
+
+### 💰 Cost Tracking
+
+**"Which interactions are most expensive?"**
+Use token badges and context panel to identify high-cost turns and optimize usage.
+
+### 🌳 Understanding Multi-Agent Workflows
+
+**"What did each subagent actually do?"**
+Switch to Tree View and drill into Task-spawned agents to understand complex workflows.
 
 ---
 
