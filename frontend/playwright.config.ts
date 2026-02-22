@@ -12,8 +12,8 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: 'html',
   use: {
-    // Base URL for tests - assumes backend is running on 3001
-    baseURL: 'http://localhost:3001',
+    // Base URL for tests - assumes frontend dev server is running
+    baseURL: 'http://localhost:5174',
     trace: 'on-first-retry',
   },
   projects: [
