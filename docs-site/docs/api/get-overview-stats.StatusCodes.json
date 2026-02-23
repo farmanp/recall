@@ -1,0 +1,19 @@
+{
+  "responses": {
+    "200": {
+      "description": "Overview statistics",
+      "content": {
+        "application/json": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "totalSessions": { "type": "integer" },
+              "totalFrames": { "type": "integer" },
+              "agentCounts": { "type": "object", "additionalProperties": { "type": "integer" } }
+            }
+          }
+        }
+      }
+    }
+  }
+}

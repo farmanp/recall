@@ -1,0 +1,18 @@
+{
+  "title": "Body",
+  "body": {
+    "required": true,
+    "content": {
+      "application/json": {
+        "schema": {
+          "type": "object",
+          "required": ["expiresIn"],
+          "properties": {
+            "expiresIn": { "type": "string", "enum": ["1h", "24h", "7d", "30d"] },
+            "redact": { "type": "boolean", "default": true }
+          }
+        }
+      }
+    }
+  }
+}

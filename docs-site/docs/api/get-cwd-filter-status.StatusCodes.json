@@ -1,0 +1,15 @@
+{
+  "responses": {
+    "200": {
+      "description": "CWD filter status",
+      "content": {
+        "application/json": {
+          "schema": {
+            "type": "object",
+            "properties": { "enabled": { "type": "boolean" }, "cwd": { "type": "string" } }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "title": "Body",
+  "body": {
+    "required": true,
+    "content": {
+      "application/json": {
+        "schema": {
+          "type": "object",
+          "required": ["frameIndex"],
+          "properties": {
+            "frameIndex": { "type": "integer" },
+            "name": { "type": "string" },
+            "notes": { "type": "string" }
+          }
+        }
+      }
+    }
+  }
+}

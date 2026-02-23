@@ -22,4 +22,10 @@
 | #5269 | 10:20 PM | 🔵  | CLAUDE.md Snapshots Migration - Content Versioning and Deduplication                          | ~633 |
 | #4765 | 10:14 PM | 🔵  | CLAUDE.md migration schema implements SHA-256 deduplication with many-to-many session linking | ~686 |
 
+### Feb 22, 2026
+
+| ID    | Time    | T   | Title                                            | Read |
+| ----- | ------- | --- | ------------------------------------------------ | ---- |
+| #7319 | 8:31 AM | 🔵  | Recall already has drift analysis infrastructure | ~360 |
+
 </claude-mem-context>

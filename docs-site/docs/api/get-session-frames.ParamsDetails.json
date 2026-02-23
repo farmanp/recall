@@ -1,0 +1,29 @@
+{
+  "parameters": [
+    {
+      "name": "sessionId",
+      "in": "path",
+      "required": true,
+      "description": "Session identifier",
+      "schema": { "type": "string" }
+    },
+    {
+      "name": "source",
+      "in": "query",
+      "description": "Data source",
+      "schema": { "type": "string", "enum": ["fs", "db"] }
+    },
+    {
+      "name": "limit",
+      "in": "query",
+      "description": "Number of frames",
+      "schema": { "type": "integer" }
+    },
+    {
+      "name": "offset",
+      "in": "query",
+      "description": "Frame offset",
+      "schema": { "type": "integer" }
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "parameters": [
+    {
+      "name": "showAll",
+      "in": "query",
+      "description": "Bypass CWD filter to show all sessions",
+      "schema": { "type": "boolean" }
+    },
+    {
+      "name": "source",
+      "in": "query",
+      "description": "Data source (filesystem or database)",
+      "schema": { "type": "string", "enum": ["fs", "db"] }
+    },
+    {
+      "name": "agent",
+      "in": "query",
+      "description": "Filter by agent type",
+      "schema": { "type": "string", "enum": ["claude", "codex", "gemini"] }
+    },
+    {
+      "name": "project",
+      "in": "query",
+      "description": "Filter by project path",
+      "schema": { "type": "string" }
+    },
+    {
+      "name": "hasClaudeMd",
+      "in": "query",
+      "description": "Only show sessions with CLAUDE.md",
+      "schema": { "type": "boolean" }
+    },
+    {
+      "name": "limit",
+      "in": "query",
+      "description": "Number of sessions to return",
+      "schema": { "type": "integer", "default": 20 }
+    },
+    {
+      "name": "offset",
+      "in": "query",
+      "description": "Pagination offset",
+      "schema": { "type": "integer", "default": 0 }
+    }
+  ]
+}

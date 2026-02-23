@@ -1,0 +1,28 @@
+{
+  "responses": {
+    "200": {
+      "description": "Shared session data",
+      "content": {
+        "application/json": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "sessionId": { "type": "string" },
+              "agent": { "type": "string", "enum": ["claude", "codex", "gemini"] },
+              "projectPath": { "type": "string" },
+              "slug": { "type": "string" },
+              "startTime": { "type": "string", "format": "date-time" },
+              "endTime": { "type": "string", "format": "date-time" },
+              "duration": { "type": "integer", "description": "Duration in seconds" },
+              "eventCount": { "type": "integer" },
+              "model": { "type": "string" },
+              "claudeMdFiles": { "type": "array", "items": { "type": "string" } }
+            },
+            "title": "SessionMetadata"
+          }
+        }
+      }
+    },
+    "404": { "description": "Share not found or expired" }
+  }
+}

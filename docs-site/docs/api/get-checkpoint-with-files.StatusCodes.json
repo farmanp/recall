@@ -1,0 +1,34 @@
+{
+  "responses": {
+    "200": {
+      "description": "Checkpoint with file contents",
+      "content": {
+        "application/json": {
+          "schema": {
+            "allOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": { "type": "string" },
+                  "sessionId": { "type": "string" },
+                  "frameIndex": { "type": "integer" },
+                  "name": { "type": "string" },
+                  "notes": { "type": "string" },
+                  "createdAt": { "type": "string", "format": "date-time" },
+                  "fileCount": { "type": "integer" }
+                },
+                "title": "Checkpoint"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "files": { "type": "object", "additionalProperties": { "type": "string" } }
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "responses": {
+    "200": {
+      "description": "Server is healthy",
+      "content": {
+        "application/json": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "status": { "type": "string", "example": "ok" },
+              "timestamp": { "type": "string", "format": "date-time" },
+              "databases": {
+                "type": "object",
+                "properties": {
+                  "claude_mem": { "type": "string", "enum": ["connected", "disconnected"] },
+                  "transcripts": { "type": "string", "enum": ["connected", "disconnected"] }
+                }
+              },
+              "security": {
+                "type": "object",
+                "properties": {
+                  "viewerMode": { "type": "boolean" },
+                  "authDisabled": { "type": "boolean" }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "responses": {
+    "200": {
+      "description": "Rewind preview",
+      "content": {
+        "application/json": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "changes": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "path": { "type": "string" },
+                    "action": { "type": "string", "enum": ["create", "modify", "delete"] },
+                    "diff": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

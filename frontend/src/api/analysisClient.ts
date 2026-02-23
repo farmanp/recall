@@ -57,7 +57,10 @@ export async function fetchAnalysis(
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ error: 'Unknown error' }));
-    throw new Error(error.error || `Failed to fetch analysis: ${response.status}`);
+    if (response.status === 404) {
+      throw new Error('Session not found. Try re-importing the session or refreshing the page.');
+    }
+    throw new Error(error.error || error.message || `Analysis failed (${response.status})`);
   }
 
   return response.json();

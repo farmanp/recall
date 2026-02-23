@@ -1,0 +1,24 @@
+{
+  "responses": {
+    "201": {
+      "description": "Checkpoint created",
+      "content": {
+        "application/json": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "sessionId": { "type": "string" },
+              "frameIndex": { "type": "integer" },
+              "name": { "type": "string" },
+              "notes": { "type": "string" },
+              "createdAt": { "type": "string", "format": "date-time" },
+              "fileCount": { "type": "integer" }
+            },
+            "title": "Checkpoint"
+          }
+        }
+      }
+    }
+  }
+}

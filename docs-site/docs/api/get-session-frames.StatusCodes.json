@@ -1,0 +1,60 @@
+{
+  "responses": {
+    "200": {
+      "description": "Session frames",
+      "content": {
+        "application/json": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "frames": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": { "type": "string" },
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "user_message",
+                        "claude_response",
+                        "tool_execution",
+                        "claude_thinking",
+                        "context_compaction"
+                      ]
+                    },
+                    "timestamp": { "type": "string", "format": "date-time" },
+                    "userMessage": {
+                      "type": "object",
+                      "properties": { "text": { "type": "string" } }
+                    },
+                    "claudeResponse": {
+                      "type": "object",
+                      "properties": { "text": { "type": "string" } }
+                    },
+                    "toolExecution": {
+                      "type": "object",
+                      "properties": {
+                        "tool": { "type": "string" },
+                        "input": { "type": "object" },
+                        "output": {
+                          "type": "object",
+                          "properties": {
+                            "content": { "type": "string" },
+                            "isError": { "type": "boolean" }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "title": "PlaybackFrame"
+                }
+              },
+              "total": { "type": "integer" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

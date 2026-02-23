@@ -13,11 +13,13 @@ import { useSessions, useOverviewStats } from '../hooks/useTranscriptApi';
 import { LoadingSpinner } from '../components/shared/LoadingSpinner';
 import { ActivityHeatmap } from '../components/overview/ActivityHeatmap';
 import { TokenUsageCard } from '../components/overview/TokenUsageCard';
+import { useConfig } from '../hooks/useConfig';
 
 export const OverviewPage: React.FC = () => {
   const navigate = useNavigate();
   const { data: sessionsData, isLoading: sessionsLoading } = useSessions({ limit: 5 });
   const { data: stats, isLoading: statsLoading } = useOverviewStats();
+  const { tokenStatsEnabled } = useConfig();
 
   const sessions = sessionsData?.sessions ?? [];
 
@@ -113,9 +115,9 @@ export const OverviewPage: React.FC = () => {
       </div>
 
       {/* Activity Heatmap, Agent Breakdown & Token Usage */}
-      <div className="grid lg:grid-cols-3 gap-4 mb-8">
+      <div className={`grid ${tokenStatsEnabled ? 'lg:grid-cols-3' : 'lg:grid-cols-1'} gap-4 mb-8`}>
         {/* Left column: Heatmap + Agent Breakdown */}
-        <div className="lg:col-span-2 space-y-4">
+        <div className={`${tokenStatsEnabled ? 'lg:col-span-2' : ''} space-y-4`}>
           {statsLoading ? (
             <div className="bg-forensic-bg-secondary border border-forensic-border rounded-lg p-4 h-40 flex items-center justify-center">
               <LoadingSpinner size="md" />
@@ -175,8 +177,8 @@ export const OverviewPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Right column: Token Usage */}
-        <TokenUsageCard />
+        {/* Right column: Token Usage (hidden when RECALL_HIDE_TOKEN_STATS=true) */}
+        {tokenStatsEnabled && <TokenUsageCard />}
       </div>
 
       {/* Recent Sessions */}

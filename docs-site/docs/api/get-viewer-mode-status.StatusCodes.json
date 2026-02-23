@@ -1,0 +1,12 @@
+{
+  "responses": {
+    "200": {
+      "description": "Viewer mode status",
+      "content": {
+        "application/json": {
+          "schema": { "type": "object", "properties": { "enabled": { "type": "boolean" } } }
+        }
+      }
+    }
+  }
+}

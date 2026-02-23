@@ -106,6 +106,9 @@ export function createServer(): Application {
           viewerMode: isViewerModeEnabled(),
           authDisabled: process.env.RECALL_DISABLE_AUTH === 'true',
         },
+        features: {
+          tokenStats: process.env.RECALL_HIDE_TOKEN_STATS !== 'true',
+        },
       });
     } catch (err) {
       console.error('Health check failed:', err);

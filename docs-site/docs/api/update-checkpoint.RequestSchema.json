@@ -1,0 +1,13 @@
+{
+  "title": "Body",
+  "body": {
+    "content": {
+      "application/json": {
+        "schema": {
+          "type": "object",
+          "properties": { "name": { "type": "string" }, "notes": { "type": "string" } }
+        }
+      }
+    }
+  }
+}

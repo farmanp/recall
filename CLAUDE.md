@@ -90,6 +90,71 @@ RECALL_FILTER_CWD=false npx recall-player@latest
 | `RECALL_LLM_MODEL`         | `claude-3-haiku` | Model for summary generation        |
 | `RECALL_LLM_MAX_TOKENS`    | `1024`           | Max tokens for summary response     |
 
+### Display Options
+
+| Variable                  | Default | Description                                        |
+| ------------------------- | ------- | -------------------------------------------------- |
+| `RECALL_HIDE_TOKEN_STATS` | `false` | Hide token usage statistics from the Overview page |
+
+**Note on Vertex AI / Third-Party Integrations:**
+
+When using Claude Code through Vertex AI or other third-party integrations (e.g., `CLAUDE_CODE_USE_VERTEX=1`), token usage data may not be available in session transcripts. In this case, set `RECALL_HIDE_TOKEN_STATS=true` to hide the token statistics card from the Overview page:
+
+```bash
+RECALL_HIDE_TOKEN_STATS=true npx recall-player@latest
+```
+
+## Features Requiring Database Import
+
+Some features require sessions to be **imported** into the transcript database, not just scanned from the filesystem:
+
+| Feature             | Requires Import | Notes                                 |
+| ------------------- | --------------- | ------------------------------------- |
+| Session list/player | No              | Works from filesystem scan            |
+| Token statistics    | Yes             | Re-import to populate token metrics   |
+| Session summaries   | Yes             | Needs frames in database for analysis |
+| Impact Analysis     | Partial         | Falls back to filesystem, but slower  |
+| Checkpoints         | Yes             | Auto-imports when creating checkpoint |
+| Search (in content) | Yes             | Searches indexed frames only          |
+
+### Auto-Import
+
+Sessions are automatically imported via the file watcher when:
+
+- A new session file is created in `~/.claude/projects/`
+- Recall is running with `AUTO_WATCH=true` (default)
+
+### Manual Import
+
+If you see "Analysis failed" or empty token stats, try re-importing:
+
+```bash
+# Import all sessions (bulk)
+cd backend && npm run import
+
+# Import a specific session file
+cd backend && npm run import -- --single /path/to/session.jsonl
+
+# Check import stats
+cd backend && npm run import -- --stats
+```
+
+### Troubleshooting
+
+**"Analysis failed: Session not found"**
+
+- The session may not be imported yet. Wait for auto-import or manually import.
+- Check if the session file exists in `~/.claude/projects/`
+
+**Token stats showing 0 or empty**
+
+- Sessions need to be re-imported after upgrading to capture token metrics
+- Run `npm run import` to re-import all sessions
+
+**404 errors in console for /api/sessions/{id}/analysis**
+
+- Normal for sessions not yet in database. They still display but analysis features won't work until imported.
+
 ## Development Commands
 
 ### Root (Monorepo)

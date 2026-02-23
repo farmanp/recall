@@ -1,0 +1,25 @@
+{
+  "responses": {
+    "200": {
+      "description": "Checkpoint diff",
+      "content": {
+        "application/json": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "added": { "type": "array", "items": { "type": "string" } },
+              "removed": { "type": "array", "items": { "type": "string" } },
+              "modified": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": { "path": { "type": "string" }, "diff": { "type": "string" } }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

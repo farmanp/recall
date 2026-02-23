@@ -3,30 +3,36 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Recall - See exactly what your AI built</title>
+    <title>Recall - The Verification Layer for AI Coding</title>
     <meta
       name="description"
-      content="Replay AI coding sessions like a video. Track every file change, understand every decision. Works with Claude Code, Codex CLI, and Gemini CLI."
+      content="The missing verification layer for AI coding. Turn black-box sessions into auditable evidence. Git blame for agents."
     />
-    <meta property="og:title" content="Recall - See exactly what your AI built" />
+    <meta property="og:title" content="Recall - The Verification Layer for AI Coding" />
     <meta
       property="og:description"
-      content="Replay AI coding sessions like a video. Track every file change, understand every decision. 100% local."
+      content="Your AI assistant just edited 47 files. Recall shows you exactly what changed. 100% Local. Zero Data Egress."
     />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://farmanp.github.io/recall" />
-    <meta property="og:image" content="https://farmanp.github.io/recall/assets/session-list.png" />
+    <meta
+      property="og:image"
+      content="https://farmanp.github.io/recall/assets/feature-player.png"
+    />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Recall - See What Your AI Built" />
+    <meta name="twitter:title" content="Recall - The Verification Layer for AI Coding" />
     <meta
       name="twitter:description"
-      content="Replay AI coding sessions frame-by-frame. Track every file change. Understand what happened."
+      content="Your AI assistant just edited 47 files. Recall shows you exactly what changed. 100% Local."
     />
-    <meta name="twitter:image" content="https://farmanp.github.io/recall/assets/session-list.png" />
+    <meta
+      name="twitter:image"
+      content="https://farmanp.github.io/recall/assets/feature-player.png"
+    />
 
     <link
       rel="icon"
-      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔍</text></svg>"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⏪</text></svg>"
     />
     <link
       href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap"
@@ -39,14 +45,12 @@
         --bg-tertiary: #1a1a1a;
         --border: #262626;
         --text-primary: #e5e5e5;
-        --text-secondary: #737373;
+        --text-secondary: #a3a3a3;
         --text-muted: #525252;
         --green: #22c55e;
         --green-dim: #166534;
-        --cyan: #06b6d4;
         --amber: #f59e0b;
         --red: #ef4444;
-        --purple: #a855f7;
       }
 
       * {
@@ -81,36 +85,15 @@
       }
 
       .container {
-        max-width: 1100px;
+        max-width: 1000px;
         margin: 0 auto;
         padding: 0 24px;
-      }
-
-      /* Scanline effect */
-      .scanlines::before {
-        content: '';
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: repeating-linear-gradient(
-          0deg,
-          rgba(0, 0, 0, 0.15),
-          rgba(0, 0, 0, 0.15) 1px,
-          transparent 1px,
-          transparent 2px
-        );
-        pointer-events: none;
-        z-index: 1000;
-        opacity: 0.15;
       }
 
       /* Nav */
       nav {
         padding: 20px 0;
         border-bottom: 1px solid var(--border);
-        position: relative;
       }
 
       nav .container {
@@ -124,70 +107,50 @@
         font-size: 1.25rem;
         font-weight: 700;
         color: var(--green);
+      }
+
+      .nav-right {
+        display: flex;
+        align-items: center;
+        gap: 24px;
+      }
+
+      .nav-right a {
+        color: var(--text-secondary);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.85rem;
+      }
+
+      .nav-right a:hover {
+        color: var(--green);
+        text-decoration: none;
+      }
+
+      .github-stars {
         display: flex;
         align-items: center;
         gap: 8px;
       }
 
-      .logo::before {
-        content: '>';
-        color: var(--text-muted);
-      }
-
-      .nav-links {
-        display: flex;
-        gap: 32px;
-      }
-
-      .nav-links a {
-        color: var(--text-secondary);
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 0.85rem;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-      }
-
-      .nav-links a:hover {
-        color: var(--green);
-        text-decoration: none;
-      }
-
       /* Hero */
       .hero {
-        padding: 120px 0 80px;
+        padding: 100px 0 80px;
         text-align: center;
-        position: relative;
       }
 
-      .hero::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 1px;
-        height: 60px;
-        background: linear-gradient(to bottom, transparent, var(--green));
-      }
-
-      .badge {
-        display: inline-block;
+      .hero-hook {
         font-family: 'JetBrains Mono', monospace;
-        font-size: 0.75rem;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        color: var(--green);
-        border: 1px solid var(--green-dim);
-        padding: 6px 12px;
-        margin-bottom: 32px;
-        background: rgba(34, 197, 94, 0.1);
+        font-size: 1rem;
+        color: var(--amber);
+        margin-bottom: 24px;
+        letter-spacing: 0.02em;
       }
 
       .hero h1 {
         font-family: 'JetBrains Mono', monospace;
-        font-size: 3rem;
+        font-size: 2.75rem;
         font-weight: 700;
-        line-height: 1.2;
+        line-height: 1.15;
         margin-bottom: 24px;
         color: var(--text-primary);
       }
@@ -196,375 +159,226 @@
         color: var(--green);
       }
 
-      .hero .tagline {
-        font-size: 1.1rem;
+      .hero .subhead {
+        font-size: 1.2rem;
         color: var(--text-secondary);
-        max-width: 600px;
-        margin: 0 auto 48px;
+        max-width: 650px;
+        margin: 0 auto 40px;
+        line-height: 1.5;
       }
 
-      /* Terminal box */
-      .terminal {
-        background: var(--bg-secondary);
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        max-width: 500px;
-        margin: 0 auto;
-        text-align: left;
-        overflow: hidden;
-      }
-
-      .terminal-header {
-        background: var(--bg-tertiary);
-        padding: 12px 16px;
+      .cta-row {
         display: flex;
         align-items: center;
-        gap: 8px;
-        border-bottom: 1px solid var(--border);
-      }
-
-      .terminal-dot {
-        width: 12px;
-        height: 12px;
-        border-radius: 50%;
-        background: var(--border);
-      }
-
-      .terminal-dot.red {
-        background: var(--red);
-      }
-
-      .terminal-dot.amber {
-        background: var(--amber);
-      }
-
-      .terminal-dot.green {
-        background: var(--green);
-      }
-
-      .terminal-body {
-        padding: 20px;
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 0.9rem;
-      }
-
-      .terminal-line {
-        margin-bottom: 8px;
-      }
-
-      .terminal-prompt {
-        color: var(--green);
-      }
-
-      .terminal-cmd {
-        color: var(--text-primary);
-      }
-
-      .terminal-output {
-        color: var(--text-secondary);
-      }
-
-      .cursor {
-        display: inline-block;
-        width: 8px;
-        height: 18px;
-        background: var(--green);
-        animation: blink 1s infinite;
-        vertical-align: text-bottom;
-      }
-
-      @keyframes blink {
-        0%,
-        50% {
-          opacity: 1;
-        }
-
-        51%,
-        100% {
-          opacity: 0;
-        }
-      }
-
-      /* Case file section */
-      .case-file {
-        padding: 100px 0;
-        border-top: 1px solid var(--border);
-      }
-
-      .case-header {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 48px;
-      }
-
-      .case-id {
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 0.8rem;
-        color: var(--amber);
-        background: rgba(245, 158, 11, 0.1);
-        border: 1px solid rgba(245, 158, 11, 0.3);
-        padding: 4px 10px;
-      }
-
-      .case-title {
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 1.5rem;
-        color: var(--text-primary);
-      }
-
-      .evidence-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
+        justify-content: center;
         gap: 16px;
-      }
-
-      @media (max-width: 768px) {
-        .evidence-grid {
-          grid-template-columns: 1fr;
-        }
-      }
-
-      .evidence-card {
-        background: var(--bg-secondary);
-        border: 1px solid var(--border);
-        padding: 24px;
-        position: relative;
-      }
-
-      .evidence-card::before {
-        content: attr(data-id);
-        position: absolute;
-        top: 12px;
-        right: 12px;
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 0.7rem;
-        color: var(--text-muted);
-      }
-
-      .evidence-card .icon {
-        font-size: 1.5rem;
-        margin-bottom: 16px;
-      }
-
-      .evidence-card h3 {
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 1rem;
-        margin-bottom: 8px;
-        color: var(--green);
-      }
-
-      .evidence-card p {
-        color: var(--text-secondary);
-        font-size: 0.9rem;
-      }
-
-      /* Capabilities */
-      .capabilities {
-        padding: 100px 0;
-        background: var(--bg-secondary);
-        border-top: 1px solid var(--border);
-        border-bottom: 1px solid var(--border);
-      }
-
-      .capabilities h2 {
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 1.5rem;
-        text-align: center;
-        margin-bottom: 16px;
-        color: var(--green);
-      }
-
-      .capabilities .subtitle {
-        text-align: center;
-        color: var(--text-secondary);
-        margin-bottom: 64px;
-        font-size: 0.95rem;
-      }
-
-      .cap-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 32px;
-      }
-
-      @media (max-width: 768px) {
-        .cap-grid {
-          grid-template-columns: 1fr;
-        }
-      }
-
-      .cap-item {
-        text-align: center;
-      }
-
-      .cap-icon {
-        width: 64px;
-        height: 64px;
-        margin: 0 auto 20px;
-        border: 1px solid var(--border);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.5rem;
-        background: var(--bg-primary);
-      }
-
-      .cap-item h3 {
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 0.95rem;
-        margin-bottom: 8px;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-      }
-
-      .cap-item p {
-        color: var(--text-secondary);
-        font-size: 0.85rem;
-      }
-
-      /* Agents */
-      .agents {
-        padding: 100px 0;
-      }
-
-      .agents h2 {
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 1.25rem;
-        text-align: center;
-        margin-bottom: 48px;
-        color: var(--text-primary);
-      }
-
-      .agents-list {
-        display: flex;
-        justify-content: center;
-        gap: 48px;
         flex-wrap: wrap;
       }
 
-      .agent {
+      .cta-primary {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.9rem;
+        padding: 14px 24px;
+        background: var(--green);
+        color: var(--bg-primary);
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s;
+        border-radius: 4px;
+      }
+
+      .cta-primary:hover {
+        background: #16a34a;
+        text-decoration: none;
+        transform: translateY(-1px);
+      }
+
+      .cta-secondary {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .cta-secondary code {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border);
+        padding: 8px 16px;
+        border-radius: 4px;
+        color: var(--text-primary);
+        cursor: pointer;
+        transition: border-color 0.2s;
+        position: relative;
+      }
+
+      .cta-secondary code:hover {
+        border-color: var(--green);
+      }
+
+      .cta-secondary code:active {
+        transform: scale(0.98);
+      }
+
+      /* Demo */
+      .demo {
+        padding: 60px 0 60px;
+      }
+
+      .demo-frame {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      }
+
+      .demo-frame img {
+        width: 100%;
+        height: auto;
+        display: block;
+      }
+
+      .demo-caption {
+        text-align: center;
+        margin-top: 24px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+      }
+
+      /* Works With (Moved Up) */
+      .works-with {
+        padding: 0 0 80px;
         text-align: center;
       }
 
-      .agent-name {
+      .works-with-label {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-bottom: 20px;
+      }
+
+      .agents-row {
+        display: flex;
+        justify-content: center;
+        gap: 32px;
+        flex-wrap: wrap;
+      }
+
+      .agent-badge {
         font-family: 'JetBrains Mono', monospace;
         font-size: 0.9rem;
-        margin-bottom: 4px;
+        padding: 8px 16px;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        color: var(--text-secondary);
+        display: flex;
+        align-items: center;
+        gap: 8px;
       }
 
-      .agent-name.claude {
-        color: #f97316;
+      /* Benefits */
+      .benefits {
+        padding: 80px 0;
+        background: var(--bg-secondary);
+        border-top: 1px solid var(--border);
+        border-bottom: 1px solid var(--border);
       }
 
-      .agent-name.gemini {
-        color: #22c55e;
+      .benefits-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 48px;
       }
 
-      .agent-name.codex {
-        color: #a855f7;
+      @media (max-width: 768px) {
+        .benefits-grid {
+          grid-template-columns: 1fr;
+          gap: 32px;
+        }
       }
 
-      .agent-path {
+      .benefit {
+        text-align: left;
+      }
+
+      .benefit-number {
         font-family: 'JetBrains Mono', monospace;
         font-size: 0.75rem;
-        color: var(--text-muted);
+        color: var(--green);
+        margin-bottom: 12px;
+        letter-spacing: 0.1em;
+      }
+
+      .benefit h3 {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 1.1rem;
+        margin-bottom: 8px;
+        color: var(--text-primary);
+      }
+
+      .benefit p {
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+        line-height: 1.6;
       }
 
       /* Install */
       .install {
-        padding: 100px 0;
-        background: var(--bg-secondary);
+        padding: 80px 0;
+        text-align: center;
         border-top: 1px solid var(--border);
       }
 
       .install h2 {
         font-family: 'JetBrains Mono', monospace;
-        font-size: 1.25rem;
-        text-align: center;
-        margin-bottom: 48px;
-      }
-
-      .install-steps {
-        max-width: 500px;
-        margin: 0 auto;
-      }
-
-      .install-step {
-        display: flex;
-        gap: 16px;
-        margin-bottom: 32px;
-        align-items: flex-start;
-      }
-
-      .step-marker {
-        font-family: 'JetBrains Mono', monospace;
-        color: var(--text-muted);
-        font-size: 0.8rem;
-        padding-top: 2px;
-      }
-
-      .step-content {
-        flex: 1;
-      }
-
-      .step-content h3 {
-        font-size: 1rem;
-        margin-bottom: 8px;
-      }
-
-      .step-content code {
-        display: block;
-        background: var(--bg-primary);
-        border: 1px solid var(--border);
-        padding: 12px 16px;
-        margin-top: 8px;
-        color: var(--green);
-        font-size: 0.85rem;
-      }
-
-      .step-content p {
-        color: var(--text-secondary);
-        font-size: 0.9rem;
-      }
-
-      /* CTA */
-      .cta {
-        padding: 100px 0;
-        text-align: center;
-        border-top: 1px solid var(--border);
-      }
-
-      .cta h2 {
-        font-family: 'JetBrains Mono', monospace;
         font-size: 1.5rem;
-        margin-bottom: 16px;
+        margin-bottom: 12px;
       }
 
-      .cta p {
+      .install .subtitle {
         color: var(--text-secondary);
         margin-bottom: 32px;
       }
 
-      .btn {
+      .install-cmd {
         display: inline-block;
         font-family: 'JetBrains Mono', monospace;
-        font-size: 0.9rem;
-        padding: 14px 28px;
-        background: var(--green);
-        color: var(--bg-primary);
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        border: none;
+        font-size: 1rem;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border);
+        padding: 16px 32px;
+        border-radius: 8px;
+        color: var(--green);
+        margin-bottom: 16px;
         cursor: pointer;
-        transition: all 0.2s;
+        transition: transform 0.1s;
       }
 
-      .btn:hover {
-        background: #16a34a;
-        text-decoration: none;
-        transform: translateY(-2px);
+      .install-cmd:active {
+        transform: scale(0.98);
+      }
+
+      .install-note {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+      }
+
+      .security-badge {
+        display: inline-block;
+        margin-top: 16px;
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        border: 1px solid var(--border);
+        padding: 4px 12px;
+        border-radius: 20px;
       }
 
       /* Footer */
@@ -590,8 +404,6 @@
         font-family: 'JetBrains Mono', monospace;
         font-size: 0.8rem;
         color: var(--text-secondary);
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
       }
 
       .footer-copy {
@@ -600,397 +412,125 @@
         color: var(--text-muted);
       }
 
+      /* Toast */
+      .toast {
+        position: fixed;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%) translateY(100px);
+        background: var(--green);
+        color: var(--bg-primary);
+        padding: 8px 16px;
+        border-radius: 4px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.85rem;
+        font-weight: 600;
+        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        opacity: 0;
+      }
+
+      .toast.visible {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+      }
+
       /* Responsive */
       @media (max-width: 768px) {
         .hero h1 {
-          font-size: 2rem;
+          font-size: 1.75rem;
         }
 
-        .nav-links {
+        .nav-right {
           display: none;
         }
-      }
-
-      /* Social Proof */
-      .social-proof {
-        margin: 24px auto;
-        text-align: center;
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 0.85rem;
-        color: var(--text-secondary);
-      }
-
-      .social-proof a {
-        color: var(--green);
-      }
-
-      /* Tagline sub */
-      .tagline-sub {
-        font-size: 0.9rem;
-        color: var(--text-muted);
-        margin-top: 8px;
-      }
-
-      /* CTA Buttons */
-      .cta-buttons {
-        display: flex;
-        gap: 16px;
-        justify-content: center;
-        flex-wrap: wrap;
-        margin-top: 32px;
-        margin-bottom: 32px;
-      }
-
-      .btn-secondary {
-        display: inline-block;
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 0.9rem;
-        padding: 14px 28px;
-        background: transparent;
-        border: 2px solid var(--green);
-        color: var(--green);
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        cursor: pointer;
-        transition: all 0.2s;
-      }
-
-      .btn-secondary:hover {
-        background: var(--green);
-        color: var(--bg-primary);
-        text-decoration: none;
-        transform: translateY(-2px);
-      }
-
-      /* Use Cases */
-      .use-cases {
-        padding: 80px 0;
-        border-top: 1px solid var(--border);
-      }
-
-      .use-case-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 24px;
-        margin-top: 48px;
-      }
-
-      @media (max-width: 768px) {
-        .use-case-grid {
-          grid-template-columns: 1fr;
-        }
-      }
-
-      .use-case-card {
-        background: var(--bg-secondary);
-        border: 1px solid var(--border);
-        padding: 24px;
-      }
-
-      .use-case-emoji {
-        font-size: 2rem;
-        margin-bottom: 16px;
-      }
-
-      .use-case-title {
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 0.95rem;
-        color: var(--green);
-        margin-bottom: 8px;
-      }
-
-      .use-case-scenario {
-        color: var(--text-secondary);
-        font-size: 0.9rem;
-        font-style: italic;
-        margin-bottom: 12px;
-      }
-
-      .use-case-solution {
-        color: var(--text-primary);
-        font-size: 0.85rem;
       }
     </style>
   </head>
 
-  <body class="scanlines">
+  <body>
     <nav>
       <div class="container">
         <div class="logo">recall</div>
-        <div class="nav-links">
-          <a href="#evidence">Evidence</a>
-          <a href="#capabilities">Capabilities</a>
+        <div class="nav-right">
+          <a href="#demo">Demo</a>
           <a href="#install">Install</a>
-          <a href="https://github.com/farmanp/recall">Source</a>
+          <a href="https://github.com/farmanp/recall" class="github-stars">
+            <img
+              src="https://img.shields.io/github/stars/farmanp/recall.svg?style=flat&color=22c55e&label=GitHub"
+              alt="GitHub Stars"
+              style="height: 20px"
+            />
+          </a>
         </div>
       </div>
     </nav>
 
     <section class="hero">
       <div class="container">
-        <div
-          style="
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 16px;
-            margin-bottom: 32px;
-          "
-        >
-          <div class="badge" style="margin-bottom: 0">Local-First · Open Source</div>
-          <a href="https://github.com/farmanp/recall" target="_blank" rel="noopener">
-            <img
-              src="https://img.shields.io/github/stars/farmanp/recall.svg?style=flat&color=22c55e"
-              alt="GitHub Stars"
-              style="height: 24px"
-            />
-          </a>
-        </div>
-        <h1>Never lose track of<br /><span class="highlight">what your AI changed</span></h1>
-        <p class="tagline">
-          The DVR for your AI coding sessions. Rewind, replay, and understand what changed—frame by
-          frame.
+        <p class="hero-hook">Claude just finished a 45-minute session.</p>
+        <h1>Do you know what<br /><span class="highlight">it actually changed?</span></h1>
+        <p class="subhead">
+          The missing verification layer for AI coding. Turn black-box sessions into auditable
+          evidence before you merge.
+          <br /><br />
+          <span style="color: var(--green); font-size: 0.9em">100% Local. Zero Data Egress.</span>
         </p>
-        <p class="tagline-sub">Works with Claude Code, Gemini CLI, and Codex CLI</p>
-
-        <div class="social-proof">
-          <a href="https://www.npmjs.com/package/recall-player" target="_blank" rel="noopener">
-            <img
-              src="https://img.shields.io/npm/dm/recall-player.svg?style=flat&color=22c55e"
-              alt="npm downloads"
-              style="height: 20px; vertical-align: middle"
-            />
-          </a>
-        </div>
-
-        <div class="cta-buttons">
-          <a href="#install" class="btn">Try It Now (30 sec install)</a>
-          <a href="#evidence" class="btn-secondary">See the Demo</a>
-        </div>
-        <div class="terminal">
-          <div class="terminal-header">
-            <div class="terminal-dot red"></div>
-            <div class="terminal-dot amber"></div>
-            <div class="terminal-dot green"></div>
-          </div>
-          <div class="terminal-body">
-            <div class="terminal-line">
-              <span class="terminal-prompt">$</span>
-              <span class="terminal-cmd">npx recall-player@latest</span>
-            </div>
-            <div class="terminal-line terminal-output">Scanning sessions...</div>
-            <div class="terminal-line terminal-output">Found 156 sessions across 3 agents</div>
-            <div class="terminal-line terminal-output">
-              Server running at http://localhost:3001 // Forensic Dashboard Active
-            </div>
-            <div class="terminal-line">
-              <span class="terminal-prompt">$</span> <span class="cursor"></span>
-            </div>
-          </div>
+        <div class="cta-row">
+          <a href="#install" class="cta-primary">Try it now</a>
+          <span class="cta-secondary">or run <code id="hero-cmd">npx recall-player</code></span>
         </div>
       </div>
     </section>
 
-    <!-- Demo Section - Moved up for visibility -->
-    <style>
-      .demo-section {
-        padding: 60px 0 80px;
-        border-top: 1px solid var(--border);
-      }
-
-      .demo-container {
-        background: var(--bg-secondary);
-        border: 1px solid var(--border);
-        padding: 16px;
-        border-radius: 4px;
-      }
-
-      .demo-label {
-        display: block;
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 0.75rem;
-        color: var(--text-muted);
-        text-transform: uppercase;
-        margin-top: 12px;
-        text-align: center;
-      }
-    </style>
-
-    <section class="demo-section" id="evidence">
+    <section class="demo" id="demo">
       <div class="container">
-        <div class="demo-container">
-          <div
-            style="position: relative; padding-bottom: calc(64.94% + 41px); height: 0; width: 100%"
-          >
-            <iframe
-              src="https://demo.arcade.software/mmUYOyo3g5eODbwxamx0?embed&embed_mobile=tab&embed_desktop=inline&show_copy_link=true"
-              title="Search a session, replay events, and inspect file diffs"
-              frameborder="0"
-              loading="lazy"
-              webkitallowfullscreen
-              mozallowfullscreen
-              allowfullscreen
-              allow="clipboard-write"
-              style="
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                color-scheme: light;
-                border-radius: 4px;
-              "
-            ></iframe>
-          </div>
-          <span class="demo-label">// Click through the interactive demo</span>
+        <div class="demo-frame">
+          <img
+            src="assets/demo.png"
+            alt="Recall session player showing timeline scrubbing and file diffs"
+          />
+        </div>
+        <p class="demo-caption">Click a session. Scrub the timeline. See what changed.</p>
+      </div>
+    </section>
+
+    <section class="works-with">
+      <div class="container">
+        <p class="works-with-label">Works with your AI tools</p>
+        <div class="agents-row">
+          <span class="agent-badge">Claude Code</span>
+          <span class="agent-badge">Gemini CLI</span>
+          <span class="agent-badge">Codex CLI</span>
         </div>
       </div>
     </section>
 
-    <!-- Use Cases Section -->
-    <section class="use-cases">
+    <section class="benefits">
       <div class="container">
-        <h2>// Built for Real Work</h2>
-        <div class="use-case-grid">
-          <div class="use-case-card">
-            <div class="use-case-emoji">🔍</div>
-            <div class="use-case-title">Debugging</div>
-            <p class="use-case-scenario">"When did this bug get introduced?"</p>
-            <p class="use-case-solution">
-              → Scrub through your session timeline to find the exact moment a file change caused
-              unexpected behavior.
-            </p>
-          </div>
-          <div class="use-case-card">
-            <div class="use-case-emoji">📚</div>
-            <div class="use-case-title">Knowledge Sharing</div>
-            <p class="use-case-scenario">"Show the team how I implemented OAuth"</p>
-            <p class="use-case-solution">
-              → Record and replay your Claude session to demonstrate architectural decisions and
-              debugging steps.
-            </p>
-          </div>
-          <div class="use-case-card">
-            <div class="use-case-emoji">⏮️</div>
-            <div class="use-case-title">Context Recovery</div>
-            <p class="use-case-scenario">"What was I working on yesterday?"</p>
-            <p class="use-case-solution">
-              → Quickly review your last session's work to pick up where you left off without losing
-              momentum.
-            </p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Problem Section -->
-    <section class="case-file" id="why">
-      <div class="container">
-        <div class="case-header">
-          <span class="case-id">THE PROBLEM</span>
-          <span class="case-title">The AI Black Box</span>
-        </div>
-        <div class="evidence-grid">
-          <div class="evidence-card" data-id="01">
-            <div class="icon">😶‍🌫️</div>
-            <h3>Lost Context</h3>
+        <div class="benefits-grid">
+          <div class="benefit">
+            <div class="benefit-number">01</div>
+            <h3>Git Blame for Agents</h3>
             <p>
-              "Why did it choose this library?" The reasoning disappears with your terminal
-              scrollback.
+              Don't just see the code; see the prompt, the context, and the reasoning that created
+              it. Trace every change back to the exact AI thought process.
             </p>
           </div>
-          <div class="evidence-card" data-id="02">
-            <div class="icon">👻</div>
-            <h3>Hidden Changes</h3>
+          <div class="benefit">
+            <div class="benefit-number">02</div>
+            <h3>Eliminate Verification Debt</h3>
             <p>
-              Small edits in distant files you missed. What else did it touch while you weren't
-              looking?
+              Your AI touched 47 files. Merging blindly is reckless. Recall gives you the diffs and
+              evidence you need to verify changes in seconds, not hours.
             </p>
           </div>
-          <div class="evidence-card" data-id="03">
-            <div class="icon">📉</div>
-            <h3>Forgotten Work</h3>
-            <p>A week later: "How did this get built?" Replay history to regain understanding.</p>
-          </div>
-          <div class="evidence-card" data-id="04">
-            <div class="icon">🧩</div>
-            <h3>Scattered Sessions</h3>
-            <p>Using Claude, Gemini, and Codex? Recall unifies all agents into one timeline.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="capabilities" id="capabilities">
-      <div class="container">
-        <h2>// Features</h2>
-        <p class="subtitle">The most complete toolkit for understanding AI coding sessions</p>
-        <div class="cap-grid">
-          <div class="cap-item">
-            <div class="cap-icon">▶️</div>
-            <h3>Playback</h3>
-            <p>Scrub through sessions at variable speeds. Skip dead air automatically.</p>
-          </div>
-          <div class="cap-item">
-            <div class="cap-icon">📂</div>
-            <h3>File Tracking</h3>
-            <p>See every file read, write, and edit. Syntax-highlighted diffs.</p>
-          </div>
-          <div class="cap-item">
-            <div class="cap-icon">🔍</div>
-            <h3>Search</h3>
-            <p>Full-text search across all sessions. Find anything in milliseconds.</p>
-          </div>
-          <div class="cap-item">
-            <div class="cap-icon">🎯</div>
-            <h3>Impact Analysis</h3>
-            <p>Detect drift from repo conventions. See blast radius.</p>
-          </div>
-          <div class="cap-item">
-            <div class="cap-icon">📊</div>
-            <h3>Context Meter</h3>
-            <p>Real-time context window fill. Token attribution by category.</p>
-          </div>
-          <div class="cap-item">
-            <div class="cap-icon">🌳</div>
-            <h3>Subagent Tree</h3>
-            <p>Hierarchical view of Task tool spawns. Drill into any subagent.</p>
-          </div>
-          <div class="cap-item">
-            <div class="cap-icon">⚡</div>
-            <h3>Token Tracking</h3>
-            <p>Per-turn breakdown with cost estimates.</p>
-          </div>
-          <div class="cap-item">
-            <div class="cap-icon">🔗</div>
-            <h3>Git Integration</h3>
-            <p>Link sessions to commits and branches.</p>
-          </div>
-          <div class="cap-item">
-            <div class="cap-icon">🔒</div>
-            <h3>Private & Local</h3>
-            <p>100% local. No telemetry, no cloud.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="agents" id="agents">
-      <div class="container">
-        <h2>// One Timeline, All Your AI Agents</h2>
-        <div class="agents-list">
-          <div class="agent">
-            <div class="agent-name claude">Claude Code</div>
-            <div class="agent-path">~/.claude/projects/</div>
-          </div>
-          <div class="agent">
-            <div class="agent-name gemini">Gemini CLI</div>
-            <div class="agent-path">~/.gemini/tmp/</div>
-          </div>
-          <div class="agent">
-            <div class="agent-name codex">Codex CLI</div>
-            <div class="agent-path">~/.codex/sessions/</div>
+          <div class="benefit">
+            <div class="benefit-number">03</div>
+            <h3>Local Institutional Memory</h3>
+            <p>
+              Whether it was Claude, Gemini, or Codex, keep a searchable, local history of every
+              decision. Zero data egress. Your IP stays yours.
+            </p>
           </div>
         </div>
       </div>
@@ -998,39 +538,11 @@
 
     <section class="install" id="install">
       <div class="container">
-        <h2>// Get Started in 30 Seconds</h2>
-        <div class="install-steps">
-          <div class="install-step">
-            <div class="step-marker">01</div>
-            <div class="step-content">
-              <h3>Run with npx</h3>
-              <code>npx recall-player@latest</code>
-            </div>
-          </div>
-          <div class="install-step">
-            <div class="step-marker">02</div>
-            <div class="step-content">
-              <h3>Browse & Replay</h3>
-              <p>Search sessions, click to open, replay like a video.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="cta">
-      <div class="container">
-        <h2>Ready to see what your AI built?</h2>
-        <p>One command. No sign-up. Free forever.</p>
-        <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap">
-          <a href="https://github.com/farmanp/recall#quick-start" class="btn">Get Started</a>
-          <a
-            href="https://github.com/farmanp/recall"
-            class="btn"
-            style="background: transparent; border: 1px solid var(--green); color: var(--green)"
-            >Star on GitHub</a
-          >
-        </div>
+        <h2>Try it in 10 seconds</h2>
+        <p class="subtitle">No signup. No config. Just run:</p>
+        <code class="install-cmd" id="install-cmd">npx recall-player@latest</code>
+        <p class="install-note">Opens in your browser.</p>
+        <div class="security-badge">🔒 100% Local &bull; No Telemetry</div>
       </div>
     </section>
 
@@ -1041,8 +553,30 @@
           <a href="https://github.com/farmanp/recall/issues">Issues</a>
           <a href="https://www.npmjs.com/package/recall-player">npm</a>
         </div>
-        <div class="footer-copy">MIT License · Local-first · No telemetry</div>
+        <div class="footer-copy">MIT License · Open source · No telemetry</div>
       </div>
     </footer>
+
+    <div class="toast" id="toast">Copied to clipboard!</div>
+
+    <script>
+      function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(() => {
+          const toast = document.getElementById('toast');
+          toast.classList.add('visible');
+          setTimeout(() => {
+            toast.classList.remove('visible');
+          }, 2000);
+        });
+      }
+
+      document.getElementById('hero-cmd').addEventListener('click', () => {
+        copyToClipboard('npx recall-player');
+      });
+
+      document.getElementById('install-cmd').addEventListener('click', () => {
+        copyToClipboard('npx recall-player@latest');
+      });
+    </script>
   </body>
 </html>

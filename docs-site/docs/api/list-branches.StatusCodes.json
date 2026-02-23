@@ -1,0 +1,18 @@
+{
+  "responses": {
+    "200": {
+      "description": "List of branches",
+      "content": {
+        "application/json": {
+          "schema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": { "name": { "type": "string" }, "sessionCount": { "type": "integer" } }
+            }
+          }
+        }
+      }
+    }
+  }
+}

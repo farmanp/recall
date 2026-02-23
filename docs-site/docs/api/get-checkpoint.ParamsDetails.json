@@ -1,0 +1,11 @@
+{
+  "parameters": [
+    {
+      "name": "checkpointId",
+      "in": "path",
+      "required": true,
+      "description": "Checkpoint identifier",
+      "schema": { "type": "string" }
+    }
+  ]
+}

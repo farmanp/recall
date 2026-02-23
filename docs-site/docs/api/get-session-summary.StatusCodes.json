@@ -1,0 +1,20 @@
+{
+  "responses": {
+    "200": {
+      "description": "Session summary",
+      "content": {
+        "application/json": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "sessionId": { "type": "string" },
+              "summary": { "type": "string" },
+              "generatedAt": { "type": "string", "format": "date-time" },
+              "type": { "type": "string", "enum": ["heuristic", "llm"] }
+            }
+          }
+        }
+      }
+    }
+  }
+}

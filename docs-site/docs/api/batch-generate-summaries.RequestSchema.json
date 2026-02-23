@@ -1,0 +1,15 @@
+{
+  "title": "Body",
+  "body": {
+    "required": true,
+    "content": {
+      "application/json": {
+        "schema": {
+          "type": "object",
+          "required": ["sessionIds"],
+          "properties": { "sessionIds": { "type": "array", "items": { "type": "string" } } }
+        }
+      }
+    }
+  }
+}

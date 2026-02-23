@@ -1,0 +1,22 @@
+{
+  "title": "Body",
+  "body": {
+    "required": true,
+    "content": {
+      "application/json": {
+        "schema": {
+          "type": "object",
+          "required": ["frameIndex"],
+          "properties": {
+            "frameIndex": { "type": "integer" },
+            "files": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Optional list of specific files to restore"
+            }
+          }
+        }
+      }
+    }
+  }
+}

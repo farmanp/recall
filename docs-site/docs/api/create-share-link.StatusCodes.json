@@ -1,0 +1,19 @@
+{
+  "responses": {
+    "201": {
+      "description": "Share link created",
+      "content": {
+        "application/json": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "shareId": { "type": "string" },
+              "url": { "type": "string" },
+              "expiresAt": { "type": "string", "format": "date-time" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

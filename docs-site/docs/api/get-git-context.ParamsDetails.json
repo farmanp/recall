@@ -1,0 +1,11 @@
+{
+  "parameters": [
+    {
+      "name": "sessionId",
+      "in": "path",
+      "required": true,
+      "description": "Session identifier",
+      "schema": { "type": "string" }
+    }
+  ]
+}

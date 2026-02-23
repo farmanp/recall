@@ -1,0 +1,868 @@
+openapi: 3.0.3
+info:
+  title: Recall API
+  description: |
+    API for Recall - The DVR for AI coding sessions.
+
+    Recall provides a REST API for managing and replaying AI coding sessions from Claude Code, Gemini CLI, and Codex CLI.
+  version: 2.4.1
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:3001/api
+    description: Local development server
+
+tags:
+  - name: Health
+    description: Health check and status endpoints
+  - name: Sessions
+    description: Session listing, details, and playback
+  - name: Search
+    description: Search across sessions
+  - name: Checkpoints
+    description: Create and manage checkpoints
+  - name: Rewind
+    description: File restoration from session history
+  - name: Shares
+    description: Session sharing with expiring links
+  - name: Summaries
+    description: Session summary generation
+  - name: Git
+    description: Git context tracking
+  - name: Admin
+    description: Administrative operations
+
+paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: Health check
+      description: Returns the health status of the server and database connections
+      responses:
+        '200':
+          description: Server is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  timestamp:
+                    type: string
+                    format: date-time
+                  databases:
+                    type: object
+                    properties:
+                      claude_mem:
+                        type: string
+                        enum: [connected, disconnected]
+                      transcripts:
+                        type: string
+                        enum: [connected, disconnected]
+                  security:
+                    type: object
+                    properties:
+                      viewerMode:
+                        type: boolean
+                      authDisabled:
+                        type: boolean
+
+  /agents:
+    get:
+      tags: [Health]
+      summary: List agents
+      description: Returns list of supported agents with session counts
+      responses:
+        '200':
+          description: List of agents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    agent:
+                      type: string
+                      enum: [claude, codex, gemini]
+                    count:
+                      type: integer
+
+  /sessions:
+    get:
+      tags: [Sessions]
+      summary: List sessions
+      description: Returns a paginated list of sessions with optional filtering
+      parameters:
+        - name: showAll
+          in: query
+          description: Bypass CWD filter to show all sessions
+          schema:
+            type: boolean
+        - name: source
+          in: query
+          description: Data source (filesystem or database)
+          schema:
+            type: string
+            enum: [fs, db]
+        - name: agent
+          in: query
+          description: Filter by agent type
+          schema:
+            type: string
+            enum: [claude, codex, gemini]
+        - name: project
+          in: query
+          description: Filter by project path
+          schema:
+            type: string
+        - name: hasClaudeMd
+          in: query
+          description: Only show sessions with CLAUDE.md
+          schema:
+            type: boolean
+        - name: limit
+          in: query
+          description: Number of sessions to return
+          schema:
+            type: integer
+            default: 20
+        - name: offset
+          in: query
+          description: Pagination offset
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: List of sessions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sessions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SessionMetadata'
+                  total:
+                    type: integer
+                  limit:
+                    type: integer
+                  offset:
+                    type: integer
+
+  /sessions/cwd-filter:
+    get:
+      tags: [Sessions]
+      summary: Get CWD filter status
+      description: Returns the current working directory filter configuration
+      responses:
+        '200':
+          description: CWD filter status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  enabled:
+                    type: boolean
+                  cwd:
+                    type: string
+
+  /sessions/search:
+    get:
+      tags: [Search]
+      summary: Search sessions
+      description: Global content search across all sessions
+      parameters:
+        - name: q
+          in: query
+          required: true
+          description: Search query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: Maximum results
+          schema:
+            type: integer
+            default: 50
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        sessionId:
+                          type: string
+                        frameId:
+                          type: string
+                        snippet:
+                          type: string
+                        matchType:
+                          type: string
+
+  /sessions/{sessionId}:
+    get:
+      tags: [Sessions]
+      summary: Get session details
+      description: Returns metadata for a specific session
+      parameters:
+        - $ref: '#/components/parameters/sessionId'
+      responses:
+        '200':
+          description: Session details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionMetadata'
+        '404':
+          description: Session not found
+
+  /sessions/{sessionId}/frames:
+    get:
+      tags: [Sessions]
+      summary: Get session frames
+      description: Returns playback frames for a session
+      parameters:
+        - $ref: '#/components/parameters/sessionId'
+        - name: source
+          in: query
+          description: Data source
+          schema:
+            type: string
+            enum: [fs, db]
+        - name: limit
+          in: query
+          description: Number of frames
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          description: Frame offset
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Session frames
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  frames:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PlaybackFrame'
+                  total:
+                    type: integer
+
+  /sessions/{sessionId}/refresh:
+    post:
+      tags: [Sessions]
+      summary: Refresh session cache
+      description: Refreshes the cached timeline for a session
+      parameters:
+        - $ref: '#/components/parameters/sessionId'
+      responses:
+        '200':
+          description: Cache refreshed
+        '404':
+          description: Session not found
+
+  /sessions/{sessionId}/checkpoints:
+    get:
+      tags: [Checkpoints]
+      summary: List session checkpoints
+      description: Returns all checkpoints for a session
+      parameters:
+        - $ref: '#/components/parameters/sessionId'
+      responses:
+        '200':
+          description: List of checkpoints
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Checkpoint'
+    post:
+      tags: [Checkpoints]
+      summary: Create checkpoint
+      description: Creates a checkpoint at a specific frame
+      parameters:
+        - $ref: '#/components/parameters/sessionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [frameIndex]
+              properties:
+                frameIndex:
+                  type: integer
+                name:
+                  type: string
+                notes:
+                  type: string
+      responses:
+        '201':
+          description: Checkpoint created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Checkpoint'
+
+  /checkpoints/{checkpointId}:
+    get:
+      tags: [Checkpoints]
+      summary: Get checkpoint
+      description: Returns checkpoint metadata
+      parameters:
+        - $ref: '#/components/parameters/checkpointId'
+      responses:
+        '200':
+          description: Checkpoint details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Checkpoint'
+    patch:
+      tags: [Checkpoints]
+      summary: Update checkpoint
+      description: Updates checkpoint name or notes
+      parameters:
+        - $ref: '#/components/parameters/checkpointId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                notes:
+                  type: string
+      responses:
+        '200':
+          description: Checkpoint updated
+    delete:
+      tags: [Checkpoints]
+      summary: Delete checkpoint
+      description: Deletes a checkpoint
+      parameters:
+        - $ref: '#/components/parameters/checkpointId'
+      responses:
+        '204':
+          description: Checkpoint deleted
+
+  /checkpoints/{checkpointId}/full:
+    get:
+      tags: [Checkpoints]
+      summary: Get checkpoint with files
+      description: Returns checkpoint with all captured file contents
+      parameters:
+        - $ref: '#/components/parameters/checkpointId'
+      responses:
+        '200':
+          description: Checkpoint with file contents
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Checkpoint'
+                  - type: object
+                    properties:
+                      files:
+                        type: object
+                        additionalProperties:
+                          type: string
+
+  /checkpoints/{checkpointId}/diff/{otherCheckpointId}:
+    get:
+      tags: [Checkpoints]
+      summary: Compare checkpoints
+      description: Returns diff between two checkpoints
+      parameters:
+        - $ref: '#/components/parameters/checkpointId'
+        - name: otherCheckpointId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Checkpoint diff
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  added:
+                    type: array
+                    items:
+                      type: string
+                  removed:
+                    type: array
+                    items:
+                      type: string
+                  modified:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        path:
+                          type: string
+                        diff:
+                          type: string
+
+  /sessions/{sessionId}/rewind/preview:
+    post:
+      tags: [Rewind]
+      summary: Preview rewind
+      description: Preview what files would change if rewinding to a frame
+      parameters:
+        - $ref: '#/components/parameters/sessionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [frameIndex]
+              properties:
+                frameIndex:
+                  type: integer
+      responses:
+        '200':
+          description: Rewind preview
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  changes:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        path:
+                          type: string
+                        action:
+                          type: string
+                          enum: [create, modify, delete]
+                        diff:
+                          type: string
+
+  /sessions/{sessionId}/rewind/execute:
+    post:
+      tags: [Rewind]
+      summary: Execute rewind
+      description: Restore files to their state at a specific frame
+      parameters:
+        - $ref: '#/components/parameters/sessionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [frameIndex]
+              properties:
+                frameIndex:
+                  type: integer
+                files:
+                  type: array
+                  items:
+                    type: string
+                  description: Optional list of specific files to restore
+      responses:
+        '200':
+          description: Rewind executed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  filesRestored:
+                    type: integer
+                  backupId:
+                    type: string
+
+  /sessions/{sessionId}/rewind/undo:
+    post:
+      tags: [Rewind]
+      summary: Undo rewind
+      description: Restore files from the backup created during last rewind
+      parameters:
+        - $ref: '#/components/parameters/sessionId'
+      responses:
+        '200':
+          description: Undo completed
+        '400':
+          description: No undo available
+
+  /sessions/{sessionId}/rewind/undo-info:
+    get:
+      tags: [Rewind]
+      summary: Get undo info
+      description: Check if undo is available for last rewind
+      parameters:
+        - $ref: '#/components/parameters/sessionId'
+      responses:
+        '200':
+          description: Undo info
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  available:
+                    type: boolean
+                  backupTimestamp:
+                    type: string
+                    format: date-time
+
+  /sessions/{sessionId}/share:
+    post:
+      tags: [Shares]
+      summary: Create share link
+      description: Generate a shareable link for a session
+      parameters:
+        - $ref: '#/components/parameters/sessionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [expiresIn]
+              properties:
+                expiresIn:
+                  type: string
+                  enum: ['1h', '24h', '7d', '30d']
+                redact:
+                  type: boolean
+                  default: true
+      responses:
+        '201':
+          description: Share link created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  shareId:
+                    type: string
+                  url:
+                    type: string
+                  expiresAt:
+                    type: string
+                    format: date-time
+
+  /shared/{shareId}:
+    get:
+      tags: [Shares]
+      summary: Get shared session
+      description: Access a shared session (public endpoint)
+      parameters:
+        - name: shareId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Shared session data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionMetadata'
+        '404':
+          description: Share not found or expired
+    delete:
+      tags: [Shares]
+      summary: Delete share link
+      description: Revoke a share link
+      parameters:
+        - name: shareId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Share deleted
+
+  /sessions/{sessionId}/summary:
+    get:
+      tags: [Summaries]
+      summary: Get session summary
+      description: Returns the generated summary for a session
+      parameters:
+        - $ref: '#/components/parameters/sessionId'
+      responses:
+        '200':
+          description: Session summary
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sessionId:
+                    type: string
+                  summary:
+                    type: string
+                  generatedAt:
+                    type: string
+                    format: date-time
+                  type:
+                    type: string
+                    enum: [heuristic, llm]
+
+  /sessions/{sessionId}/summary/regenerate:
+    post:
+      tags: [Summaries]
+      summary: Regenerate summary
+      description: Force regeneration of session summary
+      parameters:
+        - $ref: '#/components/parameters/sessionId'
+      responses:
+        '200':
+          description: Summary regenerated
+
+  /summaries/generate-batch:
+    post:
+      tags: [Summaries]
+      summary: Batch generate summaries
+      description: Generate summaries for multiple sessions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [sessionIds]
+              properties:
+                sessionIds:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '202':
+          description: Batch generation started
+
+  /sessions/{sessionId}/git:
+    get:
+      tags: [Git]
+      summary: Get git context
+      description: Returns git state (branch, commit) for session
+      parameters:
+        - $ref: '#/components/parameters/sessionId'
+      responses:
+        '200':
+          description: Git context
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  branch:
+                    type: string
+                  commit:
+                    type: string
+                  dirty:
+                    type: boolean
+
+  /git/branches:
+    get:
+      tags: [Git]
+      summary: List branches
+      description: Returns branches with session counts
+      responses:
+        '200':
+          description: List of branches
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    sessionCount:
+                      type: integer
+
+  /admin/viewer-mode:
+    get:
+      tags: [Admin]
+      summary: Get viewer mode status
+      description: Check if viewer mode is enabled
+      responses:
+        '200':
+          description: Viewer mode status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  enabled:
+                    type: boolean
+    post:
+      tags: [Admin]
+      summary: Toggle viewer mode
+      description: Enable or disable viewer mode
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [enabled]
+              properties:
+                enabled:
+                  type: boolean
+      responses:
+        '200':
+          description: Viewer mode updated
+
+  /stats/overview:
+    get:
+      tags: [Health]
+      summary: Get overview stats
+      description: Dashboard statistics
+      responses:
+        '200':
+          description: Overview statistics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalSessions:
+                    type: integer
+                  totalFrames:
+                    type: integer
+                  agentCounts:
+                    type: object
+                    additionalProperties:
+                      type: integer
+
+components:
+  parameters:
+    sessionId:
+      name: sessionId
+      in: path
+      required: true
+      description: Session identifier
+      schema:
+        type: string
+    checkpointId:
+      name: checkpointId
+      in: path
+      required: true
+      description: Checkpoint identifier
+      schema:
+        type: string
+
+  schemas:
+    SessionMetadata:
+      type: object
+      properties:
+        sessionId:
+          type: string
+        agent:
+          type: string
+          enum: [claude, codex, gemini]
+        projectPath:
+          type: string
+        slug:
+          type: string
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+        duration:
+          type: integer
+          description: Duration in seconds
+        eventCount:
+          type: integer
+        model:
+          type: string
+        claudeMdFiles:
+          type: array
+          items:
+            type: string
+
+    PlaybackFrame:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [user_message, claude_response, tool_execution, claude_thinking, context_compaction]
+        timestamp:
+          type: string
+          format: date-time
+        userMessage:
+          type: object
+          properties:
+            text:
+              type: string
+        claudeResponse:
+          type: object
+          properties:
+            text:
+              type: string
+        toolExecution:
+          type: object
+          properties:
+            tool:
+              type: string
+            input:
+              type: object
+            output:
+              type: object
+              properties:
+                content:
+                  type: string
+                isError:
+                  type: boolean
+
+    Checkpoint:
+      type: object
+      properties:
+        id:
+          type: string
+        sessionId:
+          type: string
+        frameIndex:
+          type: integer
+        name:
+          type: string
+        notes:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        fileCount:
+          type: integer

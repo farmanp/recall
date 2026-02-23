@@ -1,0 +1,6 @@
+{
+  "responses": {
+    "200": { "description": "Undo completed" },
+    "400": { "description": "No undo available" }
+  }
+}

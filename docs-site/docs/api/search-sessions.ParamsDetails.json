@@ -1,0 +1,17 @@
+{
+  "parameters": [
+    {
+      "name": "q",
+      "in": "query",
+      "required": true,
+      "description": "Search query",
+      "schema": { "type": "string" }
+    },
+    {
+      "name": "limit",
+      "in": "query",
+      "description": "Maximum results",
+      "schema": { "type": "integer", "default": 50 }
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "responses": {
+    "200": {
+      "description": "Rewind executed",
+      "content": {
+        "application/json": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "success": { "type": "boolean" },
+              "filesRestored": { "type": "integer" },
+              "backupId": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

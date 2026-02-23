@@ -1,0 +1,19 @@
+{
+  "responses": {
+    "200": {
+      "description": "Git context",
+      "content": {
+        "application/json": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "branch": { "type": "string" },
+              "commit": { "type": "string" },
+              "dirty": { "type": "boolean" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

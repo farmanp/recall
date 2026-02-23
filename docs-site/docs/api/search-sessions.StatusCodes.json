@@ -1,0 +1,28 @@
+{
+  "responses": {
+    "200": {
+      "description": "Search results",
+      "content": {
+        "application/json": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "results": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "sessionId": { "type": "string" },
+                    "frameId": { "type": "string" },
+                    "snippet": { "type": "string" },
+                    "matchType": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
