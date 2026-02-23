@@ -131,9 +131,9 @@ function startClaudeWatcher(): void {
   console.log(`[FileWatcher] Starting Claude watcher on: ${CLAUDE_WATCH_DIR}`);
 
   try {
-    // Use absolute path pattern - more reliable on macOS than cwd + glob
-    const watchPattern = path.join(CLAUDE_WATCH_DIR, '**', '*.jsonl');
-    claudeWatcher = chokidar.watch(watchPattern, {
+    // Watch the directory itself, filter for .jsonl in handlers
+    // This is more reliable than glob patterns on macOS
+    claudeWatcher = chokidar.watch(CLAUDE_WATCH_DIR, {
       persistent: true,
       ignoreInitial: false,
       // Use polling on macOS for reliability with new file detection
@@ -144,18 +144,20 @@ function startClaudeWatcher(): void {
         pollInterval: 200,
       },
       // Claude sessions are stored under ~/.claude/projects/{project}/<session>.jsonl
-      // so we must watch nested project directories.
       depth: 5,
     });
 
     claudeWatcher
       .on('add', (filePath: string) => {
-        // filePath is now absolute since we're watching absolute pattern
+        // Only process .jsonl files
+        if (!filePath.endsWith('.jsonl')) return;
         const relativePath = path.relative(CLAUDE_WATCH_DIR, filePath);
         console.log(`[FileWatcher] New Claude file detected: ${relativePath}`);
         handleFileChange(filePath);
       })
       .on('change', (filePath: string) => {
+        // Only process .jsonl files
+        if (!filePath.endsWith('.jsonl')) return;
         const relativePath = path.relative(CLAUDE_WATCH_DIR, filePath);
         console.log(`[FileWatcher] Claude file changed: ${relativePath}`);
         handleFileChange(filePath);
@@ -185,9 +187,9 @@ function startGeminiWatcher(): void {
   console.log(`[FileWatcher] Starting Gemini watcher on: ${GEMINI_WATCH_DIR}`);
 
   try {
-    // Use absolute path pattern - more reliable on macOS than cwd + glob
-    const watchPattern = path.join(GEMINI_WATCH_DIR, '**', 'chats', 'session-*.json');
-    geminiWatcher = chokidar.watch(watchPattern, {
+    // Watch the directory itself, filter for session-*.json in handlers
+    // This is more reliable than glob patterns on macOS
+    geminiWatcher = chokidar.watch(GEMINI_WATCH_DIR, {
       persistent: true,
       ignoreInitial: false,
       // Use polling on macOS for reliability with new file detection
@@ -203,12 +205,15 @@ function startGeminiWatcher(): void {
 
     geminiWatcher
       .on('add', (filePath: string) => {
-        // filePath is now absolute since we're watching absolute pattern
+        // Only process session-*.json files in chats directories
+        if (!filePath.includes('/chats/') || !filePath.match(/session-.*\.json$/)) return;
         const relativePath = path.relative(GEMINI_WATCH_DIR, filePath);
         console.log(`[FileWatcher] New Gemini session detected: ${relativePath}`);
         handleGeminiFileChange(filePath);
       })
       .on('change', (filePath: string) => {
+        // Only process session-*.json files in chats directories
+        if (!filePath.includes('/chats/') || !filePath.match(/session-.*\.json$/)) return;
         const relativePath = path.relative(GEMINI_WATCH_DIR, filePath);
         console.log(`[FileWatcher] Gemini session changed: ${relativePath}`);
         handleGeminiFileChange(filePath);
