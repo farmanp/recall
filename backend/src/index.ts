@@ -125,16 +125,10 @@ function start(): void {
         console.log(`💾 Claude-mem DB: not available (commentary disabled)`);
       }
       console.log(`💾 Transcript DB: ${getTranscriptDbPath()}`);
-      console.log(`\nAPI Endpoints:`);
-      console.log(`  GET  /api/health`);
-      console.log(`  GET  /api/sessions?source=filesystem|db`);
-      console.log(`  GET  /api/sessions/:id`);
-      console.log(`  GET  /api/sessions/:id/frames?source=filesystem|db`);
-      console.log(`  GET  /api/sessions/:id/events`);
-      console.log(`  POST /api/import/start`);
-      console.log(`  GET  /api/import/status`);
-      console.log(`  GET  /api/import/stats`);
-      console.log(`  POST /api/import/single`);
+      console.log(`\n📖 Quick Start:`);
+      console.log(`  Open http://${HOST}:${PORT} in your browser`);
+      console.log(`\n💡 First time? Import existing sessions for full features:`);
+      console.log(`  curl -X POST http://localhost:${PORT}/api/import/start`);
       console.log(`\nPress Ctrl+C to stop\n`);
     });
 

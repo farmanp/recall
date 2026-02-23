@@ -126,7 +126,22 @@ Sessions are automatically imported via the file watcher when:
 
 ### Manual Import
 
-If you see "Analysis failed" or empty token stats, try re-importing:
+If you see "Analysis failed" or empty token stats, trigger a backfill import:
+
+**Via API (recommended - works with npx):**
+
+```bash
+# Start bulk import of all existing sessions
+curl -X POST http://localhost:3001/api/import/start
+
+# Check import progress
+curl http://localhost:3001/api/import/status
+
+# Check import statistics
+curl http://localhost:3001/api/import/stats
+```
+
+**Via CLI (if running from source):**
 
 ```bash
 # Import all sessions (bulk)
@@ -135,8 +150,8 @@ cd backend && npm run import
 # Import a specific session file
 cd backend && npm run import -- --single /path/to/session.jsonl
 
-# Check import stats
-cd backend && npm run import -- --stats
+# Force re-import (updates token stats for older sessions)
+cd backend && npm run import -- --no-skip
 ```
 
 ### Troubleshooting
