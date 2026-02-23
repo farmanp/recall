@@ -249,6 +249,55 @@
         color: var(--text-muted);
       }
 
+      /* Features */
+      .features {
+        padding: 80px 0;
+      }
+
+      .features-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 32px;
+      }
+
+      @media (max-width: 900px) {
+        .features-grid {
+          grid-template-columns: 1fr;
+          gap: 48px;
+        }
+      }
+
+      .feature-card {
+        text-align: left;
+      }
+
+      .feature-img {
+        margin-bottom: 20px;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid var(--border);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      }
+
+      .feature-img img {
+        width: 100%;
+        height: auto;
+        display: block;
+      }
+
+      .feature-card h3 {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 1rem;
+        color: var(--green);
+        margin-bottom: 8px;
+      }
+
+      .feature-card p {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        line-height: 1.6;
+      }
+
       /* Works With (Moved Up) */
       .works-with {
         padding: 0 0 80px;
@@ -452,7 +501,7 @@
       <div class="container">
         <div class="logo">recall</div>
         <div class="nav-right">
-          <a href="#demo">Demo</a>
+          <a href="#overview">Overview</a>
           <a href="#install">Install</a>
           <a href="https://github.com/farmanp/recall" class="github-stars">
             <img
@@ -482,15 +531,60 @@
       </div>
     </section>
 
-    <section class="demo" id="demo">
+    <section class="demo" id="overview">
       <div class="container">
         <div class="demo-frame">
           <img
-            src="assets/demo.png"
-            alt="Recall session player showing timeline scrubbing and file diffs"
+            src="assets/overview.png"
+            alt="Recall overview showing 591 sessions, $4K saved, and multi-agent breakdown"
           />
         </div>
-        <p class="demo-caption">Click a session. Scrub the timeline. See what changed.</p>
+        <p class="demo-caption">591 sessions tracked. $4K saved. Every AI decision auditable.</p>
+      </div>
+    </section>
+
+    <section class="features">
+      <div class="container">
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-img">
+              <img
+                src="assets/transcript_view.png"
+                alt="Session transcript with timestamped conversation replay"
+              />
+            </div>
+            <h3>Replay Sessions</h3>
+            <p>
+              Scroll through AI sessions like a video. See every message, tool call, and file change
+              with full context.
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-img">
+              <img
+                src="assets/generated_insights.png"
+                alt="AI-generated session insights showing files modified and complexity analysis"
+              />
+            </div>
+            <h3>Session Analysis</h3>
+            <p>
+              Detect complexity outliers, duplicate utilities, and architectural drift across your
+              codebase.
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-img">
+              <img
+                src="assets/sessions_view.png"
+                alt="Session library with multi-agent filtering"
+              />
+            </div>
+            <h3>Multi-Agent Library</h3>
+            <p>
+              Claude, Gemini, Codex — all your AI sessions in one searchable, filterable library.
+            </p>
+          </div>
+        </div>
       </div>
     </section>
 
