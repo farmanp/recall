@@ -201,8 +201,6 @@ For more info, visit: https://github.com/farmanp/recall
     } catch (err) {
       // Browser open failed, but server is still running
     }
-    console.log(`\nRecall is running at ${url}\n`);
-    console.log('Press Ctrl+C to stop\n');
   }, 1500);
 
   // Handle shutdown

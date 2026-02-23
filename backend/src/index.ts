@@ -145,22 +145,33 @@ function start(): void {
       // Write PID file for CLI stop command
       writePidFile();
 
-      console.log(`\n🚀 Recall Server`);
-      console.log(`📡 Server running on http://${HOST}:${PORT}`);
+      // Clear startup banner
+      console.log('');
+      console.log('╔════════════════════════════════════════════════════════════╗');
+      console.log('║                                                            ║');
+      console.log('║   🎬 RECALL SERVER RUNNING                                 ║');
+      console.log('║                                                            ║');
+      console.log(`║   URL: http://${HOST}:${PORT}`.padEnd(61) + '║');
+      console.log('║                                                            ║');
+      console.log('╚════════════════════════════════════════════════════════════╝');
+      console.log('');
       console.log(
         `🔒 Security: auth=${process.env.RECALL_DISABLE_AUTH === 'true' ? 'disabled' : 'enabled'}, viewer-mode=${isViewerModeEnabled() ? 'on' : 'off'}`
       );
       if (isClaudeMemAvailable()) {
-        console.log(`💾 Claude-mem DB: ~/.claude-mem/claude-mem.db`);
+        console.log(`💾 Claude-mem: connected`);
       } else {
-        console.log(`💾 Claude-mem DB: not available (commentary disabled)`);
+        console.log(`💾 Claude-mem: not available`);
       }
-      console.log(`💾 Transcript DB: ${getTranscriptDbPath()}`);
-      console.log(`\n📖 Quick Start:`);
-      console.log(`  Open http://${HOST}:${PORT} in your browser`);
-      console.log(`\n💡 First time? Import existing sessions for full features:`);
-      console.log(`  npx recall-player import`);
-      console.log(`\nPress Ctrl+C to stop\n`);
+      console.log(`💾 Sessions: ${transcriptResult.count} imported`);
+      console.log('');
+      console.log('💡 First time? Import existing sessions:');
+      console.log('   npx recall-player import');
+      console.log('');
+      console.log('─────────────────────────────────────────────────────────────');
+      console.log('  To stop: Ctrl+C  or  npx recall-player stop');
+      console.log('─────────────────────────────────────────────────────────────');
+      console.log('');
     });
 
     // Graceful shutdown

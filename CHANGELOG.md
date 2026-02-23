@@ -5,13 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.4.4] - 2026-02-23
+## [2.4.3-2] - 2026-02-23
 
 ### Added
 
 - **`recall stop` CLI command** - Stop a running Recall server from another terminal with `npx recall-player stop`. Uses PID file for clean shutdown.
 - **Live session auto-polling** - Session list and Overview pages now auto-refresh every 15 seconds when live sessions are detected. No manual refresh needed to see new sessions appear.
 - **Coding agent support matrix** - Added comprehensive feature support matrix to documentation showing what's supported for Claude, Codex, and Gemini.
+- **Pre-commit hooks** - Added husky + lint-staged for automatic code formatting on commit.
+
+### Improved
+
+- **CLI startup UX** - Clear visual banner when server starts showing URL and how to stop (Ctrl+C or `recall stop`).
 
 ### Fixed
 
