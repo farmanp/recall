@@ -192,16 +192,45 @@ For more info, visit: https://github.com/farmanp/recall
     process.exit(1);
   });
 
-  // Open browser after short delay to let server start
-  setTimeout(async () => {
-    const url = `http://localhost:${port}`;
+  // Wait for server to be ready before opening browser
+  const url = `http://localhost:${port}`;
+  const healthUrl = `${url}/api/health`;
+  const maxAttempts = 30; // 30 seconds max wait
+  let attempt = 0;
+
+  const waitForServer = async () => {
+    attempt++;
     try {
+      const http = require('http');
+      await new Promise((resolve, reject) => {
+        const req = http.get(healthUrl, (res) => {
+          if (res.statusCode === 200) {
+            resolve();
+          } else {
+            reject(new Error(`Status ${res.statusCode}`));
+          }
+        });
+        req.on('error', reject);
+        req.setTimeout(1000, () => {
+          req.destroy();
+          reject(new Error('timeout'));
+        });
+      });
+
+      // Server is ready, open browser
       const open = (await import('open')).default;
       await open(url);
     } catch (err) {
-      // Browser open failed, but server is still running
+      if (attempt < maxAttempts) {
+        // Retry after 1 second
+        setTimeout(waitForServer, 1000);
+      }
+      // If max attempts reached, don't open browser - server may have failed
     }
-  }, 1500);
+  };
+
+  // Start polling after initial delay
+  setTimeout(waitForServer, 500);
 
   // Handle shutdown
   const shutdown = () => {
