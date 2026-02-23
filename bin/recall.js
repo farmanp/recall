@@ -19,8 +19,26 @@ const command = args[0] || '';
 
 // CLI commands that don't start the server
 const cliCommands = ['enable', 'disable', 'status', 'list'];
+const importCliPath = path.join(backendDir, 'dist', 'services', 'import-cli.js');
 
-if (cliCommands.includes(command)) {
+if (command === 'import') {
+  // Run import CLI command
+  const importArgs = args.slice(1); // Remove 'import' from args
+  const cli = spawn('node', [importCliPath, ...importArgs], {
+    stdio: 'inherit',
+    cwd: userCwd,
+    env: { ...process.env, RECALL_USER_CWD: userCwd },
+  });
+
+  cli.on('error', (err) => {
+    console.error('Failed to run import:', err.message);
+    process.exit(1);
+  });
+
+  cli.on('exit', (code) => {
+    process.exit(code || 0);
+  });
+} else if (cliCommands.includes(command)) {
   // Run CLI command
   const cli = spawn('node', [cliPath, ...args], {
     stdio: 'inherit',
@@ -48,7 +66,12 @@ USAGE
 SERVER COMMANDS
   recall              Start the Recall web server (default)
   recall start        Same as above - starts the web server
-  recall serve        Same as above - starts the web server
+
+IMPORT COMMANDS
+  recall import       Import all sessions into database (enables analysis, stats)
+  recall import --stats         Show import statistics
+  recall import --no-skip       Force re-import all sessions
+  recall import --help          Show all import options
 
 GIT TRACKING COMMANDS
   recall enable       Enable git tracking for current repository
@@ -63,12 +86,15 @@ EXAMPLES
   # Start the web server
   recall
 
+  # Import existing sessions (run this first time!)
+  recall import
+
+  # Check import stats
+  recall import --stats
+
   # Enable git tracking in your project
   cd /path/to/project
   recall enable
-
-  # Check tracking status
-  recall status
 
 For more info, visit: https://github.com/farmanp/recall
 `);

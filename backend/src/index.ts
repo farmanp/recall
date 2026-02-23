@@ -128,7 +128,7 @@ function start(): void {
       console.log(`\n📖 Quick Start:`);
       console.log(`  Open http://${HOST}:${PORT} in your browser`);
       console.log(`\n💡 First time? Import existing sessions for full features:`);
-      console.log(`  curl -X POST http://localhost:${PORT}/api/import/start`);
+      console.log(`  npx recall-player import`);
       console.log(`\nPress Ctrl+C to stop\n`);
     });
 
