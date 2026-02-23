@@ -1,69 +1,41 @@
 ---
 id: undo-rewind
-title: "Undo rewind"
-description: "Restore files from the backup created during last rewind"
-sidebar_label: "Undo rewind"
+title: 'Undo rewind'
+description: 'Restore files from the backup created during last rewind'
+sidebar_label: 'Undo rewind'
 hide_title: true
 hide_table_of_contents: true
 api: eJylU8Fu2zAM/RVCpw3w4rTrybciG4YA3VYk6S5tDorFxEJlSZXkrIHhfx/pOG2S5raTJZp8It97bEWSmyiKRzHDv9oqscyEwlgG7ZN2VhQUj8kFhLU2GGEdXA2pQljJ8rnxUAaUCRWoJmi7ASNjgrBHyoSXQdaYMPADrbB0IcCIMRL0lDM0v+Blqugc8KXRAZUoUmjwvI35vgq0Qpv0WmOgklhWWEtRtCLtfI+duA3RdUvGi95Zeo3/X4/H/DnFfLDKQelqb6hJJbpM3FxK++Wg4Uy5ldrIlUHCzwQNVjnF7buY+mFpikLkw3gxb98G7fI9JTnDcNsYtgdSmmCoqkrJF3luXClNRXjF1/H4Kpdei3Me7jgFFG7ROF8TF7BHEzyytmvXs6GTwV47SjZwez/9gEMxWLsAQ8oXWJCo3/7M+uDtlGhRLOhhmtGTfbJDrg9uSzJEkDD7Pl/AAaqWVm64SFpFJvBG7vj2EWzvoomRjUKYOIUZ/MBaWw2Tu2nWl3P0la/0MPXOdO37vh7djK4oYnSJJC5PO/jq53RB8Xc+IxHqPCW5JpQ4cmGTD0Ux51wWkbWjto9Qek+8OfiEs1aUziai/P+2YrBqwteUE0e0At3QdjuY6PGwI5HSi+N9eQPpnUSKs1m4oG1XMuJDMF3H4ZcGw47idNzKoHvTstuUjnwm266liedLdjzgp9mwjp/h4updnGIISrtjzaRp+EbHZ9ydLH63PF6g+99zVuMfAHGOkA==
-sidebar_class_name: "post api-method"
+sidebar_class_name: 'post api-method'
 info_path: docs/api/recall-api
 custom_edit_url: null
 ---
 
-import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
-import ParamsDetails from "@theme/ParamsDetails";
-import RequestSchema from "@theme/RequestSchema";
-import StatusCodes from "@theme/StatusCodes";
-import OperationTabs from "@theme/OperationTabs";
-import TabItem from "@theme/TabItem";
-import Heading from "@theme/Heading";
-import Translate from "@docusaurus/Translate";
+import MethodEndpoint from '@theme/ApiExplorer/MethodEndpoint';
+import ParamsDetails from '@theme/ParamsDetails';
+import RequestSchema from '@theme/RequestSchema';
+import StatusCodes from '@theme/StatusCodes';
+import OperationTabs from '@theme/OperationTabs';
+import TabItem from '@theme/TabItem';
+import Heading from '@theme/Heading';
+import Translate from '@docusaurus/Translate';
 
-<Heading
-  as={"h1"}
-  className={"openapi__heading"}
-  children={"Undo rewind"}
->
-</Heading>
+<Heading as={'h1'} className={'openapi__heading'} children={'Undo rewind'}></Heading>
 
 <MethodEndpoint
-  method={"post"}
-  path={"/sessions/{sessionId}/rewind/undo"}
-  context={"endpoint"}
->
-  
-</MethodEndpoint>
-
-
+  method={'post'}
+  path={'/sessions/{sessionId}/rewind/undo'}
+  context={'endpoint'}
+></MethodEndpoint>
 
 Restore files from the backup created during last rewind
 
-<Heading
-  id={"request"}
-  as={"h2"}
-  className={"openapi-tabs__heading"}
->
+<Heading id={'request'} as={'h2'} className={'openapi-tabs__heading'}>
   <Translate id="theme.openapi.request.title">Request</Translate>
 </Heading>
 
-<ParamsDetails
-  {...require("./undo-rewind.ParamsDetails.json")}
->
-  
-</ParamsDetails>
+<ParamsDetails {...require('./undo-rewind.ParamsDetails.json')}></ParamsDetails>
 
-<RequestSchema
-  {...require("./undo-rewind.RequestSchema.json")}
->
-  
-</RequestSchema>
+<RequestSchema {...require('./undo-rewind.RequestSchema.json')}></RequestSchema>
 
-<StatusCodes
-  {...require("./undo-rewind.StatusCodes.json")}
->
-  
-</StatusCodes>
-
-
-      
+<StatusCodes {...require('./undo-rewind.StatusCodes.json')}></StatusCodes>

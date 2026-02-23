@@ -1,69 +1,37 @@
 ---
 id: delete-share-link
-title: "Delete share link"
-description: "Revoke a share link"
-sidebar_label: "Delete share link"
+title: 'Delete share link'
+description: 'Revoke a share link'
+sidebar_label: 'Delete share link'
 hide_title: true
 hide_table_of_contents: true
 api: eJx9U8Fu4jAQ/RVrTrtSltBuT7lVgFaRqFRRdi8tBzceiIVju7aDiqL8+86EoMJW3VPs5zfj5zcvHSS5i1A8w1MtA0bYZKAwVkH7pJ2FAlZ4cHsUUkQmCKPtHjLwMsgGEwau7cDShrgDpVR0rrnUy1TTOuBbqwMqKFJoMYNY1dhIKDpIRz+UpaDtDvp+w+TonY2khM5vp3f8uRY0CBUKDV2vqCgDElI7ag8ncJBHNxeQD4JU3o3CejqKGA5n2W0wxKpT8kWeG1dJU7uYip/T6U0uvYZ/vVgyha4+oHG+QZvEqRuwcm23bniUTgYH44hsxP1j+akPYWLrghgpP8S6RjH/sxrA+1JUTpEh1DxGKoiTF/tiR64P7qCpGw1ktXhai3OrRlq54yJplQjojTzy7nMzsQ2uETMjW4Vi5hRm4hc22moxW5bZUM7oO2/pYtLOdp10307uJjeEGF0hzYhfO07+oVwT/uFnJEOdJ5JrQ4UTF3b5WBRz5vLYPHlNsi+6zIf5XSftyrkOKmcTGf9lMMdIJXxPOZlAOexHXd2YiudTTDmlxTmwND6ePB923auM+DuYvmf4rcVwJJyWBxm0fOXZUnSUjrym1G2lifgfnd9WY/6/i6/0jaC0R7ZbmpZ3tNzj8eKv6jeXWZ8vlov1goz8C9wmQ8M=
-sidebar_class_name: "delete api-method"
+sidebar_class_name: 'delete api-method'
 info_path: docs/api/recall-api
 custom_edit_url: null
 ---
 
-import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
-import ParamsDetails from "@theme/ParamsDetails";
-import RequestSchema from "@theme/RequestSchema";
-import StatusCodes from "@theme/StatusCodes";
-import OperationTabs from "@theme/OperationTabs";
-import TabItem from "@theme/TabItem";
-import Heading from "@theme/Heading";
-import Translate from "@docusaurus/Translate";
+import MethodEndpoint from '@theme/ApiExplorer/MethodEndpoint';
+import ParamsDetails from '@theme/ParamsDetails';
+import RequestSchema from '@theme/RequestSchema';
+import StatusCodes from '@theme/StatusCodes';
+import OperationTabs from '@theme/OperationTabs';
+import TabItem from '@theme/TabItem';
+import Heading from '@theme/Heading';
+import Translate from '@docusaurus/Translate';
 
-<Heading
-  as={"h1"}
-  className={"openapi__heading"}
-  children={"Delete share link"}
->
-</Heading>
+<Heading as={'h1'} className={'openapi__heading'} children={'Delete share link'}></Heading>
 
-<MethodEndpoint
-  method={"delete"}
-  path={"/shared/{shareId}"}
-  context={"endpoint"}
->
-  
-</MethodEndpoint>
-
-
+<MethodEndpoint method={'delete'} path={'/shared/{shareId}'} context={'endpoint'}></MethodEndpoint>
 
 Revoke a share link
 
-<Heading
-  id={"request"}
-  as={"h2"}
-  className={"openapi-tabs__heading"}
->
+<Heading id={'request'} as={'h2'} className={'openapi-tabs__heading'}>
   <Translate id="theme.openapi.request.title">Request</Translate>
 </Heading>
 
-<ParamsDetails
-  {...require("./delete-share-link.ParamsDetails.json")}
->
-  
-</ParamsDetails>
+<ParamsDetails {...require('./delete-share-link.ParamsDetails.json')}></ParamsDetails>
 
-<RequestSchema
-  {...require("./delete-share-link.RequestSchema.json")}
->
-  
-</RequestSchema>
+<RequestSchema {...require('./delete-share-link.RequestSchema.json')}></RequestSchema>
 
-<StatusCodes
-  {...require("./delete-share-link.StatusCodes.json")}
->
-  
-</StatusCodes>
-
-
-      
+<StatusCodes {...require('./delete-share-link.StatusCodes.json')}></StatusCodes>

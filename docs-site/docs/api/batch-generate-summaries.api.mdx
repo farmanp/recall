@@ -1,69 +1,41 @@
 ---
 id: batch-generate-summaries
-title: "Batch generate summaries"
-description: "Generate summaries for multiple sessions"
-sidebar_label: "Batch generate summaries"
+title: 'Batch generate summaries'
+description: 'Generate summaries for multiple sessions'
+sidebar_label: 'Batch generate summaries'
 hide_title: true
 hide_table_of_contents: true
 api: eJyVVE1z2jAQ/SsanQET2pNvCc1kmEmnGaC9kBwWe7GV6quSTGE8/Pfu2k4g5FQfQFo/vV29fetWJqiizDdy1RgDQWGULyNZYiyC8kk5K3P5gBYDJBTxDSN2LgjT6KS8pjDGSMgoRzLgnwZjunPlUeZtt1UBS5mn0OBIFs4mtIlfgfdaFcApstfIeVoZixoN8CodPVJmt33FIg28PdFGDukWZVeqD85jSFw4M5zfnVkgBDgSiUpoLuMxBWUreeofThI9XaNnmk1n/PdRiTtIRS2qXg8KiZggJCqLjxtMtaMKpXeRa/aQatpl76plw0Ecb5mHIBHDHgPr38omaELXKfk8y7QrQNfEk3+ZTm8y8Eped+WRIaLEPWrnDakqejZ5IlVY0eW5F/cHMNSpa4U2bxK8UPnK7lwnjkqMlEskfi1unxafUlOsc8AAGYt1jeLbr2UXvF2IwpXE+u6LybN9tgOW2rVXxCZALO9Xa/FGZcBCxYfAliKg13Dk3WcysQvOiLmGpkQxdyWOxAMaZZWYPy5G3XGOHnhLial2Vrivezb5OrmhCBkPqc98WwuGL/t9sab4uQWRekC+stE1ocCJC1U2HIoZY7nf3GYq+4Llgz0uxuVawPY8CP8zXINtEx5SRgIpK09Dze1gNmroRc4ru5Et2FGMatstRPwZ9OnEYfJJoHnd0HJPh2HLBtiwKWqEkizF/vyNBJHzvvDxmmthuG66EbueZjbh+0A8/VixvNvhq2CoPxQN8Jcnm35zSQvXidPNXhdrpQZbNVAxtufk5x8Oo6A6
-sidebar_class_name: "post api-method"
+sidebar_class_name: 'post api-method'
 info_path: docs/api/recall-api
 custom_edit_url: null
 ---
 
-import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
-import ParamsDetails from "@theme/ParamsDetails";
-import RequestSchema from "@theme/RequestSchema";
-import StatusCodes from "@theme/StatusCodes";
-import OperationTabs from "@theme/OperationTabs";
-import TabItem from "@theme/TabItem";
-import Heading from "@theme/Heading";
-import Translate from "@docusaurus/Translate";
+import MethodEndpoint from '@theme/ApiExplorer/MethodEndpoint';
+import ParamsDetails from '@theme/ParamsDetails';
+import RequestSchema from '@theme/RequestSchema';
+import StatusCodes from '@theme/StatusCodes';
+import OperationTabs from '@theme/OperationTabs';
+import TabItem from '@theme/TabItem';
+import Heading from '@theme/Heading';
+import Translate from '@docusaurus/Translate';
 
-<Heading
-  as={"h1"}
-  className={"openapi__heading"}
-  children={"Batch generate summaries"}
->
-</Heading>
+<Heading as={'h1'} className={'openapi__heading'} children={'Batch generate summaries'}></Heading>
 
 <MethodEndpoint
-  method={"post"}
-  path={"/summaries/generate-batch"}
-  context={"endpoint"}
->
-  
-</MethodEndpoint>
-
-
+  method={'post'}
+  path={'/summaries/generate-batch'}
+  context={'endpoint'}
+></MethodEndpoint>
 
 Generate summaries for multiple sessions
 
-<Heading
-  id={"request"}
-  as={"h2"}
-  className={"openapi-tabs__heading"}
->
+<Heading id={'request'} as={'h2'} className={'openapi-tabs__heading'}>
   <Translate id="theme.openapi.request.title">Request</Translate>
 </Heading>
 
-<ParamsDetails
-  parameters={undefined}
->
-  
-</ParamsDetails>
+<ParamsDetails parameters={undefined}></ParamsDetails>
 
-<RequestSchema
-  {...require("./batch-generate-summaries.RequestSchema.json")}
->
-  
-</RequestSchema>
+<RequestSchema {...require('./batch-generate-summaries.RequestSchema.json')}></RequestSchema>
 
-<StatusCodes
-  {...require("./batch-generate-summaries.StatusCodes.json")}
->
-  
-</StatusCodes>
-
-
-      
+<StatusCodes {...require('./batch-generate-summaries.StatusCodes.json')}></StatusCodes>

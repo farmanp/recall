@@ -1,69 +1,41 @@
 ---
 id: update-checkpoint
-title: "Update checkpoint"
-description: "Updates checkpoint name or notes"
-sidebar_label: "Update checkpoint"
+title: 'Update checkpoint'
+description: 'Updates checkpoint name or notes'
+sidebar_label: 'Update checkpoint'
 hide_title: true
 hide_table_of_contents: true
 api: eJyNVE1v2zAM/SuCThuQxmm3k29dVmwBOqDI0l3aHBiLidXakibJWQPD/32k7dRe0gLzIZHpxyfy8aOWEXZBpg9ynmP27Kw2Mcj1RCoMmdcuamtkKu+dgohBZK8gYaBEYb0wlj7IiXTgyRLRM1st+TM5Dg4LRSDNZA5iTmePvyvtUck0+gpPbxzCEVqhiXqr0ZNXIMYSZFrLeHB8Q4hem51smnVHiSF+serAiMyaSK58BOcKnQGTJ0+Bb6jPqezmCbPIuXjr0EdNiaXHVM4unMgu9TdC4YejCc6a0EGuZjP+ezfJqlVYSXYkGXOrOqWyvNWWFEtlMqgZknosbcPKoN8f1a98Qfg8RpcmSWEzKHIbYvppNrtMwGl5qvYtQ4TCPRbWlaSZ6Ngkq8p6LQdlb16gdAUOyhzzfhVkJJE2W9sqpCO7yCXSRYW4vlucxUA2saWG6iEXYpWj+Ppr2RqvFyKzikgpsBDIIUwfzaPpsVSvPXVJECCWNz9X4khVgoEdO4FRwqMr4MBv52Ri620p5gVUCsXcKpyIb1hqo8X8djFp3dn6wq90McXOUndxX00/Ty/JQv2FVO2RLj8WK7IPtQhUDGosE2zlM5xav0t6p5AwlmvvqE4U9oilm73R6J0qN2r0/xnUvlkjvsSEFKGRbPog677RHkZjyx7pP1NMHcHNxLC63kDAe180DZupRTwN3gMd9+A1bLjk1I1KBz5TR2+hCKejPg7/w7JfCh/FewvgzfB7I5gDlwaKit/o+IyH0yXUrAmfIyhi4+A6yLwL4WLFRAPF2drgeXgdz7vr1fw7oTf9vimpRcjs4Q+vN/ptY7Btnu0SaG21LMDsKtgxtiPl5y94M+gY
-sidebar_class_name: "patch api-method"
+sidebar_class_name: 'patch api-method'
 info_path: docs/api/recall-api
 custom_edit_url: null
 ---
 
-import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
-import ParamsDetails from "@theme/ParamsDetails";
-import RequestSchema from "@theme/RequestSchema";
-import StatusCodes from "@theme/StatusCodes";
-import OperationTabs from "@theme/OperationTabs";
-import TabItem from "@theme/TabItem";
-import Heading from "@theme/Heading";
-import Translate from "@docusaurus/Translate";
+import MethodEndpoint from '@theme/ApiExplorer/MethodEndpoint';
+import ParamsDetails from '@theme/ParamsDetails';
+import RequestSchema from '@theme/RequestSchema';
+import StatusCodes from '@theme/StatusCodes';
+import OperationTabs from '@theme/OperationTabs';
+import TabItem from '@theme/TabItem';
+import Heading from '@theme/Heading';
+import Translate from '@docusaurus/Translate';
 
-<Heading
-  as={"h1"}
-  className={"openapi__heading"}
-  children={"Update checkpoint"}
->
-</Heading>
+<Heading as={'h1'} className={'openapi__heading'} children={'Update checkpoint'}></Heading>
 
 <MethodEndpoint
-  method={"patch"}
-  path={"/checkpoints/{checkpointId}"}
-  context={"endpoint"}
->
-  
-</MethodEndpoint>
-
-
+  method={'patch'}
+  path={'/checkpoints/{checkpointId}'}
+  context={'endpoint'}
+></MethodEndpoint>
 
 Updates checkpoint name or notes
 
-<Heading
-  id={"request"}
-  as={"h2"}
-  className={"openapi-tabs__heading"}
->
+<Heading id={'request'} as={'h2'} className={'openapi-tabs__heading'}>
   <Translate id="theme.openapi.request.title">Request</Translate>
 </Heading>
 
-<ParamsDetails
-  {...require("./update-checkpoint.ParamsDetails.json")}
->
-  
-</ParamsDetails>
+<ParamsDetails {...require('./update-checkpoint.ParamsDetails.json')}></ParamsDetails>
 
-<RequestSchema
-  {...require("./update-checkpoint.RequestSchema.json")}
->
-  
-</RequestSchema>
+<RequestSchema {...require('./update-checkpoint.RequestSchema.json')}></RequestSchema>
 
-<StatusCodes
-  {...require("./update-checkpoint.StatusCodes.json")}
->
-  
-</StatusCodes>
-
-
-      
+<StatusCodes {...require('./update-checkpoint.StatusCodes.json')}></StatusCodes>

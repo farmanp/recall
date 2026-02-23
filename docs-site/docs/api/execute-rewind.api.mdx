@@ -1,69 +1,41 @@
 ---
 id: execute-rewind
-title: "Execute rewind"
-description: "Restore files to their state at a specific frame"
-sidebar_label: "Execute rewind"
+title: 'Execute rewind'
+description: 'Restore files to their state at a specific frame'
+sidebar_label: 'Execute rewind'
 hide_title: true
 hide_table_of_contents: true
 api: eJydVE1v2zAM/SuCThuQ1mm3k29dVgwBOrRIs13SHBSLidXKkibJWQLD/32kP5LUCXaoD4lMk4/k4xMrHsUm8HTBZ/BXGcmXIy4hZF65qKzhKdpDtB7YWmkILFoWc1CehSgiMBGZYMFBptYqY2svCuAj7gQdIngCrrgha8oDhICQU4keipCdiDmePfwplQfJ0+hLGKZ/bqOYkmAiZgGPISHLoRA8rXjcuwY7emU2vK6XLR7W/M3KPXkM4TNrIkLRJ+GcVpmgTMlroHTVObRdvUIW39W54E2nUyNhR4Q5bx34qCBQ3Mm3I4rCpBusvR7xhsiTT8J7sSdOIhThQk9DRh6bg9BMqxCZXZ/w34/ItzNDPuih0oOzJrRpb8dj+htOmabPYAdZGYFG9GGe3rMRyizDEZ44rqzVIMyBik5g8jJbK5G9lW4qLw276w6llltJgrKhKYB0lfKkE1xIqoP06sQ3jSZdo6Ql8NteqaXXGJjH6NIk0TYTOkfI9Mt4fJMIp/hwFA/kwiRsQVtXIFusReOkQ2JqdtTi/U4UTsNQIeODIBZ9Y8uaLsjaNi2rSDE4H8yk2d3T9KwItLG19axzuWLzHNj337PGeDdlmZWIyno2rl/Mi+l8cVRbvFgBL/Hs/nnOeqhCGLGhIIGa8OC02NPbORheeVuwiRalBDaxEkbsBxTKKDZ5mI6acLLu6BUTY+3EdVv37fXX6xu0oLQAtUnddpvi53SO9uMwAk4DNWWCLX0G19Zvki4oJORLIqDZY9knKPftiFk78SFt1VHgH1lxnRQj7GKC9KhGzk3FVae/Rb/wArqnp8vvUFAvQhQL6YxiqmolAvzyuq7JjOrxuMUWeNwKr8SKxIBClSrQGUW/FjoMl+Zpb59m3dr6zC6u0ouN9JvJ0F7aCl3SGx7fYP9ukdck1RyERCgqq/0+aZNfzQnlGH+2RepRH3GHO8LF//ouT+750+MzCWTVbfgCFYZWL/4Sufjb1GobMprF09gqroXZlGJDvi0mPf8AVNdrbg==
-sidebar_class_name: "post api-method"
+sidebar_class_name: 'post api-method'
 info_path: docs/api/recall-api
 custom_edit_url: null
 ---
 
-import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
-import ParamsDetails from "@theme/ParamsDetails";
-import RequestSchema from "@theme/RequestSchema";
-import StatusCodes from "@theme/StatusCodes";
-import OperationTabs from "@theme/OperationTabs";
-import TabItem from "@theme/TabItem";
-import Heading from "@theme/Heading";
-import Translate from "@docusaurus/Translate";
+import MethodEndpoint from '@theme/ApiExplorer/MethodEndpoint';
+import ParamsDetails from '@theme/ParamsDetails';
+import RequestSchema from '@theme/RequestSchema';
+import StatusCodes from '@theme/StatusCodes';
+import OperationTabs from '@theme/OperationTabs';
+import TabItem from '@theme/TabItem';
+import Heading from '@theme/Heading';
+import Translate from '@docusaurus/Translate';
 
-<Heading
-  as={"h1"}
-  className={"openapi__heading"}
-  children={"Execute rewind"}
->
-</Heading>
+<Heading as={'h1'} className={'openapi__heading'} children={'Execute rewind'}></Heading>
 
 <MethodEndpoint
-  method={"post"}
-  path={"/sessions/{sessionId}/rewind/execute"}
-  context={"endpoint"}
->
-  
-</MethodEndpoint>
-
-
+  method={'post'}
+  path={'/sessions/{sessionId}/rewind/execute'}
+  context={'endpoint'}
+></MethodEndpoint>
 
 Restore files to their state at a specific frame
 
-<Heading
-  id={"request"}
-  as={"h2"}
-  className={"openapi-tabs__heading"}
->
+<Heading id={'request'} as={'h2'} className={'openapi-tabs__heading'}>
   <Translate id="theme.openapi.request.title">Request</Translate>
 </Heading>
 
-<ParamsDetails
-  {...require("./execute-rewind.ParamsDetails.json")}
->
-  
-</ParamsDetails>
+<ParamsDetails {...require('./execute-rewind.ParamsDetails.json')}></ParamsDetails>
 
-<RequestSchema
-  {...require("./execute-rewind.RequestSchema.json")}
->
-  
-</RequestSchema>
+<RequestSchema {...require('./execute-rewind.RequestSchema.json')}></RequestSchema>
 
-<StatusCodes
-  {...require("./execute-rewind.StatusCodes.json")}
->
-  
-</StatusCodes>
-
-
-      
+<StatusCodes {...require('./execute-rewind.StatusCodes.json')}></StatusCodes>
