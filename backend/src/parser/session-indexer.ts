@@ -665,10 +665,20 @@ export class SessionIndexer {
   }
 
   /**
-   * Get all sessions
+   * Invalidate the cache to force a refresh on next getAllSessions call
    */
-  async getAllSessions(): Promise<SessionMetadata[]> {
-    if (this.sessionIndex.size === 0) {
+  invalidateCache(): void {
+    this.sessionIndex.clear();
+    this.sessionFilePaths.clear();
+    this.geminiMappingCache.clear();
+  }
+
+  /**
+   * Get all sessions
+   * @param forceRefresh - If true, rebuild the index even if cached
+   */
+  async getAllSessions(forceRefresh = false): Promise<SessionMetadata[]> {
+    if (forceRefresh || this.sessionIndex.size === 0) {
       await this.buildIndex();
     }
     return Array.from(this.sessionIndex.values());

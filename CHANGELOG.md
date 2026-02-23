@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.4] - 2026-02-23
+
+### Added
+
+- **`recall stop` CLI command** - Stop a running Recall server from another terminal with `npx recall-player stop`. Uses PID file for clean shutdown.
+- **Live session auto-polling** - Session list and Overview pages now auto-refresh every 15 seconds when live sessions are detected. No manual refresh needed to see new sessions appear.
+- **Coding agent support matrix** - Added comprehensive feature support matrix to documentation showing what's supported for Claude, Codex, and Gemini.
+
+### Fixed
+
+- **Overview stats consistency** - Overview page now shows total sessions found locally (all projects) instead of filtering by current working directory. Stats now match across all cards.
+
+---
+
 ## [2.4.3-1] - 2026-02-22
 
 ### Fixed

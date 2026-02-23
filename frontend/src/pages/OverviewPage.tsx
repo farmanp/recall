@@ -9,7 +9,8 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Activity, Clock, Radio, List, ArrowRight, Timer, Folder } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { useSessions, useOverviewStats } from '../hooks/useTranscriptApi';
+import { useOverviewStats } from '../hooks/useTranscriptApi';
+import { useLiveSessionPolling } from '../hooks/useLiveSessionPolling';
 import { LoadingSpinner } from '../components/shared/LoadingSpinner';
 import { ActivityHeatmap } from '../components/overview/ActivityHeatmap';
 import { TokenUsageCard } from '../components/overview/TokenUsageCard';
@@ -17,7 +18,7 @@ import { useConfig } from '../hooks/useConfig';
 
 export const OverviewPage: React.FC = () => {
   const navigate = useNavigate();
-  const { data: sessionsData, isLoading: sessionsLoading } = useSessions({ limit: 5 });
+  const { data: sessionsData, isLoading: sessionsLoading } = useLiveSessionPolling({ limit: 5 });
   const { data: stats, isLoading: statsLoading } = useOverviewStats();
   const { tokenStatsEnabled } = useConfig();
 

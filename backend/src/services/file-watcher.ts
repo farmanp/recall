@@ -3,6 +3,7 @@ import path from 'path';
 import os from 'os';
 import { importTranscript } from './transcript-importer';
 import { geminiHashMapper } from './gemini-hash-mapper';
+import { getSessionIndexer } from '../parser/session-indexer';
 
 /**
  * File watcher instances
@@ -37,6 +38,9 @@ const GEMINI_WATCH_DIR = path.join(os.homedir(), '.gemini', 'tmp');
  * @param filePath - Absolute path to the changed file
  */
 function handleFileChange(filePath: string): void {
+  // Invalidate session indexer cache so new sessions appear immediately
+  getSessionIndexer().invalidateCache();
+
   // Clear existing timer for this file
   const existingTimer = debounceTimers.get(filePath);
   if (existingTimer) {
@@ -68,6 +72,9 @@ function handleFileChange(filePath: string): void {
  * @param filePath - Absolute path to the changed Gemini session file
  */
 function handleGeminiFileChange(filePath: string): void {
+  // Invalidate session indexer cache so new sessions appear immediately
+  getSessionIndexer().invalidateCache();
+
   // Extract hash from path like: ~/.gemini/tmp/{hash}/chats/session-001.json
   const parts = filePath.split(path.sep);
   const tmpIndex = parts.lastIndexOf('tmp');

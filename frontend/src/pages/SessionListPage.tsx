@@ -8,7 +8,8 @@
 
 import React, { useState, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useSessions, useGlobalSearch } from '../hooks/useTranscriptApi';
+import { useGlobalSearch } from '../hooks/useTranscriptApi';
+import { useLiveSessionPolling } from '../hooks/useLiveSessionPolling';
 import type { SessionMetadata, AgentType, SearchResult } from '../types/transcript';
 import { AgentBadge } from '../components/AgentBadge';
 import { ModelBadge } from '../components/ModelBadge';
@@ -99,7 +100,7 @@ export const SessionListPage: React.FC = () => {
   // Determine if we need to bypass CWD filter
   const needsShowAll = showAllProjects || projectFilter || selectedAgent !== 'all';
 
-  const { data, isLoading, error, refetch } = useSessions({
+  const { data, isLoading, error, refetch } = useLiveSessionPolling({
     offset,
     limit: LIMIT,
     ...(selectedAgent !== 'all' && { agent: selectedAgent }),

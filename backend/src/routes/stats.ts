@@ -28,23 +28,15 @@ interface OverviewStats {
 }
 
 /**
- * Check if a session's cwd matches the filter directory
- */
-function matchesCwd(sessionCwd: string, filterCwd: string): boolean {
-  if (!sessionCwd || !filterCwd) return false;
-  const normalizedSession = sessionCwd.replace(/\/$/, '');
-  const normalizedFilter = filterCwd.replace(/\/$/, '');
-  return (
-    normalizedSession === normalizedFilter || normalizedSession.startsWith(normalizedFilter + '/')
-  );
-}
-
-/**
  * GET /api/stats/overview
  * Get aggregated statistics for the dashboard overview
  *
+ * NOTE: Overview stats show ALL sessions found locally (no CWD filter).
+ * This gives users a complete view of their coding activity across all projects.
+ * The Sessions page handles CWD filtering for focused project views.
+ *
  * Response:
- * - totalSessions: Total number of sessions
+ * - totalSessions: Total number of sessions found locally
  * - thisWeek: Sessions created in the last 7 days
  * - avgDurationMs: Average session duration in milliseconds
  * - liveCount: Number of ongoing/live sessions
@@ -55,14 +47,8 @@ router.get('/overview', async (_req: Request, res: Response) => {
   try {
     const indexer = getSessionIndexer();
 
-    // Fetch all sessions
-    let sessions = await indexer.getAllSessions();
-
-    // Apply CWD filter (matching session list behavior)
-    const cwdFilter = indexer.getCwdFilter();
-    if (cwdFilter) {
-      sessions = sessions.filter((s) => matchesCwd(s.cwd, cwdFilter));
-    }
+    // Fetch ALL sessions (no CWD filter - overview shows complete picture)
+    const sessions = await indexer.getAllSessions();
 
     const now = new Date();
     const weekAgo = new Date(now);

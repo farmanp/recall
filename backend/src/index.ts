@@ -1,4 +1,7 @@
 import dotenv from 'dotenv';
+import fs from 'fs';
+import path from 'path';
+import os from 'os';
 import { createServer } from './server';
 import { getDbInstance, closeDatabase, isClaudeMemAvailable } from './db/connection';
 import {
@@ -12,6 +15,31 @@ import { getSessionIndexer } from './parser/session-indexer';
 import { geminiHashMapper } from './services/gemini-hash-mapper';
 import { tokenManager } from './services/token-manager';
 import { isViewerModeEnabled } from './middleware/viewer-mode';
+
+// PID file for graceful shutdown via CLI
+const RECALL_DIR = path.join(os.homedir(), '.recall');
+const PID_FILE = path.join(RECALL_DIR, 'recall.pid');
+
+function writePidFile(): void {
+  try {
+    if (!fs.existsSync(RECALL_DIR)) {
+      fs.mkdirSync(RECALL_DIR, { recursive: true });
+    }
+    fs.writeFileSync(PID_FILE, String(process.pid));
+  } catch (err) {
+    console.warn('Warning: Could not write PID file:', err);
+  }
+}
+
+function removePidFile(): void {
+  try {
+    if (fs.existsSync(PID_FILE)) {
+      fs.unlinkSync(PID_FILE);
+    }
+  } catch (err) {
+    // Ignore errors during cleanup
+  }
+}
 
 // Load environment variables
 dotenv.config();
@@ -114,6 +142,9 @@ function start(): void {
 
     // Start listening
     const server = app.listen(Number(PORT), HOST, () => {
+      // Write PID file for CLI stop command
+      writePidFile();
+
       console.log(`\n🚀 Recall Server`);
       console.log(`📡 Server running on http://${HOST}:${PORT}`);
       console.log(
@@ -136,6 +167,9 @@ function start(): void {
     const shutdown = () => {
       server.close(() => {
         console.log('✅ HTTP server closed');
+
+        // Remove PID file
+        removePidFile();
 
         // Stop file watcher
         if (AUTO_WATCH) {

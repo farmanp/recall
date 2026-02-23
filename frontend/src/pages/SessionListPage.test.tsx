@@ -5,10 +5,12 @@ import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import type { SessionListResponse, SearchGlobalResponse } from '../types/transcript';
 import { SessionListPage } from './SessionListPage';
 import * as transcriptHooks from '../hooks/useTranscriptApi';
+import * as livePollingHooks from '../hooks/useLiveSessionPolling';
 
 vi.mock('../hooks/useTranscriptApi');
+vi.mock('../hooks/useLiveSessionPolling');
 
-const mockedUseSessions = vi.mocked(transcriptHooks.useSessions);
+const mockedUseLiveSessionPolling = vi.mocked(livePollingHooks.useLiveSessionPolling);
 const mockedUseGlobalSearch = vi.mocked(transcriptHooks.useGlobalSearch);
 
 const baseSessions: SessionListResponse = {
@@ -60,11 +62,13 @@ function renderWithRouter(initialEntries: string[]) {
 
 describe('SessionListPage', () => {
   beforeEach(() => {
-    mockedUseSessions.mockReturnValue({
+    mockedUseLiveSessionPolling.mockReturnValue({
       data: baseSessions,
       isLoading: false,
       error: null,
       refetch: vi.fn(),
+      hasLiveSessions: false,
+      isPolling: false,
     });
 
     mockedUseGlobalSearch.mockReturnValue({

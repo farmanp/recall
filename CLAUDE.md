@@ -441,6 +441,56 @@ The backend (`base-parser.ts`) has equivalent methods for server-side normalizat
 | Codex  | `~/.codex/sessions/YYYY/MM/`    | JSONL  | `{type, payload}` wrapper |
 | Gemini | `~/.gemini/tmp/{hash}/chats/`   | JSON   | `session-*.json` files    |
 
+### Coding Agent Support Matrix
+
+Feature support varies by agent due to differences in session file formats and available metadata.
+
+| Feature                    | Claude Code | Codex CLI | Gemini CLI | Notes                             |
+| -------------------------- | :---------: | :-------: | :--------: | --------------------------------- |
+| **Core Features**          |
+| Session playback           |     ✅      |    ✅     |     ✅     | All agents supported              |
+| Session list/filtering     |     ✅      |    ✅     |     ✅     |                                   |
+| Timeline scrubber          |     ✅      |    ✅     |     ✅     |                                   |
+| Frame navigation           |     ✅      |    ✅     |     ✅     |                                   |
+| **Session State**          |
+| Live session detection     |     ✅      |    ✅     |     ❌     | Content-based analysis            |
+| Session duration           |     ✅      |    ✅     |     ✅     |                                   |
+| Event count                |     ✅      |    ✅     |     ✅     |                                   |
+| **Metadata**               |
+| Project/folder name        |     ✅      |    ✅     |     ⚠️     | Gemini uses hash mapping          |
+| Session slug               |     ✅      |    ⚠️     |     ❌     | Codex defaults to 'codex-session' |
+| Model name                 |     ✅      |    ✅     |     ✅     |                                   |
+| First user message         |     ✅      |    ✅     |     ✅     |                                   |
+| Working directory (cwd)    |     ✅      |    ✅     |     ⚠️     | Gemini requires hash mapping      |
+| **Token Usage**            |
+| Input/output tokens        |     ✅      |    ✅     |     ❌     | Gemini format lacks token data    |
+| Cache tokens               |     ✅      |    ❌     |     ❌     | Claude-specific feature           |
+| Cost estimation            |     ✅      |    ✅     |     ❌     |                                   |
+| **Content Analysis**       |
+| Thinking blocks            |     ✅      |    ✅     |     ❌     |                                   |
+| Tool execution             |     ✅      |    ✅     |     ✅     |                                   |
+| File artifacts             |     ✅      |    ✅     |     ✅     | Via tool normalization            |
+| CLAUDE.md detection        |     ✅      |    ❌     |     ❌     | Claude-specific                   |
+| **Advanced Features**      |
+| Checkpoints                |     ✅      |    ✅     |     ✅     |                                   |
+| Rewind                     |     ✅      |    ✅     |     ✅     |                                   |
+| Session sharing            |     ✅      |    ✅     |     ✅     |                                   |
+| LLM summaries              |     ✅      |    ✅     |     ✅     |                                   |
+| Git context                |     ✅      |    ✅     |     ⚠️     | Depends on cwd resolution         |
+| Auto-import (file watcher) |     ✅      |    ❌     |     ✅     |                                   |
+
+**Legend:**
+
+- ✅ Full support
+- ⚠️ Partial support (see notes)
+- ❌ Not supported
+
+**Notes on partial support:**
+
+- **Gemini hash mapping**: Gemini CLI stores sessions in hash-based directories (`~/.gemini/tmp/{hash}/`). Recall maintains a mapping table to resolve these hashes to project paths, but this requires the session to be started while Recall is running.
+- **Codex session slug**: Codex sessions don't include a human-readable slug in their format, so they default to 'codex-session'.
+- **Live session detection**: Uses content-based analysis (tracking thinking/tool_use vs text_output events). Gemini's JSON format doesn't include the granular event types needed for this analysis.
+
 ## Features
 
 ### Checkpoints
