@@ -149,15 +149,17 @@ function startClaudeWatcher(): void {
 
     claudeWatcher
       .on('add', (filePath: string) => {
-        // Only process .jsonl files
+        // Only process .jsonl files, skip subagent files
         if (!filePath.endsWith('.jsonl')) return;
+        if (filePath.includes('/subagents/')) return;
         const relativePath = path.relative(CLAUDE_WATCH_DIR, filePath);
         console.log(`[FileWatcher] New Claude file detected: ${relativePath}`);
         handleFileChange(filePath);
       })
       .on('change', (filePath: string) => {
-        // Only process .jsonl files
+        // Only process .jsonl files, skip subagent files
         if (!filePath.endsWith('.jsonl')) return;
+        if (filePath.includes('/subagents/')) return;
         const relativePath = path.relative(CLAUDE_WATCH_DIR, filePath);
         console.log(`[FileWatcher] Claude file changed: ${relativePath}`);
         handleFileChange(filePath);
