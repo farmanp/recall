@@ -157,10 +157,15 @@ export function createServer(): Application {
         return;
       }
 
-      const indexPath = path.join(publicDir, 'index.html');
+      const indexPath = path.resolve(publicDir, 'index.html');
       // Only serve index.html if it exists (frontend is built)
       if (require('fs').existsSync(indexPath)) {
-        res.sendFile(indexPath);
+        res.sendFile(indexPath, (err) => {
+          if (err && !res.headersSent) {
+            // Fallback: redirect to root if sendFile fails
+            res.redirect('/');
+          }
+        });
       } else {
         next();
       }

@@ -833,7 +833,7 @@ const EmptyState: React.FC<EmptyStateProps> = ({
             {[
               { step: '01', text: 'npx recall-player', desc: 'Run the app' },
               { step: '02', text: 'http://localhost:3001', desc: 'Open dashboard' },
-              { step: '03', text: 'claude', desc: 'Start a coding session' },
+              { step: '03', text: 'claude / codex / gemini', desc: 'Start a session' },
             ].map(({ step, text, desc }) => (
               <div key={step} className="flex items-center gap-3 font-mono text-sm">
                 <span className="text-accent-amber">{step}</span>
