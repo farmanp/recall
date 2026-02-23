@@ -7,9 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.4.3] - 2026-02-22
 
+### Added
+
+- **`recall import` CLI command** - New user-friendly way to backfill existing sessions into the database. Run `npx recall-player import` instead of curl commands. Supports `--stats` and `--no-skip` flags.
+- **`RECALL_HIDE_TOKEN_STATS` config** - Environment variable for Vertex AI users where token usage data isn't available in transcripts. Hides the Token Usage card from the Overview dashboard.
+
 ### Fixed
 
 - **Missing glob dependency** - Added `glob` package to dependencies. Was causing "Cannot find module 'glob'" error on fresh `npx` installs.
+- **Better error messages** - Analysis features now show clearer errors when sessions aren't imported to database, with guidance on how to fix.
 
 ---
 
