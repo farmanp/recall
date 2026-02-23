@@ -4,17 +4,30 @@ import path from 'path';
 import os from 'os';
 import { createServer } from './server';
 import { getDbInstance, closeDatabase, isClaudeMemAvailable } from './db/connection';
-import {
-  getTranscriptDbInstance,
-  closeTranscriptDatabase,
-  getTranscriptDbPath,
-} from './db/transcript-connection';
+import { getTranscriptDbInstance, closeTranscriptDatabase } from './db/transcript-connection';
 import { initializeTranscriptSchema } from './db/transcript-queries';
 import { startWatcher, stopWatcher } from './services/file-watcher';
 import { getSessionIndexer } from './parser/session-indexer';
 import { geminiHashMapper } from './services/gemini-hash-mapper';
 import { tokenManager } from './services/token-manager';
 import { isViewerModeEnabled } from './middleware/viewer-mode';
+import {
+  printBanner,
+  printStatus,
+  printDivider,
+  printShutdownHint,
+  printNewAuthToken,
+  printShutdownMessage,
+  printShutdownComplete,
+  printError,
+  printWarning,
+  printProgress,
+} from './utils/cli-ui';
+
+// Read package.json for version
+const packageJson = JSON.parse(
+  fs.readFileSync(path.join(__dirname, '../../package.json'), 'utf-8')
+);
 
 // PID file for graceful shutdown via CLI
 const RECALL_DIR = path.join(os.homedir(), '.recall');
@@ -27,7 +40,7 @@ function writePidFile(): void {
     }
     fs.writeFileSync(PID_FILE, String(process.pid));
   } catch (err) {
-    console.warn('Warning: Could not write PID file:', err);
+    printWarning(`Could not write PID file: ${err}`);
   }
 }
 
@@ -78,63 +91,45 @@ const STARTUP_CWD = getProjectRoot();
 function start(): void {
   try {
     // Test claude-mem database connection (optional)
+    let claudeMemSessionCount = 0;
     if (isClaudeMemAvailable()) {
-      console.log('Testing claude-mem database connection...');
+      printProgress('Testing claude-mem database connection...');
       const db = getDbInstance();
       if (db) {
         const result = db.prepare('SELECT COUNT(*) as count FROM sdk_sessions').get() as {
           count: number;
         };
-        console.log(`✅ Claude-mem database: ${result.count} sessions found`);
+        claudeMemSessionCount = result.count;
       }
-    } else {
-      console.log('⚠️  Claude-mem database not found - commentary features disabled');
     }
 
     // Initialize transcript database
-    console.log('Initializing transcript database...');
+    printProgress('Initializing transcript database...');
     initializeTranscriptSchema();
     const transcriptDb = getTranscriptDbInstance();
     const transcriptResult = transcriptDb
       .prepare('SELECT COUNT(*) as count FROM session_metadata')
       .get() as { count: number };
-    console.log(`✅ Transcript database: ${transcriptResult.count} sessions imported`);
-    console.log(`   Location: ${getTranscriptDbPath()}`);
 
     // Configure CWD filter for session indexer
     const indexer = getSessionIndexer();
     if (FILTER_BY_CWD) {
       indexer.setCwdFilter(STARTUP_CWD);
-      console.log(`✅ CWD filter: enabled (${STARTUP_CWD})`);
     } else {
       indexer.setCwdFilter(null);
-      console.log(`⏸️  CWD filter disabled (RECALL_FILTER_CWD=false)`);
     }
 
     // Initialize Gemini hash mapper with current working directory
-    // This captures the hash→project mapping for the current directory
-    // so that new Gemini sessions from this project are recognized
     geminiHashMapper.setCwd(STARTUP_CWD);
-    console.log(`✅ Gemini hash mapper: initialized for ${STARTUP_CWD}`);
 
     // Initialize authentication token
     const shouldRegenerateToken = process.argv.includes('--regenerate-token');
     const { token, isNew } = tokenManager.initialize(shouldRegenerateToken);
-    if (isNew || shouldRegenerateToken) {
-      console.log(`\n🔑 Authentication Token (save this - shown only once):`);
-      console.log(`   ${token}`);
-      console.log(`   Stored at: ${tokenManager.getTokenFilePath()}\n`);
-    } else {
-      console.log(`✅ Auth token: loaded from ${tokenManager.getTokenFilePath()}`);
-    }
 
     // Start file watcher (monitors both Claude and Gemini sessions)
     if (AUTO_WATCH) {
-      console.log('Starting file watchers for auto-import...');
+      printProgress('Starting file watchers...');
       startWatcher();
-      console.log(`✅ File watcher: monitoring ~/.claude/projects/ and ~/.gemini/tmp/`);
-    } else {
-      console.log('⏸️  File watcher disabled (AUTO_WATCH=false)');
     }
 
     // Create Express app
@@ -145,39 +140,49 @@ function start(): void {
       // Write PID file for CLI stop command
       writePidFile();
 
-      // Clear startup banner
-      console.log('');
-      console.log('╔════════════════════════════════════════════════════════════╗');
-      console.log('║                                                            ║');
-      console.log('║   🎬 RECALL SERVER RUNNING                                 ║');
-      console.log('║                                                            ║');
-      console.log(`║   URL: http://${HOST}:${PORT}`.padEnd(61) + '║');
-      console.log('║                                                            ║');
-      console.log('╚════════════════════════════════════════════════════════════╝');
-      console.log('');
-      console.log(
-        `🔒 Security: auth=${process.env.RECALL_DISABLE_AUTH === 'true' ? 'disabled' : 'enabled'}, viewer-mode=${isViewerModeEnabled() ? 'on' : 'off'}`
-      );
-      if (isClaudeMemAvailable()) {
-        console.log(`💾 Claude-mem: connected`);
-      } else {
-        console.log(`💾 Claude-mem: not available`);
+      // Print the styled banner
+      printBanner(packageJson.version);
+
+      // Print status items
+      const authEnabled = process.env.RECALL_DISABLE_AUTH !== 'true';
+      const viewerModeOn = isViewerModeEnabled();
+      const claudeMemAvailable = isClaudeMemAvailable();
+
+      printStatus([
+        { label: 'Server ready', value: `http://${HOST}:${PORT}`, ok: true },
+        { label: 'Sessions loaded', value: `${transcriptResult.count} indexed`, ok: true },
+        {
+          label: 'File watcher',
+          value: AUTO_WATCH ? 'enabled' : 'disabled',
+          ok: AUTO_WATCH,
+        },
+        {
+          label: 'Claude-mem',
+          value: claudeMemAvailable
+            ? `connected (${claudeMemSessionCount} sessions)`
+            : 'not available',
+          ok: claudeMemAvailable,
+        },
+        {
+          label: 'Security',
+          value: `auth=${authEnabled ? 'on' : 'off'}, viewer=${viewerModeOn ? 'on' : 'off'}`,
+          ok: authEnabled,
+        },
+      ]);
+
+      // Show new auth token if generated
+      if (isNew || shouldRegenerateToken) {
+        printNewAuthToken(token, tokenManager.getTokenFilePath());
       }
-      console.log(`💾 Sessions: ${transcriptResult.count} imported`);
-      console.log('');
-      console.log('💡 First time? Import existing sessions:');
-      console.log('   npx recall-player import');
-      console.log('');
-      console.log('─────────────────────────────────────────────────────────────');
-      console.log('  To stop: Ctrl+C  or  npx recall-player stop');
-      console.log('─────────────────────────────────────────────────────────────');
-      console.log('');
+
+      printDivider();
+      printShutdownHint();
     });
 
     // Graceful shutdown
     const shutdown = () => {
       server.close(() => {
-        console.log('✅ HTTP server closed');
+        printShutdownComplete('HTTP server closed');
 
         // Remove PID file
         removePidFile();
@@ -185,33 +190,33 @@ function start(): void {
         // Stop file watcher
         if (AUTO_WATCH) {
           stopWatcher();
-          console.log('✅ File watcher stopped');
+          printShutdownComplete('File watcher stopped');
         }
 
         // Close database connections
         if (isClaudeMemAvailable()) {
           closeDatabase();
-          console.log('✅ Claude-mem database closed');
+          printShutdownComplete('Claude-mem database closed');
         }
 
         closeTranscriptDatabase();
-        console.log('✅ Transcript database closed');
+        printShutdownComplete('Transcript database closed');
 
         process.exit(0);
       });
     };
 
     process.on('SIGTERM', () => {
-      console.log('\n⏹️  SIGTERM received, shutting down gracefully...');
+      printShutdownMessage('SIGTERM');
       shutdown();
     });
 
     process.on('SIGINT', () => {
-      console.log('\n⏹️  SIGINT received, shutting down gracefully...');
+      printShutdownMessage('SIGINT');
       shutdown();
     });
   } catch (error) {
-    console.error('❌ Failed to start server:', error);
+    printError('Failed to start server', error);
     process.exit(1);
   }
 }
