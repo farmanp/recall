@@ -9,6 +9,7 @@ import { AgentParser } from './base-parser';
 import { ClaudeParser } from './claude-parser';
 import { CodexParser } from './codex-parser';
 import { GeminiParser } from './gemini-parser';
+import { CopilotParser } from './copilot-parser';
 import { detectAgentFromPath, AgentType } from './agent-detector';
 import { ParsedTranscript, SessionTimeline } from '../types/transcript';
 
@@ -34,6 +35,7 @@ export class ParserFactory {
         ['claude', new ClaudeParser()],
         ['codex', new CodexParser()],
         ['gemini', new GeminiParser()],
+        ['copilot', new CopilotParser()],
       ]);
     }
   }
@@ -162,6 +164,20 @@ export class ParserFactory {
       // Check for Gemini markers
       if ((entry as any).model?.startsWith('gemini')) {
         return 'gemini';
+      }
+
+      // Check for Copilot markers
+      const copilotEvent = (entry as any).copilotEvent;
+      if (copilotEvent?.type && copilotEvent?.data && copilotEvent?.id) {
+        const copilotEventTypes = [
+          'session.start',
+          'user.message',
+          'assistant.message',
+          'assistant.reasoning',
+        ];
+        if (copilotEventTypes.includes(copilotEvent.type)) {
+          return 'copilot';
+        }
       }
     }
 

@@ -27,6 +27,7 @@ export class SessionIndexer {
       ['claude', claudeDir],
       ['codex', path.join(os.homedir(), '.codex', 'sessions')],
       ['gemini', path.join(os.homedir(), '.gemini', 'tmp')],
+      ['copilot', path.join(os.homedir(), '.copilot', 'session-state')],
     ]);
 
     // Parse RECALL_EXCLUDE_PATTERNS env var (comma-separated directory patterns)
@@ -152,6 +153,20 @@ export class SessionIndexer {
           console.warn(`Failed to index Gemini session ${sessionPath}:`, error);
         }
       }
+    } else if (agent === 'copilot') {
+      // Copilot: Structure - session-state/{sessionId}/events.jsonl
+      const eventFiles = await this.findCopilotSessionFiles(agentDir);
+
+      for (const sessionPath of eventFiles) {
+        try {
+          const metadata = await this.extractSessionMetadata(sessionPath, agent);
+          this.sessionIndex.set(metadata.sessionId, metadata);
+          this.sessionFilePaths.set(metadata.sessionId, sessionPath);
+          sessions.push(metadata);
+        } catch (error) {
+          console.warn(`Failed to index Copilot session ${sessionPath}:`, error);
+        }
+      }
     } else {
       // Claude (and others): Nested structure - projects/{project}/*.jsonl
       let projectDirs: string[];
@@ -221,6 +236,7 @@ export class SessionIndexer {
       claude: 0,
       codex: 0,
       gemini: 0,
+      copilot: 0,
       unknown: 0,
     };
 
@@ -244,6 +260,14 @@ export class SessionIndexer {
         // Gemini: Count session-*.json files in tmp/{hash}/chats/ subdirectories
         try {
           const allFiles = await this.findGeminiSessionFiles(agentDir);
+          sessionCount = allFiles.length;
+        } catch {
+          sessionCount = 0;
+        }
+      } else if (agentType === 'copilot') {
+        // Copilot: Count events.jsonl files in session-state/{sessionId}/ subdirectories
+        try {
+          const allFiles = await this.findCopilotSessionFiles(agentDir);
           sessionCount = allFiles.length;
         } catch {
           sessionCount = 0;
@@ -306,6 +330,12 @@ export class SessionIndexer {
     if (agent === 'gemini') {
       const content = await fs.readFile(filePath, 'utf-8');
       return this.extractGeminiMetadata(filePath, content);
+    }
+
+    // Handle Copilot's event-based JSONL format
+    if (agent === 'copilot') {
+      const content = await fs.readFile(filePath, 'utf-8');
+      return this.extractCopilotMetadata(filePath, content);
     }
 
     // Extract session ID from filename
@@ -655,6 +685,89 @@ export class SessionIndexer {
   }
 
   /**
+   * Extract metadata from Copilot session file (event-based JSONL format)
+   */
+  private extractCopilotMetadata(filePath: string, content: string): SessionMetadata {
+    const lines = content.split('\n').filter((line) => line.trim());
+
+    // Parse events
+    const events: any[] = [];
+    for (const line of lines) {
+      try {
+        events.push(JSON.parse(line));
+      } catch (error) {
+        // Skip malformed lines
+        continue;
+      }
+    }
+
+    if (events.length === 0) {
+      throw new Error('Empty Copilot session file (no valid events)');
+    }
+
+    // Extract session ID from directory name
+    const pathParts = filePath.split(path.sep);
+    const sessionStateIndex = pathParts.indexOf('session-state');
+    const sessionIdRaw =
+      sessionStateIndex >= 0 && sessionStateIndex + 1 < pathParts.length
+        ? pathParts[sessionStateIndex + 1]
+        : path.basename(path.dirname(filePath));
+    const sessionId = sessionIdRaw || 'unknown-session';
+
+    // Find session.start event for metadata
+    const sessionStartEvent = events.find((e) => e.type === 'session.start');
+    const copilotVersion = sessionStartEvent?.data?.copilotVersion;
+
+    // Find session.info event for cwd (if it exists)
+    const sessionInfoEvent = events.find((e) => e.type === 'session.info' && e.data?.context?.cwd);
+    const cwd = sessionInfoEvent?.data?.context?.cwd || '';
+
+    // Extract project name from cwd (last path component)
+    let projectName = 'Copilot Session';
+    if (cwd) {
+      const cwdParts = cwd.split(path.sep).filter(Boolean);
+      projectName = cwdParts[cwdParts.length - 1] || 'Copilot Session';
+    }
+
+    // Extract first user message for slug
+    const firstUserEvent = events.find((e) => e.type === 'user.message');
+    const firstUserMessage =
+      firstUserEvent?.data?.content || firstUserEvent?.data?.transformedContent || '';
+    const slug: string =
+      (firstUserMessage
+        ? firstUserMessage.substring(0, 50).replace(/\n/g, ' ')
+        : 'copilot-session') || 'copilot-session';
+
+    // Timestamps
+    const firstEvent = events[0];
+    const lastEvent = events[events.length - 1];
+    const startTime = firstEvent?.timestamp;
+    const endTime = lastEvent?.timestamp;
+    const duration =
+      startTime && endTime
+        ? (new Date(endTime).getTime() - new Date(startTime).getTime()) / 1000
+        : undefined;
+
+    // Detect if session is ongoing (heuristic: last event is NOT assistant.turn_end)
+    const isOngoing = lastEvent?.type !== 'assistant.turn_end';
+
+    return {
+      sessionId,
+      slug,
+      project: projectName,
+      agent: 'copilot',
+      model: copilotVersion,
+      startTime,
+      endTime,
+      duration,
+      eventCount: events.length,
+      cwd,
+      firstUserMessage: firstUserMessage.substring(0, 200),
+      isOngoing,
+    };
+  }
+
+  /**
    * Get session metadata by ID
    */
   async getSessionMetadata(sessionId: string): Promise<SessionMetadata | undefined> {
@@ -739,6 +852,12 @@ export class SessionIndexer {
           });
           if (match) {
             return match;
+          }
+        } else if (agentType === 'copilot') {
+          // Copilot: Structure is session-state/{sessionId}/events.jsonl
+          const sessionPath = path.join(agentDir, sessionId, 'events.jsonl');
+          if (await this.fileExists(sessionPath)) {
+            return sessionPath;
           }
         } else {
           // Claude: Nested structure - search in project subdirectories
@@ -829,6 +948,33 @@ export class SessionIndexer {
       }
     } catch (error) {
       console.warn(`Error scanning Gemini sessions in ${tmpDir}:`, error);
+    }
+
+    return results;
+  }
+
+  /**
+   * Find Copilot session files
+   * Structure: session-state/{sessionId}/events.jsonl
+   */
+  private async findCopilotSessionFiles(sessionStateDir: string): Promise<string[]> {
+    const results: string[] = [];
+
+    try {
+      const sessionDirs = await fs.readdir(sessionStateDir, { withFileTypes: true });
+
+      for (const sessionEntry of sessionDirs) {
+        if (!sessionEntry.isDirectory()) continue;
+
+        const eventsFile = path.join(sessionStateDir, sessionEntry.name, 'events.jsonl');
+
+        // Check if events.jsonl exists
+        if (await this.fileExists(eventsFile)) {
+          results.push(eventsFile);
+        }
+      }
+    } catch (error) {
+      console.warn(`Error scanning Copilot sessions in ${sessionStateDir}:`, error);
     }
 
     return results;

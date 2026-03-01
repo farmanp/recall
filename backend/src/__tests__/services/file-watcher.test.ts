@@ -2,16 +2,18 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import path from 'path';
 import os from 'os';
 
-// Track handlers separately for Claude and Gemini watchers
+// Track handlers separately for Claude, Gemini, and Copilot watchers
 const claudeHandlers = new Map<string, (path: string) => void>();
 const geminiHandlers = new Map<string, (path: string) => void>();
+const copilotHandlers = new Map<string, (path: string) => void>();
 const closeMocks: Array<ReturnType<typeof vi.fn>> = [];
 
 let watchCallCount = 0;
 const watchMock = vi.fn(() => {
   const currentCall = watchCallCount++;
-  const isClaudeWatcher = currentCall === 0;
-  const handlers = isClaudeWatcher ? claudeHandlers : geminiHandlers;
+  // 0 = Claude, 1 = Gemini, 2 = Copilot
+  const handlers =
+    currentCall === 0 ? claudeHandlers : currentCall === 1 ? geminiHandlers : copilotHandlers;
   const closeMock = vi.fn().mockResolvedValue(undefined);
   closeMocks.push(closeMock);
 
@@ -51,6 +53,7 @@ describe('file-watcher', () => {
     vi.useFakeTimers();
     claudeHandlers.clear();
     geminiHandlers.clear();
+    copilotHandlers.clear();
     closeMocks.length = 0;
     watchCallCount = 0;
     watchMock.mockClear();
@@ -72,27 +75,31 @@ describe('file-watcher', () => {
     expect(isWatcherRunning()).toBe(false);
     startWatcher();
     expect(isWatcherRunning()).toBe(true);
-    // Now creates both Claude and Gemini watchers
-    expect(watchMock).toHaveBeenCalledTimes(2);
+    // Now creates Claude, Gemini, and Copilot watchers
+    expect(watchMock).toHaveBeenCalledTimes(3);
 
     // Test Claude watcher handler
     const claudeAddHandler = claudeHandlers.get('add');
     expect(claudeAddHandler).toBeDefined();
 
-    claudeAddHandler?.('my-project/session.jsonl');
+    const claudePath = path.join(
+      process.env.HOME!,
+      '.claude',
+      'projects',
+      'my-project/session.jsonl'
+    );
+    claudeAddHandler?.(claudePath);
     expect(importTranscript).not.toHaveBeenCalled();
 
     vi.advanceTimersByTime(2000);
     await Promise.resolve();
 
-    expect(importTranscript).toHaveBeenCalledWith(
-      path.join(process.env.HOME!, '.claude', 'projects', 'my-project/session.jsonl')
-    );
+    expect(importTranscript).toHaveBeenCalledWith(claudePath);
 
     await stopWatcher();
     expect(isWatcherRunning()).toBe(false);
-    // Both watchers should be closed
-    expect(closeMocks.length).toBe(2);
+    // All three watchers should be closed
+    expect(closeMocks.length).toBe(3);
     closeMocks.forEach((mock) => {
       expect(mock).toHaveBeenCalledTimes(1);
     });
@@ -112,7 +119,13 @@ describe('file-watcher', () => {
     expect(geminiAddHandler).toBeDefined();
 
     // Simulate a new Gemini session file
-    geminiAddHandler?.('abc123hash/chats/session-001.json');
+    const geminiPath = path.join(
+      process.env.HOME!,
+      '.gemini',
+      'tmp',
+      'abc123hash/chats/session-001.json'
+    );
+    geminiAddHandler?.(geminiPath);
     expect(importTranscript).not.toHaveBeenCalled();
 
     // Verify hash mapper was called with the extracted hash
@@ -121,13 +134,10 @@ describe('file-watcher', () => {
     vi.advanceTimersByTime(2000);
     await Promise.resolve();
 
-    expect(importTranscript).toHaveBeenCalledWith(
-      path.join(process.env.HOME!, '.gemini', 'tmp', 'abc123hash/chats/session-001.json'),
-      {
-        agent: 'gemini',
-        resolvedProjectPath: '/test/project/path',
-      }
-    );
+    expect(importTranscript).toHaveBeenCalledWith(geminiPath, {
+      agent: 'gemini',
+      resolvedProjectPath: '/test/project/path',
+    });
 
     await stopWatcher();
   });

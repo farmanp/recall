@@ -10,6 +10,7 @@ import { getSessionIndexer } from '../parser/session-indexer';
  */
 let claudeWatcher: FSWatcher | null = null;
 let geminiWatcher: FSWatcher | null = null;
+let copilotWatcher: FSWatcher | null = null;
 
 /**
  * Debounce timers for file changes
@@ -31,6 +32,11 @@ const CLAUDE_WATCH_DIR = path.join(os.homedir(), '.claude', 'projects');
  * Directory to watch for Gemini session files
  */
 const GEMINI_WATCH_DIR = path.join(os.homedir(), '.gemini', 'tmp');
+
+/**
+ * Directory to watch for Copilot session files
+ */
+const COPILOT_WATCH_DIR = path.join(os.homedir(), '.copilot', 'session-state');
 
 /**
  * Handles a file change event with debouncing
@@ -234,10 +240,66 @@ function startGeminiWatcher(): void {
 }
 
 /**
- * Starts watching directories for both Claude and Gemini session files
+ * Starts the Copilot watcher for events.jsonl files in ~/.copilot/session-state/
+ */
+function startCopilotWatcher(): void {
+  if (copilotWatcher) {
+    console.warn('[FileWatcher] Copilot watcher is already running');
+    return;
+  }
+
+  console.log(`[FileWatcher] Starting Copilot watcher on: ${COPILOT_WATCH_DIR}`);
+
+  try {
+    // Watch the directory itself, filter for events.jsonl in session subdirectories
+    copilotWatcher = chokidar.watch(COPILOT_WATCH_DIR, {
+      persistent: true,
+      ignoreInitial: false,
+      // Use polling on macOS for reliability with new file detection
+      usePolling: process.platform === 'darwin',
+      interval: 1000,
+      awaitWriteFinish: {
+        stabilityThreshold: 1000,
+        pollInterval: 200,
+      },
+      // Copilot sessions are stored under ~/.copilot/session-state/{sessionId}/events.jsonl
+      depth: 2,
+    });
+
+    copilotWatcher
+      .on('add', (filePath: string) => {
+        // Only process events.jsonl files
+        if (!filePath.endsWith('events.jsonl')) return;
+        const relativePath = path.relative(COPILOT_WATCH_DIR, filePath);
+        console.log(`[FileWatcher] New Copilot session detected: ${relativePath}`);
+        handleFileChange(filePath);
+      })
+      .on('change', (filePath: string) => {
+        // Only process events.jsonl files
+        if (!filePath.endsWith('events.jsonl')) return;
+        const relativePath = path.relative(COPILOT_WATCH_DIR, filePath);
+        console.log(`[FileWatcher] Copilot session changed: ${relativePath}`);
+        handleFileChange(filePath);
+      })
+      .on('error', (error: unknown) => {
+        console.error('[FileWatcher] Copilot watcher error:', error);
+      })
+      .on('ready', () => {
+        console.log('[FileWatcher] Copilot watcher initial scan complete. Ready for changes.');
+      });
+  } catch (error) {
+    console.error('[FileWatcher] Failed to start Copilot watcher:', error);
+    copilotWatcher = null;
+    throw error;
+  }
+}
+
+/**
+ * Starts watching directories for Claude, Gemini, and Copilot session files
  *
  * Claude: ~/.claude/projects/ for .jsonl files
  * Gemini: ~/.gemini/tmp/ for session-*.json files
+ * Copilot: ~/.copilot/session-state/ for events.jsonl files
  *
  * When files are added or modified, they will be automatically
  * imported after a 2-second debounce period.
@@ -245,15 +307,16 @@ function startGeminiWatcher(): void {
  * @throws Error if watchers are already running
  */
 export function startWatcher(): void {
-  if (claudeWatcher || geminiWatcher) {
+  if (claudeWatcher || geminiWatcher || copilotWatcher) {
     console.warn('[FileWatcher] One or more watchers are already running');
     return;
   }
 
-  console.log('[FileWatcher] Starting file watchers for Claude and Gemini sessions...');
+  console.log('[FileWatcher] Starting file watchers for Claude, Gemini, and Copilot sessions...');
 
   startClaudeWatcher();
   startGeminiWatcher();
+  startCopilotWatcher();
 
   console.log('[FileWatcher] All file watchers started');
 }
@@ -261,10 +324,10 @@ export function startWatcher(): void {
 /**
  * Stops all file watchers and cleans up resources
  *
- * Clears all pending debounce timers and closes both Claude and Gemini watcher instances.
+ * Clears all pending debounce timers and closes all watcher instances.
  */
 export async function stopWatcher(): Promise<void> {
-  if (!claudeWatcher && !geminiWatcher) {
+  if (!claudeWatcher && !geminiWatcher && !copilotWatcher) {
     console.warn('[FileWatcher] No watchers running');
     return;
   }
@@ -309,6 +372,21 @@ export async function stopWatcher(): Promise<void> {
     }
   }
 
+  // Close Copilot watcher
+  if (copilotWatcher) {
+    try {
+      await copilotWatcher.close();
+      copilotWatcher = null;
+      console.log('[FileWatcher] Copilot watcher stopped');
+    } catch (error) {
+      console.error('[FileWatcher] Error stopping Copilot watcher:', error);
+      copilotWatcher = null;
+      if (error instanceof Error) {
+        errors.push(error);
+      }
+    }
+  }
+
   console.log('[FileWatcher] All file watchers stopped');
 
   if (errors.length > 0) {
@@ -322,7 +400,7 @@ export async function stopWatcher(): Promise<void> {
  * @returns True if at least one watcher is active, false otherwise
  */
 export function isWatcherRunning(): boolean {
-  return claudeWatcher !== null || geminiWatcher !== null;
+  return claudeWatcher !== null || geminiWatcher !== null || copilotWatcher !== null;
 }
 
 /**
@@ -341,4 +419,13 @@ export function isClaudeWatcherRunning(): boolean {
  */
 export function isGeminiWatcherRunning(): boolean {
   return geminiWatcher !== null;
+}
+
+/**
+ * Returns whether the Copilot watcher is currently running
+ *
+ * @returns True if Copilot watcher is active, false otherwise
+ */
+export function isCopilotWatcherRunning(): boolean {
+  return copilotWatcher !== null;
 }

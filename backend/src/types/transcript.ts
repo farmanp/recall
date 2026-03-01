@@ -7,7 +7,7 @@
 /**
  * Supported AI coding agent types
  */
-export type AgentType = 'claude' | 'codex' | 'gemini' | 'unknown';
+export type AgentType = 'claude' | 'codex' | 'gemini' | 'copilot' | 'unknown';
 
 /**
  * Token usage metrics from API response

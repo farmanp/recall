@@ -1,7 +1,7 @@
 /**
  * Tool Name Normalization Utility
  *
- * Centralizes mapping of agent-specific tool names (Claude, Gemini, Codex)
+ * Centralizes mapping of agent-specific tool names (Claude, Gemini, Codex, Copilot)
  * to canonical categories (read, write, edit, shell, other).
  *
  * This enables artifact detection to work consistently across all supported agents.
@@ -11,7 +11,7 @@ export type ToolCategory = 'read' | 'write' | 'edit' | 'shell' | 'other';
 
 /**
  * Mapping of tool names to their canonical categories.
- * Includes all known tool names from Claude Code, Gemini CLI, and Codex CLI.
+ * Includes all known tool names from Claude Code, Gemini CLI, Codex CLI, and GitHub Copilot CLI.
  */
 const TOOL_CATEGORY_MAP: Record<string, ToolCategory> = {
   // Claude Code tools
@@ -36,6 +36,14 @@ const TOOL_CATEGORY_MAP: Record<string, ToolCategory> = {
 
   // Codex CLI tools (OpenAI function calling)
   shell_command: 'shell',
+
+  // GitHub Copilot CLI tools
+  bash: 'shell',
+  view: 'read',
+  apply_patch: 'edit',
+  write_file: 'write',
+  report_intent: 'shell',
+  // glob is already defined above for Gemini
 };
 
 /**

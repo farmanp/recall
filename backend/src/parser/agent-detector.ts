@@ -11,7 +11,7 @@ import os from 'os';
 /**
  * Supported AI coding agent types
  */
-export type AgentType = 'claude' | 'codex' | 'gemini' | 'unknown';
+export type AgentType = 'claude' | 'codex' | 'gemini' | 'copilot' | 'unknown';
 
 /**
  * Agent detection result with metadata
@@ -42,6 +42,7 @@ export function getAgentSessionDirs(): Map<AgentType, string> {
     ['claude', path.join(homeDir, '.claude', 'projects')],
     ['codex', path.join(homeDir, '.codex', 'sessions')],
     ['gemini', path.join(homeDir, '.gemini', 'tmp')],
+    ['copilot', path.join(homeDir, '.copilot', 'session-state')],
   ]);
 }
 
@@ -67,6 +68,11 @@ export function getAgentConfigs(): AgentDirConfig[] {
       baseDir: path.join(homeDir, '.gemini', 'tmp'),
       sessionSubdir: 'chats',
       filePattern: /^session-.*\.json$/,
+    },
+    {
+      type: 'copilot',
+      baseDir: path.join(homeDir, '.copilot', 'session-state'),
+      filePattern: /^events\.jsonl$/,
     },
   ];
 }
@@ -101,12 +107,20 @@ export function detectAgentFromPath(filePath: string): AgentType {
     return 'codex';
   }
 
-  // Check for Gemini path pattern (future)
+  // Check for Gemini path pattern
   if (
     normalizedPath.includes(`${path.sep}.gemini${path.sep}`) ||
     normalizedPath.includes('/.gemini/')
   ) {
     return 'gemini';
+  }
+
+  // Check for Copilot path pattern
+  if (
+    normalizedPath.includes(`${path.sep}.copilot${path.sep}`) ||
+    normalizedPath.includes('/.copilot/')
+  ) {
+    return 'copilot';
   }
 
   return 'unknown';
@@ -149,6 +163,13 @@ export function detectAgentFromContent(firstEntry: any): AgentType {
   // - Google-specific tool format
   if (hasGeminiSignatures(firstEntry)) {
     return 'gemini';
+  }
+
+  // Copilot detection: Look for GitHub Copilot-specific patterns
+  // - Event-based structure with type field
+  // - session.start, user.message, assistant.message events
+  if (hasCopilotSignatures(firstEntry)) {
+    return 'copilot';
   }
 
   return 'unknown';
@@ -242,6 +263,36 @@ function hasGeminiSignatures(entry: any): boolean {
 }
 
 /**
+ * Check for Copilot-specific content signatures
+ */
+function hasCopilotSignatures(entry: any): boolean {
+  // Check for Copilot event structure
+  if (entry.type && entry.data && entry.id && entry.timestamp && entry.parentId !== undefined) {
+    // Check for Copilot-specific event types
+    const copilotEventTypes = [
+      'session.start',
+      'session.info',
+      'user.message',
+      'assistant.message',
+      'assistant.reasoning',
+      'tool.execution_start',
+      'tool.execution_complete',
+    ];
+
+    if (copilotEventTypes.includes(entry.type)) {
+      return true;
+    }
+  }
+
+  // Check for copilotVersion field in session.start events
+  if (entry.data?.copilotVersion || entry.data?.producer === 'copilot-agent') {
+    return true;
+  }
+
+  return false;
+}
+
+/**
  * Get full agent info from file path and optional content
  *
  * @param filePath - Path to session file
@@ -309,6 +360,13 @@ function extractAgentVersion(entry: any, agentType: AgentType): string | undefin
         return entry.model;
       }
       break;
+
+    case 'copilot':
+      // Copilot version from session.start event
+      if (entry.data?.copilotVersion) {
+        return entry.data.copilotVersion;
+      }
+      break;
   }
 
   return undefined;
@@ -322,6 +380,7 @@ export function getAgentDisplayName(type: AgentType): string {
     claude: 'Claude',
     codex: 'Codex',
     gemini: 'Gemini',
+    copilot: 'GitHub Copilot',
     unknown: 'Unknown',
   };
   return names[type];
@@ -335,6 +394,7 @@ export function getAgentBadgeColor(type: AgentType): string {
     claude: '#D97706', // Orange/amber for Claude
     codex: '#059669', // Green for Codex/OpenAI
     gemini: '#2563EB', // Blue for Gemini
+    copilot: '#1f6feb', // GitHub blue for Copilot
     unknown: '#6B7280', // Gray for unknown
   };
   return colors[type];

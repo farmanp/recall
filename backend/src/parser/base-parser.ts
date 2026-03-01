@@ -491,6 +491,8 @@ export abstract class AgentParser {
       'read_file',
       'glob',
       'list_directory',
+      'view', // Copilot
+      'bash', // Copilot (can read files via cat, etc.)
     ];
     return READ_TOOLS.includes(toolName);
   }
@@ -499,7 +501,14 @@ export abstract class AgentParser {
    * Check if a tool is a write operation (across all agents)
    */
   protected isWriteTool(toolName: string): boolean {
-    const WRITE_TOOLS = ['Write', 'NotebookEdit', 'write_file', 'create_file'];
+    const WRITE_TOOLS = [
+      'Write',
+      'NotebookEdit',
+      'write_file',
+      'create_file',
+      'write_file', // Copilot
+      'apply_patch', // Copilot
+    ];
     return WRITE_TOOLS.includes(toolName);
   }
 
@@ -507,7 +516,11 @@ export abstract class AgentParser {
    * Check if a tool is an edit operation (across all agents)
    */
   protected isEditTool(toolName: string): boolean {
-    const EDIT_TOOLS = ['Edit', 'replace'];
+    const EDIT_TOOLS = [
+      'Edit',
+      'replace',
+      'apply_patch', // Copilot
+    ];
     return EDIT_TOOLS.includes(toolName);
   }
 
@@ -515,7 +528,14 @@ export abstract class AgentParser {
    * Check if a tool is a shell operation (across all agents)
    */
   protected isShellTool(toolName: string): boolean {
-    const SHELL_TOOLS = ['Bash', 'shell', 'run_shell_command', 'shell_command'];
+    const SHELL_TOOLS = [
+      'Bash',
+      'shell',
+      'run_shell_command',
+      'shell_command',
+      'bash', // Copilot
+      'report_intent', // Copilot
+    ];
     return SHELL_TOOLS.includes(toolName);
   }
 
