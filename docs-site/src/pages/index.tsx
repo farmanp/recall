@@ -3,6 +3,13 @@ import Link from '@docusaurus/Link';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import Layout from '@theme/Layout';
 
+const imageStyle: React.CSSProperties = {
+  width: '100%',
+  borderRadius: '8px',
+  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
+  border: '1px solid rgba(0, 0, 0, 0.1)',
+};
+
 function HomepageHeader() {
   const { siteConfig } = useDocusaurusContext();
   return (
@@ -33,14 +40,31 @@ function HomepageHeader() {
             npx recall-player@latest
           </code>
         </div>
+        <div style={{ marginTop: '3rem', maxWidth: '900px', margin: '3rem auto 0' }}>
+          <img
+            src="/img/overview.png"
+            alt="Recall overview showing 591 sessions, $4K saved, and multi-agent breakdown"
+            style={imageStyle}
+          />
+        </div>
       </div>
     </header>
   );
 }
 
-function Feature({ title, description }: { title: string; description: string }) {
+interface FeatureProps {
+  title: string;
+  description: string;
+  image: string;
+  imageAlt: string;
+}
+
+function Feature({ title, description, image, imageAlt }: FeatureProps) {
   return (
-    <div style={{ flex: 1, padding: '1rem' }}>
+    <div style={{ flex: 1, minWidth: '280px', padding: '1rem' }}>
+      <div style={{ marginBottom: '1rem' }}>
+        <img src={image} alt={imageAlt} style={imageStyle} />
+      </div>
       <h3>{title}</h3>
       <p>{description}</p>
     </div>
@@ -59,14 +83,20 @@ export default function Home(): React.JSX.Element {
               <Feature
                 title="Replay Sessions"
                 description="Scroll through AI coding sessions like a video. See every message, every tool call, every file change."
+                image="/img/transcript_view.png"
+                imageAlt="Transcript view showing conversation replay with timestamps"
               />
               <Feature
-                title="Multi-Agent Support"
-                description="Works with Claude Code, Gemini CLI, and Codex CLI. All your AI sessions in one place."
+                title="Session Analysis"
+                description="Detect complexity outliers, duplicate utilities, and architectural drift across your codebase."
+                image="/img/generated_insights.png"
+                imageAlt="Session insights showing 19 files modified, 4K lines changed"
               />
               <Feature
-                title="File Tracking"
-                description="Track every file read, write, and edit. Full diffs for all changes."
+                title="Multi-Agent Library"
+                description="Claude Code, Gemini CLI, and Codex CLI — all your AI sessions in one searchable library."
+                image="/img/sessions_view.png"
+                imageAlt="Sessions library with multi-agent filtering"
               />
             </div>
           </div>

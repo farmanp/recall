@@ -13,11 +13,13 @@ import adminRouter from './routes/admin';
 import sharesRouter from './routes/shares';
 import statsRouter from './routes/stats';
 import analysisRouter from './routes/analysis';
+import insightsRouter from './routes/insights';
 import { authGuard } from './middleware/auth';
 import { viewerModeGuard, isViewerModeEnabled } from './middleware/viewer-mode';
 import { getDbInstance, isClaudeMemAvailable } from './db/connection';
 import { getTranscriptDbInstance } from './db/transcript-connection';
 import { initializeTranscriptSchema } from './db/transcript-queries';
+import { isInsightsConfigured, getConfiguredTier } from './services/insights-factory';
 
 /**
  * Create and configure Express application
@@ -108,6 +110,10 @@ export function createServer(): Application {
         },
         features: {
           tokenStats: process.env.RECALL_HIDE_TOKEN_STATS !== 'true',
+          insights: {
+            enabled: isInsightsConfigured(),
+            tier: getConfiguredTier(),
+          },
         },
       });
     } catch (err) {
@@ -141,6 +147,8 @@ export function createServer(): Application {
   // Analysis routes - session-specific (/api/sessions/:sessionId/analysis) and standalone (/api/analysis)
   app.use('/api/sessions', analysisRouter);
   app.use('/api/analysis', analysisRouter);
+  // Insights routes - advanced analytics (optional feature)
+  app.use('/api/insights', insightsRouter);
 
   // Serve built frontend (for production)
   const publicDir = path.join(__dirname, '..', 'public');

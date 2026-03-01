@@ -5,31 +5,30 @@
 
 ### Feb 10, 2026
 
-| ID    | Time    | T   | Title                                                           | Read |
-| ----- | ------- | --- | --------------------------------------------------------------- | ---- |
-| #4512 | 7:20 PM | 🔵  | Comprehensive checkpoint/rewind architecture analysis completed | ~728 |
+| ID | Time | T | Title | Read |
+|----|------|---|-------|------|
+| #4512 | 7:20 PM | 🔵 | Comprehensive checkpoint/rewind architecture analysis completed | ~728 |
 
 ### Feb 11, 2026
 
-| ID    | Time     | T   | Title                                                                                             | Read  |
-| ----- | -------- | --- | ------------------------------------------------------------------------------------------------- | ----- |
-| #5391 | 10:23 PM | 🔵  | Timeline builder implements two-pass algorithm with tool result matching and dead air compression | ~631  |
-| #5381 | "        | 🔵  | BaseParser implements Template Method pattern with dead air compression and CLAUDE.md extraction  | ~722  |
-| #4900 | 10:15 PM | 🔵  | Base Parser - Template Method Pattern for Multi-Agent Transcript Parsing                          | ~1067 |
-| #4849 | "        | 🔵  | Claude Parser - Agent-Specific JSONL Transcript Parsing                                           | ~768  |
-| #4810 | 10:14 PM | 🔵  | Session Indexer - Multi-Agent Directory Scanning and Metadata Extraction                          | ~868  |
+| ID | Time | T | Title | Read |
+|----|------|---|-------|------|
+| #5391 | 10:23 PM | 🔵 | Timeline builder implements two-pass algorithm with tool result matching and dead air compression | ~631 |
+| #5381 | " | 🔵 | BaseParser implements Template Method pattern with dead air compression and CLAUDE.md extraction | ~722 |
+| #4900 | 10:15 PM | 🔵 | Base Parser - Template Method Pattern for Multi-Agent Transcript Parsing | ~1067 |
+| #4849 | " | 🔵 | Claude Parser - Agent-Specific JSONL Transcript Parsing | ~768 |
+| #4810 | 10:14 PM | 🔵 | Session Indexer - Multi-Agent Directory Scanning and Metadata Extraction | ~868 |
 
 ### Feb 19, 2026
 
-| ID    | Time    | T   | Title                                                  | Read |
-| ----- | ------- | --- | ------------------------------------------------------ | ---- |
-| #6929 | 8:17 PM | ✅  | Session State Detector Import Added to Session Indexer | ~293 |
+| ID | Time | T | Title | Read |
+|----|------|---|-------|------|
+| #6929 | 8:17 PM | ✅ | Session State Detector Import Added to Session Indexer | ~293 |
 
 ### Feb 22, 2026
 
-| ID    | Time    | T   | Title                                                                                             | Read |
-| ----- | ------- | --- | ------------------------------------------------------------------------------------------------- | ---- |
-| #7329 | 8:32 AM | 🔵  | Session indexer extracts metadata from JSONL transcripts supporting both Claude and Codex formats | ~535 |
-| #7324 | "       | 🔵  | Recall session indexer scans multi-agent directories with CWD filtering and exclude patterns      | ~510 |
-
+| ID | Time | T | Title | Read |
+|----|------|---|-------|------|
+| #7329 | 8:32 AM | 🔵 | Session indexer extracts metadata from JSONL transcripts supporting both Claude and Codex formats | ~535 |
+| #7324 | " | 🔵 | Recall session indexer scans multi-agent directories with CWD filtering and exclude patterns | ~510 |
 </claude-mem-context>
